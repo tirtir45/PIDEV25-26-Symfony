@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - StartHub{% endblock %}
+
+{% block body %}
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-welcome">
+        <h1 class="dashboard-title">Bienvenue sur StartHub!</h1>
+        <p class="dashboard-subtitle">
+            {% if isAdmin %}
+                Bonjour, {{ app.session.get('user_nom') }}
+            {% else %}
+                Sélectionnez une option dans le menu de gauche pour commencer
+            {% endif %}
+        </p>
+    </div>
+
+    {% if isAdmin %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">{{ stats.users }}</div>
+            <div class="stat-label">Utilisateurs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">{{ stats.reclamations }}</div>
+            <div class="stat-label">Total réclamations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value">{{ stats.pending }}</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{{ stats.resolved }}</div>
+            <div class="stat-label">Résolues</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="dashboard-cards">
+        {% if isAdmin %}
+        <div class="dash-card">
+            <div class="dash-card-icon">👤</div>
+            <div class="dash-card-title">Gestion Utilisateurs</div>
+            <div class="dash-card-desc">Administrez les comptes</div>
+            <a href="{{ path('utilisateur_index') }}" class="dash-card-btn">Gérer</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">📩</div>
+            <div class="dash-card-title">Gestion Réclamations</div>
+            <div class="dash-card-desc">Toutes les réclamations</div>
+            <a href="{{ path('admin_reclamation_index') }}" class="dash-card-btn">Voir tout</a>
+        </div>
+        {% else %}
+        <div class="dash-card">
+            <div class="dash-card-icon">👤</div>
+            <div class="dash-card-title">Profil</div>
+            <div class="dash-card-desc">Complétez votre profil</div>
+            <a href="{{ path('app_profil') }}" class="dash-card-btn">Accéder</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">📋</div>
+            <div class="dash-card-title">Réclamations</div>
+            <div class="dash-card-desc">Gérez vos réclamations</div>
+            <a href="{{ path('reclamation_index') }}" class="dash-card-btn">Accéder</a>
+        </div>
+        <div class="dash-card">
+            <div class="dash-card-icon">💼</div>
+            <div class="dash-card-title">Opportunités</div>
+            <div class="dash-card-desc">Explorez les offres</div>
+            <a href="#" class="dash-card-btn">Explorer</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

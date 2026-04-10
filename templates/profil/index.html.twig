@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - StartHub{% endblock %}
+
+{% block body %}
+<div class="profil-container">
+
+    <h1 class="profil-page-title">Mon Profil</h1>
+
+    {% if errors is not empty %}
+        <div class="flash flash-error">Veuillez corriger les erreurs ci-dessous.</div>
+    {% endif %}
+
+    <!-- Card profil -->
+    <div class="profil-card">
+        <div class="profil-card-top">
+            <div class="profil-avatar-section">
+                <div class="profil-avatar">
+                    {% if user.photo %}
+                        <img src="{{ asset(user.photo) }}" alt="{{ user.nom }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                    {% else %}
+                        {{ user.nom|slice(0,2)|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="profil-nom">{{ user.nom }}</div>
+                    <div class="profil-role">{{ user.role ? user.role.nomRole : 'Utilisateur' }}</div>
+                </div>
+            </div>
+            <div class="profil-card-actions">
+                <button onclick="document.getElementById('edit-form').scrollIntoView({behavior:'smooth'})"
+                        class="btn-modifier">✏ Modifier</button>
+                <form method="POST" action="{{ path('app_profil') }}"
+                      onsubmit="return confirm('Supprimer votre compte ? Cette action est irréversible.')">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="btn-supprimer-compte">🗑 Supprimer le compte</button>
+                </form>            </div>
+        </div>
+
+        <hr class="profil-divider">
+
+        <div class="profil-info-grid">
+            <div class="profil-info-item">
+                <div class="profil-info-label">Email</div>
+                <div class="profil-info-value">{{ user.email }}</div>
+            </div>
+            <div class="profil-info-item">
+                <div class="profil-info-label">Bio</div>
+                <div class="profil-info-value">{{ user.bio ?? 'Aucune bio' }}</div>
+            </div>
+            <div class="profil-info-item">
+                <div class="profil-info-label">Téléphone</div>
+                <div class="profil-info-value">{{ user.telephone ?? '—' }}</div>
+            </div>
+            <div class="profil-info-item">
+                <div class="profil-info-label">Compétences</div>
+                <div class="profil-info-value">{{ user.competences ?? 'Aucune compétence' }}</div>
+            </div>
+            <div class="profil-info-item">
+                <div class="profil-info-label">Date d'inscription</div>
+                <div class="profil-info-value">{{ user.dateInscription|date('d/m/Y H:i') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire modification -->
+    <div class="profil-card" id="edit-form">
+        <h2 class="profil-edit-title">Modifier le profil</h2>
+
+        <form method="POST" action="{{ path('app_profil') }}" class="profil-form" enctype="multipart/form-data">
+            <div class="profil-field">
+                <label class="profil-label">Nom</label>
+                <input type="text" name="nom" class="profil-input {{ errors.nom is defined ? 'is-invalid' : '' }}" value="{{ user.nom }}" required>
+                {% if errors.nom is defined %}<div class="form-error">{{ errors.nom }}</div>{% endif %}
+            </div>
+
+            <div class="profil-field">
+                <label class="profil-label">Email</label>
+                <input type="email" name="email" class="profil-input {{ errors.email is defined ? 'is-invalid' : '' }}" value="{{ user.email }}" required>
+                {% if errors.email is defined %}<div class="form-error">{{ errors.email }}</div>{% endif %}
+            </div>
+
+            <div class="profil-field">
+                <label class="profil-label">Téléphone</label>
+                <input type="tel" name="telephone" class="profil-input {{ errors.telephone is defined ? 'is-invalid' : '' }}" value="{{ user.telephone ?? '' }}">
+                {% if errors.telephone is defined %}<div class="form-error">{{ errors.telephone }}</div>{% endif %}
+            </div>
+
+            <div class="profil-field">
+                <label class="profil-label">Photo de profil</label>
+                <div class="profil-photo-row">
+                    <label class="btn-choisir-photo">📷 Choisir une photo
+                        <input type="file" name="photo" accept="image/*" style="display:none"
+                               onchange="document.getElementById('photo-name').value = this.files[0]?.name ?? ''">
+                    </label>
+                    <input type="text" id="photo-name" class="profil-input" placeholder="Chemin de la photo" readonly>
+                </div>
+            </div>
+
+            <div class="profil-field">
+                <label class="profil-label">Bio</label>
+                <textarea name="bio" class="profil-textarea {{ errors.bio is defined ? 'is-invalid' : '' }}" placeholder="Parlez nous de vous...">{{ user.bio ?? '' }}</textarea>
+                {% if errors.bio is defined %}<div class="form-error">{{ errors.bio }}</div>{% endif %}
+            </div>
+
+            <div class="profil-field">
+                <label class="profil-label">Compétences</label>
+                <textarea name="competences" class="profil-textarea {{ errors.competences is defined ? 'is-invalid' : '' }}" placeholder="Ex: Java, Python, React...">{{ user.competences ?? '' }}</textarea>
+                {% if errors.competences is defined %}<div class="form-error">{{ errors.competences }}</div>{% endif %}
+            </div>
+
+            <div class="profil-form-actions">
+                <button type="submit" class="btn-enregistrer">Enregistrer</button>
+                <a href="{{ path('app_profil') }}" class="btn-annuler-profil">Annuler</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

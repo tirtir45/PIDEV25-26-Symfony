@@ -1,0 +1,115 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Réclamations - StartHub{% endblock %}
+
+{% block body %}
+<div class="reclamation-container">
+
+    <div class="reclamation-header">
+        <h1 class="reclamation-title">Mes Réclamations</h1>
+        {% if not showForm %}
+            <a href="{{ path('reclamation_index', {new: 1}) }}" class="btn-nouvelle">+ Nouvelle réclamation</a>
+        {% endif %}
+    </div>
+
+    {% if showForm %}
+    <div class="reclamation-form-card">
+        <h2 class="reclamation-form-title">Nouvelle réclamation</h2>
+
+        {% if error %}
+            <div class="flash flash-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ path('reclamation_index') }}" id="reclamForm">
+            <div class="reclamation-field">
+                <label class="reclamation-label">Sujet <span style="color:#dc2626">*</span></label>
+                <input type="text" name="sujet" id="sujet" class="reclamation-input"
+                       placeholder="Entrez le sujet de votre réclamation">
+                <span class="field-error" id="sujet-error"></span>
+            </div>
+
+            <div class="reclamation-field">
+                <label class="reclamation-label">Description <span style="color:#dc2626">*</span></label>
+                <textarea name="description" id="description" class="reclamation-textarea"
+                          placeholder="Décrivez votre réclamation en détail" rows="5"></textarea>
+                <span class="field-error" id="description-error"></span>
+            </div>
+
+            <div class="reclamation-actions">
+                <button type="submit" class="btn-soumettre">Soumettre</button>
+                <a href="{{ path('reclamation_index') }}" class="btn-annuler">Annuler</a>
+            </div>
+        </form>
+
+        <script>
+        document.getElementById('reclamForm').addEventListener('submit', function(e) {
+            let valid = true;
+
+            const sujet = document.getElementById('sujet').value.trim();
+            const desc  = document.getElementById('description').value.trim();
+
+            if (sujet.length < 3) {
+                document.getElementById('sujet').style.borderColor = '#dc2626';
+                document.getElementById('sujet-error').textContent = 'Le sujet est obligatoire (min. 3 caractères)';
+                valid = false;
+            } else {
+                document.getElementById('sujet').style.borderColor = '#10b981';
+                document.getElementById('sujet-error').textContent = '';
+            }
+
+            if (desc.length < 10) {
+                document.getElementById('description').style.borderColor = '#dc2626';
+                document.getElementById('description-error').textContent = 'La description est obligatoire (min. 10 caractères)';
+                valid = false;
+            } else {
+                document.getElementById('description').style.borderColor = '#10b981';
+                document.getElementById('description-error').textContent = '';
+            }
+
+            if (!valid) e.preventDefault();
+        });
+
+        document.getElementById('sujet').addEventListener('input', function() {
+            if (this.value.trim().length >= 3) {
+                this.style.borderColor = '#10b981';
+                document.getElementById('sujet-error').textContent = '';
+            } else {
+                this.style.borderColor = '#dc2626';
+                document.getElementById('sujet-error').textContent = 'Min. 3 caractères';
+            }
+        });
+
+        document.getElementById('description').addEventListener('input', function() {
+            if (this.value.trim().length >= 10) {
+                this.style.borderColor = '#10b981';
+                document.getElementById('description-error').textContent = '';
+            } else {
+                this.style.borderColor = '#dc2626';
+                document.getElementById('description-error').textContent = 'Min. 10 caractères';
+            }
+        });
+        </script>
+    </div>
+    {% endif %}
+
+    {% if reclamations is not empty %}
+    <div class="reclamation-list">
+        {% for r in reclamations %}
+        <div class="reclamation-item">
+            <div class="reclamation-item-header">
+                <span class="reclamation-sujet">{{ r.sujet }}</span>
+                <span class="reclamation-statut statut-{{ r.statut|lower }}">{{ r.statut }}</span>
+            </div>
+            <div class="reclamation-desc">{{ r.description }}</div>
+            <div class="reclamation-date">{{ r.dateCreation|date('d/m/Y H:i') }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elseif not showForm %}
+    <div class="reclamation-empty">
+        <p>Vous n'avez aucune réclamation pour le moment.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

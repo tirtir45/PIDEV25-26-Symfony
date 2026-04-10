@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel utilisateur{% endblock %}
+{% block page_title %}Créer un utilisateur{% endblock %}
+
+{% block body %}
+<div class="form-container">
+    <div class="form-header">
+        <h1 class="form-title">Créer un utilisateur</h1>
+        <p class="form-subtitle">Remplissez les informations ci-dessous</p>
+    </div>
+
+    <div class="form-card">
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class': 'form-content'}}) }}
+
+        <div class="form-group">
+            {{ form_label(form.nom, 'Nom complet', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.nom, {'attr': {'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Entrez le nom complet'}}) }}
+            {% if form.nom.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.nom) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.email, {'attr': {'class': 'form-control' ~ (form.email.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Entrez l\'email'}}) }}
+            {% if form.email.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.email) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.telephone, {'attr': {'class': 'form-control' ~ (form.telephone.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Entrez le téléphone'}}) }}
+            {% if form.telephone.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.telephone) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.role, 'Rôle', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.role, {'attr': {'class': 'form-control'}}) }}
+            {% if form.role.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.role) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.motDePasse, 'Mot de passe', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.motDePasse, {'attr': {'class': 'form-control' ~ (form.motDePasse.vars.errors|length > 0 ? ' is-invalid' : ''), 'placeholder': 'Min. 6 caractères, 1 majuscule, 1 chiffre'}}) }}
+            {% if form.motDePasse.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.motDePasse) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.bio, 'Bio', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.bio, {'attr': {'class': 'form-control' ~ (form.bio.vars.errors|length > 0 ? ' is-invalid' : ''), 'rows': 3, 'placeholder': 'Entrez la bio'}}) }}
+            {% if form.bio.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.bio) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.competences, 'Compétences', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.competences, {'attr': {'class': 'form-control' ~ (form.competences.vars.errors|length > 0 ? ' is-invalid' : ''), 'rows': 3, 'placeholder': 'Entrez les compétences'}}) }}
+            {% if form.competences.vars.errors|length > 0 %}
+                <div class="form-error">{{ form_errors(form.competences) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-checkboxes">
+            <label class="checkbox-label">
+                {{ form_widget(form.actif, {'attr': {'class': 'checkbox-input'}}) }}
+                <span>Compte actif</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-secondary btn-submit">Créer l'utilisateur</button>
+            <a href="{{ path('utilisateur_index') }}" class="btn btn-outline">Annuler</a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

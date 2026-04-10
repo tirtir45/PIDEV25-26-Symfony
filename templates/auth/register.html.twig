@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S'inscrire - StartHub</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+</head>
+<body style="margin:0; padding:0; background:white;">
+
+<div class="register-wrapper">
+    <div class="register-left">
+        <div class="register-left-content">
+            <h1 class="register-brand">StartHub</h1>
+            <p class="register-tagline">Rejoignez notre communauté</p>
+            <ul class="register-features">
+                <li>Opportunités sans limites</li>
+                <li>Réseau professionnel puissant</li>
+                <li>Support et mentorship</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="register-right">
+        <div class="register-form-box">
+            <h2 class="register-title">Créer un compte</h2>
+            <p class="register-subtitle">Remplissez les informations ci-dessous</p>
+
+            {% if error %}
+                <div class="flash flash-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ path('app_register') }}" class="register-form" id="registerForm" novalidate>
+
+                <div class="register-field">
+                    <label class="register-label">Nom complet <span class="required">*</span></label>
+                    <input type="text" name="nom" id="nom" class="register-input" placeholder="Entrez votre nom complet">
+                    <span class="field-error" id="nom-error"></span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Email <span class="required">*</span></label>
+                    <input type="text" name="email" id="email" class="register-input" placeholder="mail@example.com">
+                    <span class="field-error" id="email-error"></span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Téléphone</label>
+                    <input type="tel" name="telephone" id="telephone" class="register-input" placeholder="Entrez votre téléphone">
+                    <span class="field-error" id="telephone-error"></span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Rôle <span class="required">*</span></label>
+                    <select name="role_id" id="role" class="register-input">
+                        <option value="">-- Choisir un rôle --</option>
+                        {% for role in roles %}
+                            {% if role.nomRole in ['Administrateur', 'Candidat', 'Entrepreneur', 'Fournisseur', 'Membre equipe'] %}
+                                <option value="{{ role.id }}">{{ role.nomRole }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <span class="field-error" id="role-error"></span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Mot de passe <span class="required">*</span></label>
+                    <input type="password" name="password" id="password" class="register-input" placeholder="Entrez votre mot de passe">
+                    <span class="field-hint">Min. 6 caractères, 1 majuscule, 1 minuscule, 1 chiffre</span>
+                    <span class="field-error" id="password-error"></span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Confirmer le mot de passe <span class="required">*</span></label>
+                    <input type="password" name="confirm" id="confirm" class="register-input" placeholder="Confirmez votre mot de passe">
+                    <span class="field-error" id="confirm-error"></span>
+                </div>
+
+                <button type="submit" class="btn-register">S'inscrire</button>
+            </form>
+
+            <div class="register-login-link">
+                <p>Vous avez déjà un compte?</p>
+                <a href="{{ path('app_login') }}" class="btn-register-outline">Se connecter</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const form = document.getElementById('registerForm');
+
+function showError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.style.borderColor = '#dc2626';
+    error.textContent = message;
+    error.style.color = '#dc2626';
+}
+
+function clearError(fieldId, errorId) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.style.borderColor = '#10b981';
+    error.textContent = '';
+}
+
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+    return /^[0-9+\s\-]{6,20}$/.test(phone);
+}
+
+// Validation en temps réel
+document.getElementById('nom').addEventListener('input', function() {
+    if (this.value.trim().length < 2) showError('nom', 'nom-error', 'Le nom doit contenir au moins 2 caractères');
+    else clearError('nom', 'nom-error');
+});
+
+document.getElementById('email').addEventListener('input', function() {
+    if (!validateEmail(this.value.trim())) showError('email', 'email-error', 'Adresse email invalide');
+    else clearError('email', 'email-error');
+});
+
+document.getElementById('telephone').addEventListener('input', function() {
+    if (this.value && !validatePhone(this.value)) showError('telephone', 'telephone-error', 'Numéro invalide (chiffres uniquement)');
+    else { document.getElementById('telephone').style.borderColor = ''; document.getElementById('telephone-error').textContent = ''; }
+});
+
+document.getElementById('role').addEventListener('change', function() {
+    if (!this.value) { showError('role', 'role-error', 'Veuillez choisir un rôle'); }
+    else { this.style.borderColor = '#10b981'; document.getElementById('role-error').textContent = ''; }
+});
+
+function validatePassword(pwd) {
+    return pwd.length >= 6 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd);
+}
+
+document.getElementById('password').addEventListener('input', function() {
+    if (!validatePassword(this.value)) showError('password', 'password-error', 'Min. 6 caractères, 1 majuscule, 1 minuscule, 1 chiffre');
+    else clearError('password', 'password-error');
+    const confirm = document.getElementById('confirm').value;
+    if (confirm) {
+        if (confirm !== this.value) showError('confirm', 'confirm-error', 'Les mots de passe ne correspondent pas');
+        else clearError('confirm', 'confirm-error');
+    }
+});
+
+document.getElementById('confirm').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    if (this.value !== password) showError('confirm', 'confirm-error', 'Les mots de passe ne correspondent pas');
+    else clearError('confirm', 'confirm-error');
+});
+
+// Validation à la soumission
+form.addEventListener('submit', function(e) {
+    let valid = true;
+
+    const nom = document.getElementById('nom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const telephone = document.getElementById('telephone').value;
+
+    if (nom.length < 2) { showError('nom', 'nom-error', 'Le nom est obligatoire (min. 2 caractères)'); valid = false; }
+    else clearError('nom', 'nom-error');
+
+    if (!validateEmail(email)) { showError('email', 'email-error', 'Adresse email invalide ou vide'); valid = false; }
+    else clearError('email', 'email-error');
+
+    if (telephone && !validatePhone(telephone)) { showError('telephone', 'telephone-error', 'Numéro invalide'); valid = false; }
+
+    const roleId = document.getElementById('role').value;
+    if (!roleId) { showError('role', 'role-error', 'Veuillez choisir un rôle'); valid = false; }
+    else { document.getElementById('role').style.borderColor = '#10b981'; document.getElementById('role-error').textContent = ''; }
+
+    if (!validatePassword(password)) { showError('password', 'password-error', 'Min. 6 caractères, 1 majuscule, 1 minuscule, 1 chiffre'); valid = false; }
+    else clearError('password', 'password-error');
+
+    if (password !== confirm) { showError('confirm', 'confirm-error', 'Les mots de passe ne correspondent pas'); valid = false; }
+    else if (confirm) clearError('confirm', 'confirm-error');
+
+    if (!valid) e.preventDefault();
+});
+</script>
+
+</body>
+</html>

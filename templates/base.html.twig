@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StartHub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <div class="topbar-logo">starthub</div>
+    <div class="topbar-right">
+        <button class="topbar-notif">🔔</button>
+        <span class="topbar-username">{{ app.session.get('user_nom') ?? 'Utilisateur' }}</span>
+        {% if app.session.get('user_id') %}
+            <a href="{{ path('app_logout') }}" class="btn-deconnexion">Déconnexion</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-section-title">Navigation</div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ path('app_profil') }}" class="sidebar-item {{ app.request.get('_route') == 'app_profil' ? 'active' : '' }}">
+                👤 Mon Profil
+            </a>
+            <a href="{{ path('reclamation_index') }}" class="sidebar-item {{ app.request.get('_route') starts with 'reclamation' ? 'active' : '' }}">
+                🔔 Mes Réclamations
+            </a>
+            <a href="#" class="sidebar-item">
+                🌐 Historique Connexions
+            </a>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-item">
+                📋 Offres d'emploi
+            </a>
+            <a href="#" class="sidebar-item">
+                ✦ Mes Projets
+            </a>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-item">
+                📊 Statistiques
+            </a>
+            {% if app.session.get('user_role') == 'Administrateur' %}
+            <a href="{{ path('utilisateur_index') }}" class="sidebar-item {{ app.request.get('_route') starts with 'utilisateur' ? 'active' : '' }}">
+                👥 Gestion Utilisateurs
+            </a>
+            <a href="{{ path('admin_reclamation_index') }}" class="sidebar-item {{ app.request.get('_route') starts with 'admin_reclamation' ? 'active' : '' }}">
+                📁 Gestion Réclamations
+            </a>
+            {% endif %}
+            <a href="#" class="sidebar-item">
+                ¥ Gestion Badges
+            </a>
+            <a href="#" class="sidebar-item">
+                ⚙ Paramètres
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrapper">
+        <main class="main-content {% block main_class %}{% endblock %}">
+            {% for message in app.flashes('success') %}
+                <div class="flash flash-success">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="flash flash-error">{{ message }}</div>
+            {% endfor %}
+            {% block body %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+{% block javascripts %}{% endblock %}
+</body>
+</html>

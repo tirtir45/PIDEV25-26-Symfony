@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - StartHub</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+</head>
+<body style="margin:0; padding:0; background:white;">
+
+<div class="register-wrapper">
+    <!-- Panneau gauche violet -->
+    <div class="register-left">
+        <div class="register-left-content">
+            <h1 class="register-brand">StartHub</h1>
+            <p class="register-tagline">Bienvenue de retour</p>
+            <ul class="register-features">
+                <li>Accédez à votre espace</li>
+                <li>Gérez vos projets</li>
+                <li>Restez connecté</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Panneau droit -->
+    <div class="register-right">
+        <div class="register-form-box">
+            <h2 class="register-title">Connexion</h2>
+            <p class="register-subtitle">Accédez à votre compte</p>
+
+            {% if error %}
+                <div class="flash flash-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ path('app_login') }}" class="register-form" novalidate>
+                <div class="register-field">
+                    <label class="register-label">Email</label>
+                    <input type="email" name="email" class="register-input" placeholder="Entrez votre email" required
+                           oninvalid="this.setCustomValidity('Veuillez entrer votre email')"
+                           oninput="this.setCustomValidity('')">
+                    <span class="field-hint">Champ obligatoire</span>
+                </div>
+
+                <div class="register-field">
+                    <label class="register-label">Mot de passe</label>
+                    <input type="password" name="password" class="register-input" placeholder="••••••••" required
+                           minlength="6"
+                           oninvalid="this.setCustomValidity('Veuillez entrer votre mot de passe')"
+                           oninput="this.setCustomValidity('')">
+                    <span class="field-hint">Champ obligatoire</span>
+                </div>
+
+                <button type="submit" class="btn-register">Se connecter</button>
+            </form>
+
+            <div class="register-login-link">
+                <p>Vous n'avez pas de compte?</p>
+                <a href="{{ path('app_register') }}" class="btn-register-outline">S'inscrire</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
