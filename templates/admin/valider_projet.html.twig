@@ -1,0 +1,230 @@
+{# templates/admin/valider_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="validation-card">
+        <div class="validation-header">
+            <h2><i class="bi bi-clipboard-check"></i> Validation du projet</h2>
+            <span class="status-badge status-pending">En attente de validation</span>
+        </div>
+        
+        <div class="project-details">
+            <h3>{{ projet.titre }}</h3>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <label>Entrepreneur</label>
+                    <p>{{ projet.entrepreneur.nom ?? 'N/A' }}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Secteur</label>
+                    <p>{{ projet.secteur }}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Date de soumission</label>
+                    <p>{{ projet.dateSoumission|date('d/m/Y H:i') }}</p>
+                </div>
+            </div>
+            
+            <div class="detail-item full-width">
+                <label>Description</label>
+                <p>{{ projet.description }}</p>
+            </div>
+            
+            <div class="detail-item full-width">
+                <label>Objectifs</label>
+                <p>{{ projet.objectifs }}</p>
+            </div>
+        </div>
+        
+        {{ form_start(form, {'attr': {'id': 'validationForm', 'class': 'validation-form'}})}}
+            <div class="form-group">
+                {{ form_label(form.commentaire_admin) }}
+                {{ form_widget(form.commentaire_admin) }}
+            </div>
+            
+            <div class="decision-group">
+                <label>Décision</label>
+                <div class="decision-options">
+                    {% for child in form.action %}
+                        <label class="decision-option {% if child.vars.value == 'accepter' %}accept{% else %}refuse{% endif %}">
+                            {{ form_widget(child) }}
+                            <i class="bi bi-{% if child.vars.value == 'accepter' %}check-circle{% else %}x-circle{% endif %}"></i>
+                            <span>{{ child.vars.label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">Confirmer la décision</button>
+                <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary btn-lg">Annuler</a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<style>
+.validation-card {
+    background: white;
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.validation-header {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.validation-header h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-details {
+    padding: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.project-details h3 {
+    margin-bottom: 1.5rem;
+    color: var(--color-dark);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: var(--color-gray);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-item p {
+    margin: 0;
+    color: var(--color-dark);
+    line-height: 1.5;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.validation-form {
+    padding: 2rem;
+}
+
+.decision-group {
+    margin: 1.5rem 0;
+}
+
+.decision-group > label {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: block;
+    color: var(--color-dark);
+}
+
+.decision-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.decision-option {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+}
+
+.decision-option:hover {
+    border-color: var(--color-primary);
+    background: rgba(161, 85, 185, 0.05);
+}
+
+.decision-option.accept.selected {
+    border-color: var(--color-success);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+}
+
+.decision-option.refuse.selected {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+}
+
+.decision-option input {
+    display: none;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .decision-options {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const decisionOptions = document.querySelectorAll('.decision-option');
+    const radioInputs = document.querySelectorAll('input[name="projet_validation[action]"]');
+    
+    decisionOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                decisionOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            }
+        });
+    });
+    
+    // Vérifier quelle option est sélectionnée au chargement
+    radioInputs.forEach(radio => {
+        if (radio.checked) {
+            radio.closest('.decision-option').classList.add('selected');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Ressource{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+{{ include('ressources/_form.html.twig', {
+    form_title: 'Ajouter une Ressource',
+    form_subtitle: 'Complétez le formulaire pour créer une nouvelle ressource',
+    submit_label: '✓ Ajouter la Ressource',
+    cancel_path: 'app_fournisseur_ressources'
+}) }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        const initRessourceCreateForm = () => {
+            document.querySelectorAll('.qty-up').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const input = document.getElementById(button.dataset.target);
+                    if (input) input.stepUp();
+                });
+            });
+
+            document.querySelectorAll('.qty-down').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const input = document.getElementById(button.dataset.target);
+                    if (input) input.stepDown();
+                });
+            });
+
+            // ── Image upload ──────────────────────────────────────────────
+            // The real file picker copies the chosen filename into the
+            // Symfony text field (imageR). Only the filename string is stored.
+            window.syncImageFilename = function(filePicker) {
+                const textField = document.getElementById('{{ form.image_r.vars.id }}');
+                const label     = document.getElementById('img-filename');
+                if (filePicker.files && filePicker.files[0]) {
+                    const name = filePicker.files[0].name;
+                    if (textField) textField.value = name;
+                    if (label)     label.textContent = name;
+                } else {
+                    if (textField) textField.value = '';
+                    if (label)     label.textContent = 'Aucune image sélectionnée';
+                }
+            }
+
+            // ── Offre field sync ──────────────────────────────────────────
+            // When "achat" is selected  → disable louer price + unit fields
+            // When "louer" is selected  → disable achat price field
+            // Otherwise                 → all enabled
+            const offreField      = document.getElementById('{{ form.offre.vars.id }}');
+            const prixAchatField  = document.getElementById('{{ form.prix_achat.vars.id }}');
+            const prixLouerField  = document.getElementById('{{ form.prix_louer.vars.id }}');
+            const uniteLouerField = document.getElementById('{{ form.unite_louer.vars.id }}');
+
+        /**
+         * Toggle disabled state on a field AND its closest .field container
+         * (which may be inside a .field-row — walk up to find it).
+         */
+            const setDisabledState = (field, disabled) => {
+                if (!field) return;
+                field.disabled = disabled;
+                const container = field.closest('.field');
+                if (container) container.classList.toggle('is-disabled', disabled);
+                if (disabled) {
+                    if (field.tagName === 'SELECT') field.selectedIndex = 0;
+                    else field.value = '';
+                }
+            };
+
+            const syncOffreFields = () => {
+                const val = offreField ? offreField.value : '';
+                if (val === 'achat') {
+                    setDisabledState(prixAchatField,  false);
+                    setDisabledState(prixLouerField,  true);
+                    setDisabledState(uniteLouerField, true);
+                } else if (val === 'louer') {
+                    setDisabledState(prixAchatField,  true);
+                    setDisabledState(prixLouerField,  false);
+                    setDisabledState(uniteLouerField, false);
+                } else {
+                    setDisabledState(prixAchatField,  false);
+                    setDisabledState(prixLouerField,  false);
+                    setDisabledState(uniteLouerField, false);
+                }
+            };
+
+            if (offreField) {
+                offreField.addEventListener('change', syncOffreFields);
+                syncOffreFields(); // run once on page load to reflect any pre-selected value
+            }
+        };
+
+        // Support both classic page loads and Symfony Turbo visits.
+        document.addEventListener('DOMContentLoaded', initRessourceCreateForm);
+        document.addEventListener('turbo:load', initRessourceCreateForm);
+    </script>
+{% endblock %}

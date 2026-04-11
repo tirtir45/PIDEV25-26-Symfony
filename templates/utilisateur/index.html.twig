@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block body %}
+<div class="crud-container">
+    <div class="gestion-header">
+        <h1 class="gestion-title">Gestion des Utilisateurs</h1>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span class="gestion-count">{{ utilisateurs|length }} utilisateur{{ utilisateurs|length > 1 ? 's' : '' }}</span>
+            {% if app.session.get('user_role') == 'Administrateur' %}
+                <a href="{{ path('utilisateur_new') }}" class="btn-nouvelle">+ Ajouter un utilisateur</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="GET" action="{{ path('utilisateur_index') }}" class="gestion-filters">
+        <div class="filter-group">
+            <label class="filter-label">Rechercher</label>
+            <input type="text" name="search" class="filter-input"
+                   placeholder="Nom, email ou téléphone..." value="{{ search }}">
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Filtrer par rôle</label>
+            <select name="role_filter" class="filter-select">
+                <option value="">Tous les rôles</option>
+                <option value="Administrateur" {{ app.request.query.get('role_filter') == 'Administrateur' ? 'selected' : '' }}>Administrateur</option>
+                <option value="Candidat" {{ app.request.query.get('role_filter') == 'Candidat' ? 'selected' : '' }}>Candidat</option>
+                <option value="Entrepreneur" {{ app.request.query.get('role_filter') == 'Entrepreneur' ? 'selected' : '' }}>Entrepreneur</option>
+                <option value="Fournisseur" {{ app.request.query.get('role_filter') == 'Fournisseur' ? 'selected' : '' }}>Fournisseur</option>
+                <option value="Membre equipe" {{ app.request.query.get('role_filter') == 'Membre equipe' ? 'selected' : '' }}>Membre equipe</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Trier par</label>
+            <select name="sort_combined" class="filter-select">
+                <option value="nom_ASC"  {{ sortBy == 'nom' and order == 'ASC'  ? 'selected' : '' }}>Nom (A-Z)</option>
+                <option value="nom_DESC" {{ sortBy == 'nom' and order == 'DESC' ? 'selected' : '' }}>Nom (Z-A)</option>
+                <option value="email_ASC" {{ sortBy == 'email' and order == 'ASC' ? 'selected' : '' }}>Email (A-Z)</option>
+                <option value="dateInscription_DESC" {{ sortBy == 'dateInscription' and order == 'DESC' ? 'selected' : '' }}>Date d'inscription (Récent)</option>
+                <option value="dateInscription_ASC"  {{ sortBy == 'dateInscription' and order == 'ASC'  ? 'selected' : '' }}>Date d'inscription (Ancien)</option>
+            </select>
+        </div>
+        <input type="hidden" name="order" value="{{ order }}">
+        <button type="submit" class="btn-actualiser">⟳ Actualiser</button>
+    </form>
+
+    {% if utilisateurs is empty %}
+        <div class="empty-state"><p>Aucun utilisateur trouvé</p></div>
+    {% else %}
+    <div class="table-wrapper">
+        <table class="crud-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                    <th>Inscription</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in utilisateurs %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td class="user-name-cell">
+                        <div class="user-avatar">{{ u.nom|slice(0,1)|upper }}</div>
+                        <div class="user-name">{{ u.nom }}</div>
+                    </td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.telephone ?? '—' }}</td>
+                    <td>
+                        {% if u.role %}
+                            <span class="badge badge-role">{{ u.role.nomRole }}</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.actif %}
+                            <span class="badge badge-active">Actif</span>
+                        {% else %}
+                            <span class="badge badge-inactive">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.dateInscription ? u.dateInscription|date('d/m/Y') : '—' }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ path('utilisateur_show', {id: u.id}) }}" class="action-btn action-view" title="Voir">👁</a>
+                        {% set isAdminAccount = u.role and u.role.nomRole in ['Administrateur', 'Admin', 'Moderateur'] %}
+                        {% if not isAdminAccount %}
+                            <a href="{{ path('utilisateur_edit', {id: u.id}) }}" class="action-btn action-edit" title="Modifier">✏</a>
+                            <form method="POST" action="{{ path('utilisateur_delete', {id: u.id}) }}" class="action-form"
+                                  onsubmit="return confirm('Confirmer la suppression ?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ u.id) }}">
+                                <button type="submit" class="action-btn action-delete" title="Supprimer">🗑</button>
+                            </form>
+                        {% else %}
+                            <span class="action-btn action-locked" title="Compte protégé">🔒</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

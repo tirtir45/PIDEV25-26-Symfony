@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}S'inscrire - StartHub{% endblock %}
+
+{% block layout %}
+    <div class="auth-layout">
+        <div class="auth-container">
+            <!-- Left Pane -->
+            <div class="auth-left">
+                <h1 class="auth-brand">StartHub</h1>
+                <p class="auth-tagline">Rejoignez notre communauté</p>
+                <ul class="auth-features">
+                    <li><i class="bi bi-star-fill"></i> Opportunités sans limites</li>
+                    <li><i class="bi bi-person-check-fill"></i> Réseau professionnel puissant</li>
+                    <li><i class="bi bi-lightning-fill"></i> Support et mentorship</li>
+                </ul>
+            </div>
+
+            <!-- Right Pane -->
+            <div class="auth-right">
+                <h2 class="auth-title">Créer un compte</h2>
+                <p class="auth-subtitle">Remplissez les informations ci-dessous</p>
+
+                {% if error %}
+                    <div class="alert alert-danger rounded-4 mb-4 border-0 shadow-sm" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{{ path('app_register') }}" class="auth-form" id="registerForm" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="auth-field">
+                                <label class="auth-label">Nom complet <span class="text-danger">*</span></label>
+                                <input type="text" name="nom" id="nom" class="auth-input" placeholder="Entrez votre nom">
+                                <span class="small text-danger" id="nom-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" id="email" class="auth-input" placeholder="mail@example.com">
+                                <span class="small text-danger" id="email-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-label">Téléphone</label>
+                                <input type="tel" name="telephone" id="telephone" class="auth-input" placeholder="+216 ...">
+                                <span class="small text-danger" id="telephone-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="auth-field">
+                                <label class="auth-label">Rôle <span class="text-danger">*</span></label>
+                                <select name="role_id" id="role" class="auth-input">
+                                    <option value="">-- Choisir un rôle --</option>
+                                    {% for role in roles %}
+                                        {% if role.nomRole in ['Administrateur', 'Candidat', 'Entrepreneur', 'Fournisseur', 'Membre equipe'] %}
+                                            <option value="{{ role.id }}">{{ role.nomRole }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <span class="small text-danger" id="role-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-label">Mot de passe <span class="text-danger">*</span></label>
+                                <input type="password" name="password" id="password" class="auth-input" placeholder="••••••••">
+                                <span class="small text-danger" id="password-error"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-label">Confirmer <span class="text-danger">*</span></label>
+                                <input type="password" name="confirm" id="confirm" class="auth-input" placeholder="••••••••">
+                                <span class="small text-danger" id="confirm-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-auth w-100">S'inscrire</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Vous avez déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const form = document.getElementById('registerForm');
+
+    function showError(fieldId, errorId, message) {
+        const field = document.getElementById(fieldId);
+        const error = document.getElementById(errorId);
+        field.style.borderColor = '#ef4444';
+        error.textContent = message;
+    }
+
+    function clearError(fieldId, errorId) {
+        const field = document.getElementById(fieldId);
+        const error = document.getElementById(errorId);
+        field.style.borderColor = '#10b981';
+        error.textContent = '';
+    }
+
+    // Basic Validation logic
+    // ... (Keep the user's validation logic but update selectors if needed)
+    form.addEventListener('submit', function(e) {
+        let valid = true;
+        const nom = document.getElementById('nom').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const role = document.getElementById('role').value;
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirm').value;
+
+        if (nom.length < 2) { showError('nom', 'nom-error', 'Le nom est obligatoire'); valid = false; }
+        else clearError('nom', 'nom-error');
+
+        if (!email.includes('@')) { showError('email', 'email-error', 'Email invalide'); valid = false; }
+        else clearError('email', 'email-error');
+
+        if (!role) { showError('role', 'role-error', 'Veuillez choisir un rôle'); valid = false; }
+        else clearError('role', 'role-error');
+
+        if (password.length < 6) { showError('password', 'password-error', 'Min. 6 caractères'); valid = false; }
+        else clearError('password', 'password-error');
+
+        if (password !== confirm) { showError('confirm', 'confirm-error', 'Les mots de passe ne correspondent pas'); valid = false; }
+        else clearError('confirm', 'confirm-error');
+
+        if (!valid) e.preventDefault();
+    });
+    </script>
+{% endblock %}

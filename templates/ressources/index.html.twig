@@ -1,0 +1,149 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catalogue de Ressources{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="ressource-catalog-page">
+    <section class="catalog-hero">
+        <div>
+            <h1>Catalogue de Ressources</h1>
+            <p>Decouvrez et reservez des ressources pour vos projets</p>
+        </div>
+    </section>
+
+    <section class="stats-grid">
+        <article class="stat-card">
+            <h3>Ressources Disponibles</h3>
+            <div class="stat-value">{{ stats.disponibles }}</div>
+        </article>
+        <article class="stat-card">
+            <h3>A Acheter</h3>
+            <div class="stat-value">{{ stats.achat }}</div>
+        </article>
+        <article class="stat-card">
+            <h3>A Louer</h3>
+            <div class="stat-value">{{ stats.louer }}</div>
+        </article>
+        <article class="stat-card accent">
+            <h3>Categories</h3>
+            <div class="stat-value">{{ stats.categories }}</div>
+        </article>
+    </section>
+
+    <form method="get" action="{{ path('app_ressources_index') }}" class="catalog-toolbar catalog-toolbar-clean">
+        <input type="text" name="q" value="{{ filters.q|default('') }}" class="catalog-search-input" placeholder="Rechercher">
+
+        <select name="offer" class="catalog-select">
+            <option value="all" {% if (filters.offer|default('all')) == 'all' %}selected{% endif %}>Offre</option>
+            <option value="achat" {% if (filters.offer|default('all')) == 'achat' %}selected{% endif %}>Achat</option>
+            <option value="louer" {% if (filters.offer|default('all')) == 'louer' %}selected{% endif %}>Location</option>
+        </select>
+
+        <select name="availability" class="catalog-select">
+            <option value="all" {% if (filters.availability|default('all')) == 'all' %}selected{% endif %}>Statut</option>
+            <option value="disponible" {% if (filters.availability|default('all')) == 'disponible' %}selected{% endif %}>Disponible</option>
+            <option value="rupture" {% if (filters.availability|default('all')) == 'rupture' %}selected{% endif %}>Rupture</option>
+            <option value="indisponible" {% if (filters.availability|default('all')) == 'indisponible' %}selected{% endif %}>Indisponible</option>
+        </select>
+
+        <select name="category" class="catalog-select">
+            <option value="all">Categorie</option>
+            {% for categoryValue, categoryLabel in filter_categories|default({}) %}
+                <option value="{{ categoryValue }}" {% if (filters.category|default('all')) == categoryValue %}selected{% endif %}>{{ categoryLabel }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="sort" class="catalog-select">
+            <option value="name_asc" {% if (filters.sort|default('name_asc')) == 'name_asc' %}selected{% endif %}>Nom A-Z</option>
+            <option value="name_desc" {% if (filters.sort|default('name_asc')) == 'name_desc' %}selected{% endif %}>Nom Z-A</option>
+            <option value="price_asc" {% if (filters.sort|default('name_asc')) == 'price_asc' %}selected{% endif %}>Prix +</option>
+            <option value="price_desc" {% if (filters.sort|default('name_asc')) == 'price_desc' %}selected{% endif %}>Prix -</option>
+            <option value="quantity_asc" {% if (filters.sort|default('name_asc')) == 'quantity_asc' %}selected{% endif %}>Quantite +</option>
+            <option value="quantity_desc" {% if (filters.sort|default('name_asc')) == 'quantity_desc' %}selected{% endif %}>Quantite -</option>
+        </select>
+
+        <button type="submit" class="btn btn-secondary btn-compact">Appliquer</button>
+        <a href="{{ path('app_ressources_index') }}" class="btn btn-ghost btn-compact">Annuler</a>
+    </form>
+
+    <section class="catalog-panel">
+        <h2>Recommandations basees sur votre projet</h2>
+        <div class="catalog-cards">
+            {% for ressource in ressources %}
+                {% set imageSrc = ressource.image_r and (ressource.image_r starts with 'http://' or ressource.image_r starts with 'https://')
+                    ? ressource.image_r
+                    : (ressource.image_r ? asset('uploads/ressources/' ~ ressource.image_r) : '') %}
+                {% set offreNormalized = ressource.offre ? ressource.offre|lower : '' %}
+                {% set qty = ressource.quantite|default(0) %}
+                {% set canAdd = (ressource.disponibilite and qty > 0) %}
+                {% set displayUnit = (offreNormalized == 'louer' and ressource.unite_louer) ? ressource.unite_louer : '-' %}
+
+                <article class="resource-card">
+                    <div class="resource-badge">
+                        Recommande — {{ ressource.type_r ?: 'Ressource' }}
+                    </div>
+
+                    <div class="resource-image-wrap">
+                        {% if imageSrc %}
+                            <img src="{{ imageSrc }}" alt="{{ ressource.nom ?: 'Ressource' }}"
+                                 onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+                            <div class="image-fallback" hidden>Image indisponible</div>
+                        {% else %}
+                            <div class="image-fallback">Aucune image</div>
+                        {% endif %}
+                    </div>
+
+                    <h3>{{ ressource.nom ?: 'Sans nom' }}</h3>
+                    <p>{{ ressource.description ? ressource.description|slice(0, 75) ~ (ressource.description|length > 75 ? '...' : '') : 'Aucune description' }}</p>
+
+                    <div class="resource-meta">
+                        <span>Quantite: {{ ressource.quantite ?? '-' }}</span>
+                        <span>Unite: {{ displayUnit }}</span>
+                    </div>
+
+                    <div class="resource-footer">
+                        <div class="price">
+                            {% if offreNormalized == 'achat' and ressource.prix_achat is not null %}
+                                {{ ressource.prix_achat }} DT
+                            {% elseif offreNormalized == 'louer' and ressource.prix_louer is not null %}
+                                {{ ressource.prix_louer }} DT{{ displayUnit != '-' ? ' / ' ~ displayUnit : '' }}
+                            {% elseif ressource.prix_achat is not null %}
+                                {{ ressource.prix_achat }} DT
+                            {% elseif ressource.prix_louer is not null %}
+                                {{ ressource.prix_louer }} DT{{ ressource.unite_louer ? ' / ' ~ ressource.unite_louer : '' }}
+                            {% else %}
+                                Prix indisponible
+                            {% endif %}
+                        </div>
+                        {% set isAvailable = (ressource.disponibilite and qty > 0) %}
+                        <span class="status {{ isAvailable ? 'ok' : 'ko' }}">
+                            {% if qty <= 0 %}
+                                Rupture de stock
+                            {% elseif ressource.disponibilite %}
+                                Disponible
+                            {% else %}
+                                Indisponible
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <form class="card-links card-links-form" method="post" action="{{ path('app_panier_add', {'idRessource': ressource.id_ressource}) }}">
+                        <input type="hidden" name="quantite" value="1">
+                        <button type="submit" {% if not canAdd %}disabled{% endif %}>Ajouter au panier</button>
+                    </form>
+                </article>
+            {% else %}
+                <div class="empty-state">
+                    Aucune ressource disponible pour le moment.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}

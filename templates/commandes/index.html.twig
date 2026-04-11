@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Commandes{% endblock %}
+
+{% block body %}
+<div class="orders-page">
+    <section class="orders-hero">
+        <div>
+            <h1>Mes Commandes</h1>
+            <p>Suivez l’état de vos commandes</p>
+        </div>
+        <div class="orders-hero-icon">🧾</div>
+    </section>
+
+    {% if orders is not empty %}
+        <div class="orders-list">
+            {% for order in orders %}
+                {% set commande = order.commande %}
+                <article class="order-card">
+                    <header class="order-card-header">
+                        <div>
+                            <h2>Commande #{{ order.order_number ?? commande.id_commande }}</h2>
+                            {% set status = commande.statut|upper %}
+                            {% set badge_class = '' %}
+                            {% if status == 'SUBMITTED' %}
+                                {% set badge_class = 'order-badge-blue' %}
+                            {% elseif status == 'CANCELLED' %}
+                                {% set badge_class = 'order-badge-red' %}
+                            {% elseif status == 'PANIER' %}
+                                {% set badge_class = 'order-badge-gray' %}
+                            {% endif %}
+                            
+                            <span class="order-badge {{ badge_class }}">{{ status }}</span>
+                            
+                            {% if status == 'SUBMITTED' %}
+                                <form method="post" action="{{ path('app_commandes_cancel', {'idCommande': commande.id_commande}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette commande ?');" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ commande.id_commande) }}">
+                                    <button type="submit" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; margin-left: 10px;">Annuler</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="order-total">Total TTC: {{ commande.total_global }} DT</div>
+                    </header>
+                    <div class="order-lines">
+                        {% for line in order.lines %}
+                            {% set dateDeb = line.date_deb %}
+                            {% set dateFin = line.date_fin %}
+                            <div class="order-line">
+                                <div class="order-line-name">{{ order.resource_names[line.id_ressource.id_ressource]|default('Ressource #' ~ line.id_ressource.id_ressource) }}</div>
+                                <div class="order-line-meta">Qty: {{ line.quantite }} | {{ dateDeb ? dateDeb|date('d/m/Y') : 'N/A' }} → {{ dateFin ? dateFin|date('d/m/Y') : 'N/A' }}</div>
+                                <div class="order-line-price">{{ line.prix_ligne }} DT</div>
+                            </div>
+                        {% else %}
+                            <div class="order-empty-lines">Aucune ligne enregistrée.</div>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="orders-empty-panel">
+            <div class="orders-empty-icon">🧾</div>
+            <h2>Aucune commande pour le moment</h2>
+            <p>Vos commandes confirmées apparaîtront ici.</p>
+            <a href="{{ path('app_ressources_index') }}" class="btn btn-save">Aller au catalogue</a>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

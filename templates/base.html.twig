@@ -1,0 +1,161 @@
+{# templates/base.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StartHub{% endblock %}</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link href="{{ asset('styles/style.css') }}" rel="stylesheet">
+
+    {% block stylesheets %}{% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+
+    {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+    {% if frankenphpHotReload %}
+        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
+        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
+        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
+    {% endif %}
+</head>
+{% block layout %}
+    <div class="layout-container">
+        {% block sidebar %}
+            {% set userRole = app.session.get('user_role') %}
+            {% if userRole == 'Entrepreneur' %}
+                {% include '_sidebar_entrepreneur.html.twig' %}
+            {% elseif userRole == 'Fournisseur' %}
+                {% include '_sidebar_fournisseur.html.twig' %}
+            {% elseif userRole == 'Administrateur' %}
+                {% include '_sidebar_admin.html.twig' %}
+            {% elseif userRole == 'Membre' %}
+                {% include '_sidebar_membre.html.twig' %}
+            {% elseif app.session.get('user_id') %}
+                {% include '_sidebar.html.twig' %}
+            {% endif %}
+        {% endblock %}
+
+        <div class="main-content">
+            {% block top_nav %}
+                {% if app.session.get('user_id') %}
+                    <nav class="top-nav">
+                        <button class="nav-icon-btn d-lg-none" id="toggleSidebar" type="button" aria-label="Toggle Navigation">
+                            <i class="bi bi-list fs-3"></i>
+                        </button>
+                        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <div class="nav-icons">
+                            <button class="nav-icon-btn" type="button" aria-label="Notifications">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                            </button>
+                            <a href="{{ path('app_profile') }}" class="nav-icon-btn" aria-label="Profile">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </nav>
+                {% endif %}
+            {% endblock %}
+
+            <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+            <main class="main-area">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="flash-message flash-{{ label }}">{{ message }}</div>
+                    {% endfor %}
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+    </div>
+{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('toggleSidebar')?.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            if (window.innerWidth <= 992 &&
+                sidebar && !sidebar.contains(event.target) &&
+                toggleBtn && !toggleBtn.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+
+            const bgColor = type === 'success'
+                ? 'linear-gradient(135deg, #10b981, #34d399)'
+                : type === 'warning'
+                ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
+                : 'linear-gradient(135deg, #ef4444, #f87171)';
+
+            const icon = type === 'success'
+                ? 'bi-check-circle-fill'
+                : type === 'warning'
+                ? 'bi-exclamation-triangle-fill'
+                : 'bi-x-circle-fill';
+
+            toast.innerHTML = `
+                <div style="background: ${bgColor}; color: white; padding: 1rem 1.5rem;
+                            border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                            display: flex; align-items: center; gap: 0.75rem; min-width: 300px;">
+                    <i class="bi ${icon}"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()"
+                            style="background: none; border: none; color: white;
+                                   margin-left: auto; cursor: pointer; font-size: 1.2rem;">
+                        &times;
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        {% for message in app.flashes('success') %}
+            showToast('{{ message|escape('js') }}', 'success');
+        {% endfor %}
+
+        {% for message in app.flashes('warning') %}
+            showToast('{{ message|escape('js') }}', 'warning');
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            showToast('{{ message|escape('js') }}', 'error');
+        {% endfor %}
+    </script>
+</body>
+</html>
