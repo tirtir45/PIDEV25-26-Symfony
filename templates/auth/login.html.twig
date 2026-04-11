@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - StartHub{% endblock %}
+
+{% block layout %}
+    <div class="auth-layout">
+        <div class="auth-container">
+            <!-- Left Pane -->
+            <div class="auth-left">
+                <h1 class="auth-brand">StartHub</h1>
+                <p class="auth-tagline">Bienvenue de retour</p>
+                <ul class="auth-features">
+                    <li><i class="bi bi-check-circle"></i> Accédez à votre espace</li>
+                    <li><i class="bi bi-check-circle"></i> Gérez vos projets</li>
+                    <li><i class="bi bi-check-circle"></i> Restez connecté</li>
+                </ul>
+            </div>
+
+            <!-- Right Pane -->
+            <div class="auth-right">
+                <h2 class="auth-title">Connexion</h2>
+                <p class="auth-subtitle">Content de vous revoir !</p>
+
+                {% if error %}
+                    <div class="alert alert-danger rounded-4 mb-4 border-0 shadow-sm" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{{ path('app_login') }}" class="auth-form" novalidate>
+                    <div class="auth-field">
+                        <label class="auth-label">Email</label>
+                        <input type="email" name="email" class="auth-input" placeholder="mail@example.com" required>
+                    </div>
+
+                    <div class="auth-field">
+                        <label class="auth-label">Mot de passe</label>
+                        <input type="password" name="password" class="auth-input" placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit" class="btn-auth">Se connecter</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Vous n'avez pas de compte ? <a href="{{ path('app_register') }}">S'inscrire</a></p>
+                    <div class="mt-3">
+                        <a href="{{ path('app_home') }}" class="text-muted text-decoration-none small">
+                            <i class="bi bi-arrow-left"></i> Retour à l'accueil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

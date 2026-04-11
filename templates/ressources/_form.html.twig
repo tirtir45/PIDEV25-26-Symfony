@@ -1,0 +1,386 @@
+{% set form_title = form_title|default('Ajouter une Ressource') %}
+{% set form_subtitle = form_subtitle|default('Complétez le formulaire pour créer une nouvelle ressource') %}
+{% set submit_label = submit_label|default('✓ Ajouter la Ressource') %}
+{% set cancel_path = cancel_path|default('app_fournisseur_ressources') %}
+
+<style>
+/* ── Validation summary ── */
+.validation-summary {
+    background: #fef2f2;
+    border: 1.5px solid #fca5a5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+}
+.validation-summary-title {
+    font-weight: 700;
+    color: #dc2626;
+    margin-bottom: 8px;
+    font-size: 0.97rem;
+}
+.validation-summary ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.validation-summary li {
+    color: #b91c1c;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
+
+/* ── Field error state ── */
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+    border-color: #ef4444 !important;
+    background: #fff5f5 !important;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.13) !important;
+}
+.field.has-error label {
+    color: #dc2626 !important;
+}
+.field-error-msg {
+    color: #dc2626;
+    font-size: 0.82rem;
+    margin-top: 4px;
+    display: none;
+}
+.field.has-error .field-error-msg {
+    display: block;
+}
+
+/* ── Hidden offre sections ── */
+.offre-section {
+    display: contents; /* keeps grid layout intact */
+}
+.offre-section.hidden {
+    display: none;
+}
+</style>
+
+<div class="ressource-create-page">
+<div class="card">
+
+    <div class="card-header">
+        <h1>{{ form_title }}</h1>
+        <p>{{ form_subtitle }}</p>
+    </div>
+
+    <div class="card-body">
+        <div class="section-title">Informations de la ressource</div>
+        <hr class="divider">
+
+        {{ form_start(form, {'attr': {'novalidate': true, 'id': 'ressource-form'}}) }}
+        {{ form_errors(form) }}
+
+        <!-- Validation Summary -->
+        <div id="validation-summary" class="validation-summary" style="display:none;">
+            <div class="validation-summary-title">⚠ Veuillez corriger les erreurs suivantes :</div>
+            <ul id="validation-errors-list"></ul>
+        </div>
+
+        <div class="grid-2">
+
+            {# ── Always-visible fields ── #}
+            <div class="field-row">
+                <div class="field" id="field-nom">
+                    {{ form_label(form.nom, 'Nom de ressource') }}
+                    {{ form_widget(form.nom, {'attr': {'placeholder': 'Ex: Perceuse sans fil', 'autocomplete': 'off', 'data-label': 'Nom de ressource', 'data-required': 'true', 'data-minlength': '3'}}) }}
+                    <span class="field-error-msg" id="err-nom"></span>
+                    {{ form_errors(form.nom) }}
+                </div>
+                <div class="field" id="field-quantite">
+                    {{ form_label(form.quantite, 'Quantité') }}
+                    <div class="qty-wrapper">
+                        {{ form_widget(form.quantite, {'attr': {'min': 0, 'step': 1, 'class': 'qty-input', 'data-label': 'Quantité', 'data-required': 'true'}}) }}
+                        <div class="qty-controls">
+                            <button type="button" class="qty-btn qty-up" data-action="up">▲</button>
+                            <button type="button" class="qty-btn qty-down" data-action="down">▼</button>
+                        </div>
+                    </div>
+                    <span class="field-error-msg" id="err-quantite"></span>
+                    {{ form_errors(form.quantite) }}
+                </div>
+            </div>
+
+            <div class="field" id="field-description">
+                {{ form_label(form.description, 'Description') }}
+                {{ form_widget(form.description, {'attr': {'placeholder': 'Décrivez votre ressource en détail...', 'data-label': 'Description', 'data-required': 'true', 'data-minlength': '10'}}) }}
+                <span class="field-error-msg" id="err-description"></span>
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="field-row">
+                <div class="field" id="field-offre">
+                    {{ form_label(form.offre, "Type d'offre") }}
+                    {{ form_widget(form.offre, {'attr': {'data-label': "Type d'offre", 'data-required': 'true'}}) }}
+                    <span class="field-error-msg" id="err-offre"></span>
+                    {{ form_errors(form.offre) }}
+                </div>
+                <div class="field" id="field-type-r">
+                    {{ form_label(form.type_r, 'Type de ressource') }}
+                    {{ form_widget(form.type_r, {'attr': {'data-label': 'Type de ressource', 'data-required': 'true'}}) }}
+                    <span class="field-error-msg" id="err-type-r"></span>
+                    {{ form_errors(form.type_r) }}
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field" id="field-etat">
+                    {{ form_label(form.etat, 'État') }}
+                    {{ form_widget(form.etat, {'attr': {'data-label': 'État', 'data-required': 'true'}}) }}
+                    <span class="field-error-msg" id="err-etat"></span>
+                    {{ form_errors(form.etat) }}
+                </div>
+                <div class="field availability-field">
+                    {{ form_widget(form.disponibilite, {'attr': {'class': 'availability-checkbox'}}) }}
+                    <div class="availability-copy">
+                        <span class="availability-title">Disponibilité</span>
+                        <span class="availability-text">Rendre cette ressource visible comme disponible</span>
+                    </div>
+                    {{ form_errors(form.disponibilite) }}
+                </div>
+            </div>
+
+            {# ── Achat-only section ── #}
+            <div class="offre-section hidden" id="section-achat">
+                <div class="field-row">
+                    <div class="field" id="field-prix-achat">
+                        {{ form_label(form.prix_achat, "Prix d'achat (TND)") }}
+                        {{ form_widget(form.prix_achat, {'attr': {'placeholder': 'Ex: 150.00', 'min': 0, 'step': '0.01', 'data-label': "Prix d'achat", 'data-offre': 'achat'}}) }}
+                        <span class="field-error-msg" id="err-prix-achat"></span>
+                        {{ form_errors(form.prix_achat) }}
+                    </div>
+                </div>
+            </div>
+
+            {# ── Louer-only section ── #}
+            <div class="offre-section hidden" id="section-louer">
+                <div class="field-row">
+                    <div class="field" id="field-prix-louer">
+                        {{ form_label(form.prix_louer, 'Prix de location (TND)') }}
+                        {{ form_widget(form.prix_louer, {'attr': {'placeholder': 'Ex: 50.00', 'min': 0, 'step': '0.01', 'data-label': 'Prix de location', 'data-offre': 'louer'}}) }}
+                        <span class="field-error-msg" id="err-prix-louer"></span>
+                        {{ form_errors(form.prix_louer) }}
+                    </div>
+                    <div class="field" id="field-unite-louer">
+                        {{ form_label(form.unite_louer, 'Unité de location') }}
+                        {{ form_widget(form.unite_louer, {'attr': {'data-label': 'Unité de location', 'data-offre': 'louer'}}) }}
+                        <span class="field-error-msg" id="err-unite-louer"></span>
+                        {{ form_errors(form.unite_louer) }}
+                    </div>
+                </div>
+            </div>
+
+            {# ── Image (always visible, optional) ── #}
+            <div class="field-row">
+                <div class="field">
+                    {{ form_label(form.image_r, 'Photo de ressource') }}
+                    <div class="upload-row">
+                        <label class="btn-upload" for="image_r_picker">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Choisir une image
+                        </label>
+                        <input type="file"
+                               id="image_r_picker"
+                               accept="image/*"
+                               class="resource-file-input"
+                               onchange="syncImageFilename(this)">
+                        {{ form_widget(form.image_r, {'attr': {
+                            'class': 'resource-image-field',
+                            'id': form.image_r.vars.id
+                        }}) }}
+                        <span class="upload-label" id="img-filename">Aucune image sélectionnée</span>
+                    </div>
+                    {{ form_errors(form.image_r) }}
+                </div>
+            </div>
+
+        </div>{# /grid-2 #}
+
+        <div class="actions">
+            <a class="btn btn-cancel" href="{{ path(cancel_path) }}">Annuler</a>
+            <button class="btn btn-save" type="submit">{{ submit_label }}</button>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+    // ── IDs injected by Twig ──────────────────────────────────────────────
+    const ID = {
+        offre:      '{{ form.offre.vars.id }}',
+        nom:        '{{ form.nom.vars.id }}',
+        quantite:   '{{ form.quantite.vars.id }}',
+        description:'{{ form.description.vars.id }}',
+        typeR:      '{{ form.type_r.vars.id }}',
+        etat:       '{{ form.etat.vars.id }}',
+        prixAchat:  '{{ form.prix_achat.vars.id }}',
+        prixLouer:  '{{ form.prix_louer.vars.id }}',
+        uniteLouer: '{{ form.unite_louer.vars.id }}',
+        image:      '{{ form.image_r.vars.id }}',
+    };
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    window.syncImageFilename = function (filePicker) {
+        const tf = document.getElementById(ID.image);
+        const lb = document.getElementById('img-filename');
+        if (filePicker.files && filePicker.files[0]) {
+            const n = filePicker.files[0].name;
+            if (tf) tf.value = n;
+            if (lb) lb.textContent = n;
+        } else {
+            if (tf) tf.value = '';
+            if (lb) lb.textContent = 'Aucune image sélectionnée';
+        }
+    };
+
+    // ── Offre show/hide ───────────────────────────────────────────────────
+    // KEY FIX: we NEVER use field.disabled — that strips the value from the
+    // POST and causes the "Expected string, null given" 500 error.
+    // Instead we simply show/hide the wrapper div. The hidden fields still
+    // submit their (empty/default) values, which Symfony can handle via
+    // empty_data on the form type.
+    function syncOffre() {
+        const val = document.getElementById(ID.offre)?.value ?? '';
+        const sAchat  = document.getElementById('section-achat');
+        const sLouer  = document.getElementById('section-louer');
+
+        if (sAchat) sAchat.classList.toggle('hidden', val !== 'achat');
+        if (sLouer) sLouer.classList.toggle('hidden', val !== 'louer');
+    }
+
+    // ── Quantity +/- buttons ──────────────────────────────────────────────
+    function initQty() {
+        const qtyInput = document.querySelector('.qty-input');
+        document.querySelectorAll('.qty-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const cur = parseInt(qtyInput.value, 10) || 0;
+                qtyInput.value = Math.max(0, cur + (btn.dataset.action === 'up' ? 1 : -1));
+                qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+            };
+        });
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────
+    // Returns true = valid, false = invalid; also sets .has-error and msg.
+    function validateOne(el) {
+        const field = el.closest('.field');
+        if (!field) return true;
+
+        // If the parent offre-section is hidden, skip validation entirely
+        const section = el.closest('.offre-section');
+        if (section && section.classList.contains('hidden')) {
+            field.classList.remove('has-error');
+            return true;
+        }
+
+        const label    = el.dataset.label || el.name || 'Ce champ';
+        const required = el.dataset.required === 'true';
+        const minLen   = parseInt(el.dataset.minlength || '0', 10);
+        const value    = el.value.trim();
+
+        let msg = '';
+
+        if (required && value === '') {
+            msg = `${label} est obligatoire.`;
+        } else if (minLen && value.length < minLen) {
+            msg = `${label} doit contenir au moins ${minLen} caractères.`;
+        }
+
+        // Find the inline error span (id = "err-FIELDNAME")
+        const errSpan = field.querySelector('.field-error-msg');
+        if (errSpan) errSpan.textContent = msg;
+        field.classList.toggle('has-error', !!msg);
+
+        return !msg;
+    }
+
+    function validateAll() {
+        const form   = document.getElementById('ressource-form');
+        if (!form) return true;
+
+        let allOk    = true;
+        let first    = null;
+        const errors = [];
+
+        // All inputs / selects / textareas that have data-label (= our managed fields)
+        form.querySelectorAll('[data-label]').forEach(el => {
+            // Skip image field
+            if (el.id === ID.image) return;
+
+            const ok = validateOne(el);
+            if (!ok) {
+                allOk = false;
+                const lbl = el.dataset.label || el.name;
+                errors.push(lbl + (el.dataset.required === 'true' ? ' est obligatoire.' : ' est invalide.'));
+                if (!first) first = el;
+            }
+        });
+
+        // Also check mandatory selects that have data-required but no data-minlength
+        return { allOk, errors, first };
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────
+    function init() {
+        const form       = document.getElementById('ressource-form');
+        const offreEl    = document.getElementById(ID.offre);
+        const summary    = document.getElementById('validation-summary');
+        const errList    = document.getElementById('validation-errors-list');
+
+        if (!form) return;
+
+        // Offre toggle
+        if (offreEl) {
+            offreEl.addEventListener('change', syncOffre);
+            syncOffre();
+        }
+
+        // Qty buttons
+        initQty();
+
+        // Live validation on blur/change
+        form.querySelectorAll('[data-label]').forEach(el => {
+            el.addEventListener('blur',   () => validateOne(el));
+            el.addEventListener('change', () => validateOne(el));
+            el.addEventListener('input',  () => validateOne(el));
+        });
+
+        // Submit guard
+        form.addEventListener('submit', (e) => {
+            const { allOk, errors, first } = validateAll();
+
+            if (!allOk) {
+                e.preventDefault();
+
+                // Show summary
+                errList.innerHTML = '';
+                errors.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    errList.appendChild(li);
+                });
+                summary.style.display = 'block';
+                summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (first) setTimeout(() => first.focus(), 500);
+            } else {
+                summary.style.display = 'none';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('turbo:load', init);
+})();
+</script>

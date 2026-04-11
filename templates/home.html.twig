@@ -1,0 +1,102 @@
+{# templates/home.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="text-center text-white mb-5">
+        <div class="display-1 mb-3">
+            <i class="bi bi-rocket-takeoff"></i>
+        </div>
+        <h1 class="display-4 fw-bold mb-3">StartHub</h1>
+        <p class="lead">Plateforme de gestion de projets pour startups innovantes</p>
+        <p class="mb-4">Gérez vos projets, collaborez avec votre équipe et suivez votre progression en temps réel</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card-modern text-center h-100">
+                <div class="card-body-modern">
+                    <div class="display-1 mb-3" style="color: var(--color-primary);">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h3>Administrateur</h3>
+                    <p class="text-muted">Valider les projets, gérer les équipes et superviser les tâches</p>
+                    <a href="/admin-demo" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-speedometer2"></i> Dashboard Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-modern text-center h-100">
+                <div class="card-body-modern">
+                    <div class="display-1 mb-3" style="color: var(--color-secondary);">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+                    <h3>Entrepreneur</h3>
+                    <p class="text-muted">Soumettre des projets et suivre leur progression</p>
+                    <a href="/entrepreneur-demo" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-folder2"></i> Dashboard Entrepreneur
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-modern text-center h-100">
+                <div class="card-body-modern">
+                    <div class="display-1 mb-3" style="color: var(--color-accent);">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h3>Membre d'équipe</h3>
+                    <p class="text-muted">Consulter et mettre à jour vos tâches assignées</p>
+                    <a href="/member-demo" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-check2-square"></i> Dashboard Membre
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5 g-4">
+        <div class="col-md-4">
+            <div class="text-center text-white">
+                <i class="bi bi-check-circle fs-1 mb-3"></i>
+                <h5>Validation des projets</h5>
+                <p class="small">Soumettez votre projet et recevez une réponse rapide de notre équipe</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center text-white">
+                <i class="bi bi-people fs-1 mb-3"></i>
+                <h5>Gestion d'équipe</h5>
+                <p class="small">Ajoutez des membres et assignez-leur des rôles spécifiques</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center text-white">
+                <i class="bi bi-graph-up fs-1 mb-3"></i>
+                <h5>Suivi de progression</h5>
+                <p class="small">Visualisez l'avancement de vos projets en temps réel</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center text-white mt-5 pt-3">
+        <small>Version démo - Gestion de projet uniquement</small>
+    </div>
+</div>
+
+<style>
+.card-modern {
+    background: white;
+    transition: var(--transition);
+}
+
+.card-modern:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+</style>
+{% endblock %}
