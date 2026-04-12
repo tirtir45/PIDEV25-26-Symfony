@@ -1,0 +1,74 @@
+{# templates/demande_emploi/edit.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Candidature{% endblock %}
+
+{% block body %}
+<div class="form-page-container">
+
+    <header class="form-header">
+        <div>
+            <h1>Modifier la Candidature</h1>
+            {# CORRECTION : Utilisation des propriétés snake_case #}
+            <p>Pour l'offre : {{ demande.publication_id.titre }}</p>
+        </div>
+        <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" class="btn-outline">
+            ← Retour à l'offre
+        </a>
+    </header>
+
+    <main class="form-card" style="max-width: 700px;">
+        {# CORRECTION : Logique de verrouillage basée sur statut_demande #}
+        {% set isLocked = demande.statut_demande != 'En attente' %}
+
+        {% if isLocked %}
+            <div class="lock-info-label">
+                🔒 Cette candidature n'est plus modifiable car son statut est « {{ demande.statut_demande }} ».
+            </div>
+        {% endif %}
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+        <div class="form-grid">
+            <label class="form-label">Candidat</label>
+            <div>
+                <input type="text" value="{{ demande.candidat_id.nom ?? 'N/A' }}" disabled class="form-control-disabled">
+            </div>
+
+            <label class="form-label">CV (nom du fichier PDF) *</label>
+            <div>
+                {{ form_widget(form.cv_url, {'attr': {'disabled': isLocked}}) }}
+                {{ form_errors(form.cv_url) }}
+                {% if demande.cv_url %}
+                    <div style="margin-top:6px; font-size:12px; color:#64748b;">Fichier actuel : {{ demande.cv_url }}</div>
+                {% endif %}
+            </div>
+
+            <label class="form-label">Lettre de motivation *</label>
+            <div>
+                {{ form_widget(form.lettre_motivation, {'attr': {'rows': 5, 'disabled': isLocked}}) }}
+                {{ form_errors(form.lettre_motivation) }}
+            </div>
+            
+            <label class="form-label">Statut *</label>
+            <div>
+                {# Si le statut est autre que 'En attente', le champ est désactivé (l'admin ne peut plus le changer) #}
+                {# Si vous voulez que l'admin puisse changer le statut, enlevez l'attribut 'disabled' ici #}
+                {{ form_widget(form.statut_demande, {'attr': {'disabled': isLocked }}) }}
+                {{ form_errors(form.statut_demande) }}
+            </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-actions">
+            <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" class="btn-cancel">Annuler</a>
+            <button type="submit" class="btn-submit" {{ isLocked ? 'disabled' : '' }}>
+                ✓ Enregistrer les modifications
+            </button>
+        </div>
+
+        {{ form_end(form) }}
+    </main>
+</div>
+{% endblock %}

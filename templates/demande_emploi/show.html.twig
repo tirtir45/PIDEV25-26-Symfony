@@ -1,0 +1,50 @@
+{% extends 'base_dashboard.html.twig' %}
+
+{% block title %}Demande_emploi{% endblock %}
+
+{% block body %}
+    <h1>Demande_emploi</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Demande_id</th>
+                <td>{{ demande_emploi.getDemande_id() }}</td>
+            </tr>
+            <tr>
+                <th>Publication</th>
+                <td>{{ demande_emploi.getPublication_id() ? demande_emploi.getPublication_id().getPublication_id() : '' }}</td>
+            </tr>
+            <tr>
+                <th>Candidat</th>
+                <td>{{ demande_emploi.getCandidat_id() ? demande_emploi.getCandidat_id().getId_utilisateur() : '' }}</td>
+            </tr>
+            <tr>
+                <th>Cv_url</th>
+                <td>{{ demande_emploi.getCv_url() }}</td>
+            </tr>
+            <tr>
+                <th>Lettre_motivation</th>
+                <td>{{ demande_emploi.getLettre_motivation() }}</td>
+            </tr>
+            <tr>
+                <th>Motivation_ciblee</th>
+                <td>{{ demande_emploi.getMotivation_ciblee() }}</td>
+            </tr>
+            <tr>
+                <th>Statut_demande</th>
+                <td>{{ demande_emploi.getStatut_demande() }}</td>
+            </tr>
+            <tr>
+                <th>Date_demande</th>
+                <td>{{ demande_emploi.getDate_demande() ? demande_emploi.getDate_demande()|date('Y-m-d') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_demande_emploi_index') }}">back to list</a>
+
+    <a href="{{ path('app_demande_emploi_edit', {'id': demande_emploi.getDemande_id()}) }}">edit</a>
+
+    {{ include('demande_emploi/_delete_form.html.twig') }}
+{% endblock %}

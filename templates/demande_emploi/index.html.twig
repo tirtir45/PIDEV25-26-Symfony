@@ -1,0 +1,138 @@
+{# templates/demande_emploi/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Candidatures{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Assurez-vous d'avoir un fichier CSS pour les styles, par exemple celui que je vous ai fourni précédemment #}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}"> 
+{% endblock %}
+
+{% block body %}
+<div class="page-container">
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="header-titles">
+            <h1>Gestion des Candidatures</h1>
+            <p>Consultez et gérez les candidatures reçues pour vos offres</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ path('app_publication_index') }}" class="btn-outline">
+                Retour aux offres
+            </a>
+            <a href="{{ path('app_demande_emploi_new') }}" class="btn-pink">
+                + Nouvelle candidature
+            </a>
+        </div>
+    </header>
+
+    <!-- STATS -->
+    <div class="stat-row" style="margin-bottom:20px;">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" style="color:#A155B9;">{{ demandes|length }}</div>
+            <div class="stat-label">Candidatures Totales</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            {# Calcul du nombre de candidatures en attente #}
+            {# CORRECTION ICI : demande.statut_demande #}
+            <div class="stat-value" style="color:#b45309;">
+                {{ demandes|filter(d => d.statut_demande == 'En attente')|length }}
+            </div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" style="color:#28a745;">
+                {{ demandes|filter(d => d.statut_demande == 'Acceptée')|length }}
+            </div>
+            <div class="stat-label">Acceptées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">❌</div>
+            <div class="stat-value" style="color:#dc2626;">
+                {{ demandes|filter(d => d.statut_demande == 'Refusée')|length }}
+            </div>
+            <div class="stat-label">Refusées</div>
+        </div>
+    </div>
+    
+    {% if demandes is empty %}
+        <div class="no-results" style="background:white; border-radius:16px; border:1px solid #ead5f0;">
+            <p>Aucune candidature trouvée.</p>
+             <a href="{{ path('app_demande_emploi_new') }}" class="btn-pink"
+               style="display:inline-block; margin-top:12px; text-decoration:none;">
+                ＋ Créer une candidature
+            </a>
+        </div>
+    {% else %}
+        <div class="table-card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Candidat</th>
+                        <th>Offre d'emploi</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for demande in demandes %}
+                    <tr>
+                        <td>
+                            {# CORRECTION ICI : demande.candidat_id #}
+                            {% if demande.candidat_id %}
+                                <div style="font-weight:600;">{{ demande.candidat_id.nom ?? 'N/A' }} {{ demande.candidat_id.prenom ?? '' }}</div>
+                                <div style="font-size:12px; color:#64748b;">{{ demande.candidat_id.email }}</div>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# CORRECTION ICI : demande.publication_id #}
+                            {% if demande.publication_id %}
+                                {# On utilise le getter publication_id pour avoir l'ID pour la route #}
+                                <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" style="color:#A155B9; font-weight:600; text-decoration:none;">
+                                    {{ demande.publication_id.titre }}
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# CORRECTION ICI : demande.date_demande #}
+                            {{ demande.date_demande|date('d/m/Y') }}
+                        </td>
+                        <td>
+                            {# CORRECTION ICI : demande.statut_demande #}
+                            <span class="badge badge-{{ demande.statut_demande|lower|replace({' ': '-'}) }}">
+                                {{ demande.statut_demande }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:8px;">
+                                {# CORRECTION ICI : demande.demande_id #}
+                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.demande_id}) }}" class="action-btn btn-edit" title="Modifier">
+                                    ✏️
+                                </a>
+                                <form method="post" action="{{ path('app_demande_emploi_delete', {'id': demande.demande_id}) }}"
+                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?')" style="margin:0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ demande.demande_id) }}">
+                                    <button type="submit" class="action-btn btn-delete" title="Supprimer">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

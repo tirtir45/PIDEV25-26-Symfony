@@ -1,0 +1,88 @@
+{# templates/demande_emploi/new.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Candidature{% endblock %}
+
+{% block body %}
+<div class="form-page-container">
+
+    <header class="form-header">
+        <div>
+            <h1>Ajouter une Candidature</h1>
+            <p>Ajouter manuellement une candidature pour une offre</p>
+        </div>
+        {# Redirige vers la liste des publications de l'admin #}
+        <a href="{{ path('app_admin_publication_index') }}" class="btn-outline">
+            ← Retour
+        </a>
+    </header>
+
+    <main class="form-card" style="max-width: 700px;">
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+        <div class="form-title">
+            <span class="form-title-icon">▎</span>
+            <span class="form-title-text">Nouvelle Candidature</span>
+        </div>
+        <div class="form-divider"></div>
+
+        {% if not form.vars.valid %}
+            <div class="form-error-summary">
+                Veuillez corriger les erreurs ci-dessous.
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+            {# CORRECTION : les noms de champs du formulaire sont en snake_case #}
+            <label class="form-label">Offre concernée *</label>
+            <div>
+                {{ form_widget(form.publication_id) }}
+                {{ form_errors(form.publication_id) }}
+            </div>
+
+            <label class="form-label">Candidat *</label>
+            <div>
+                {{ form_widget(form.candidat_id) }}
+                {{ form_errors(form.candidat_id) }}
+            </div>
+
+            <label class="form-label">CV (nom du fichier PDF) *</label>
+            <div>
+                {{ form_widget(form.cv_url) }}
+                {{ form_errors(form.cv_url) }}
+            </div>
+
+            <label class="form-label">Lettre de motivation *</label>
+            <div style="grid-column: span 1;">
+                {{ form_widget(form.lettre_motivation) }}
+                {{ form_errors(form.lettre_motivation) }}
+            </div>
+
+            <label class="form-label">Motivation ciblée</label>
+            <div style="grid-column: span 1;">
+                {{ form_widget(form.motivation_ciblee) }}
+                {{ form_errors(form.motivation_ciblee) }}
+            </div>
+
+            <label class="form-label">Statut *</label>
+            <div>
+                {{ form_widget(form.statut_demande) }}
+                {{ form_errors(form.statut_demande) }}
+            </div>
+
+            <label class="form-label">Date de candidature *</label>
+            <div>
+                {{ form_widget(form.date_demande) }}
+                {{ form_errors(form.date_demande) }}
+            </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-actions">
+            <a href="{{ path('app_admin_publication_index') }}" class="btn-cancel">Annuler</a>
+            <button type="submit" class="btn-submit">Ajouter la candidature</button>
+        </div>
+        {{ form_end(form) }}
+    </main>
+</div>
+{% endblock %}

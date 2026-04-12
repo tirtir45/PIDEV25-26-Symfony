@@ -1,0 +1,87 @@
+{# templates/publication/_form.html.twig #}
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    {# Affiche les erreurs globales du formulaire (celles non liées à un champ) #}
+    {{ form_errors(form) }}
+
+    {# --- Titre --- #}
+    <div class="mb-3">
+        {{ form_label(form.titre) }}
+        {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.titre) }} {# Affiche l'erreur pour le titre #}
+        </div>
+    </div>
+
+    {# --- Description --- #}
+    <div class="mb-3">
+        {{ form_label(form.description) }}
+        {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5}}) }}
+        <div class="text-danger small mt-1">
+            {{ form_errors(form.description) }} {# Affiche l'erreur pour la description #}
+        </div>
+    </div>
+
+    {# --- Ligne pour les dates --- #}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.date_publication) }}
+            {{ form_widget(form.date_publication, {'attr': {'class': 'form-control'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.date_publication) }}
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.date_expiration) }}
+            {{ form_widget(form.date_expiration, {'attr': {'class': 'form-control'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.date_expiration) }}
+            </div>
+        </div>
+    </div>
+
+    {# --- Ligne pour Type de contrat et Statut --- #}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.type_contrat) }}
+            {{ form_widget(form.type_contrat, {'attr': {'class': 'form-select'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.type_contrat) }}
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.statut) }}
+            {{ form_widget(form.statut, {'attr': {'class': 'form-select'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.statut) }}
+            </div>
+        </div>
+    </div>
+
+    {# --- Ligne pour Département et Localisation --- #}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.departement) }}
+            {{ form_widget(form.departement, {'attr': {'class': 'form-control'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.departement) }}
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.localisation) }}
+            {{ form_widget(form.localisation, {'attr': {'class': 'form-control'}}) }}
+            <div class="text-danger small mt-1">
+                {{ form_errors(form.localisation) }}
+            </div>
+        </div>
+    </div>
+
+
+    {# --- Boutons --- #}
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+        <a href="{{ path('app_publication_index') }}" class="btn btn-secondary">Annuler</a>
+    </div>
+
+{{ form_end(form) }}

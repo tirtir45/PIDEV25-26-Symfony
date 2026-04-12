@@ -1,0 +1,142 @@
+{# templates/publication/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail de l'offre : {{ publication.titre }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Assurez-vous que votre CSS est bien inclus #}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="page-container">
+    
+    <!-- HEADER -->
+    <div class="page-header">
+        <div style="flex: 1;">
+            <p class="page-header-title">📄 {{ publication.titre }}</p>
+            <p class="page-header-sub">📍 {{ publication.localisation }} — {{ publication.type_contrat }}</p>
+        </div>
+        {% if is_granted('ROLE_CANDIDAT') %}
+            <a href="{{ path('app_publication_postuler', {'publication_id': publication.publication_id}) }}" class="btn-purple"
+               style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; margin-right: 10px;">
+                ✅ Postuler
+            </a>
+        {% endif %}
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('app_admin_publication_edit', {'publication_id': publication.publication_id}) }}" class="btn-pink"
+               style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; margin-right: 10px;">
+                ✏️ Modifier
+            </a>
+        {% endif %}
+        <a href="{{ path(is_granted('ROLE_ADMIN') ? 'app_admin_publication_index' : 'app_user_publication_index') }}" class="btn-outline" style="text-decoration: none;">
+            ← Retour aux offres
+        </a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        
+        <!-- DÉTAILS DE L'OFFRE (Left Card) -->
+        <div style="flex: 1; min-width: 300px; background: white; border-radius: 16px; padding: 24px;
+                    border: 1px solid #ead5f0; box-shadow: 0 6px 14px rgba(161, 85, 185, 0.08);">
+            
+            <h6 style="color: #A155B9; font-weight: 700; margin-bottom: 16px; font-size: 16px;">
+                ℹ️ Détails de l'offre
+            </h6>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+                {# ... Les détails de la publication ici ... #}
+                {# Pas de changement dans cette partie car on n'utilise que l'objet 'publication' #}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Département</span>
+                    <span style="font-weight: 700;">{{ publication.departement }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Expire le</span>
+                    <span style="font-weight: 700; color: {% if publication.date_expiration < "now"|date("Y-m-d") %}#dc2626{% else %}#333{% endif %};">
+                        {{ publication.date_expiration|date('d/m/Y') }}
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Statut</span>
+                    <span class="badge badge-{{ publication.statut|lower }}">{{ publication.statut }}</span>
+                </div>
+            </div>
+
+            {% if publication.description %}
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+                <h6 style="color: #A155B9; font-weight: 700; margin-bottom: 8px; font-size: 16px;">
+                    📝 Description du poste
+                </h6>
+                <p style="font-size: 14px; color: #4b5563; line-height: 1.6; white-space: pre-wrap;">
+                    {{ publication.description }}
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- LISTE DES CANDIDATURES (Right Card) -->
+        <div style="flex: 2; min-width: 400px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <h6 style="color: #4a3068; font-weight: 700; margin: 0; font-size: 16px;">
+                    {# CORRECTION ICI : publication.demande_emplois #}
+                    👥 Candidatures reçues ({{ publication.demande_emplois|length }})
+                </h6>
+                
+                {# Le bouton "Ajouter une candidature" pour l'admin (pointe vers le contrôleur Demande_emploi) #}
+                {# On passe l'ID de la publication pour pré-remplir le formulaire #}
+                <a href="{{ path('app_demande_emploi_new', {'publication_id': publication.publication_id}) }}" class="btn-pink"
+                   style="text-decoration:none; font-size:11px; padding:6px 14px; border-radius:8px;">
+                    ＋ Ajouter une candidature
+                </a>
+            </div>
+
+            {# CORRECTION ICI : publication.demande_emplois #}
+            {% if publication.demande_emplois is empty %}
+                <div style="text-align: center; padding: 50px; background: white; border-radius: 16px;
+                            border: 1px solid #ead5f0; color: #a78bca;">
+                    <div style="font-size: 48px;">📭</div>
+                    <p style="margin-top: 10px; font-size: 14px; font-weight: 600;">Aucune candidature pour cette offre pour le moment.</p>
+                </div>
+            {% else %}
+                <div class="table-card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Candidat</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {# CORRECTION ICI : la boucle et les accès aux propriétés #}
+                            {% for demande in publication.demande_emplois %}
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ demande.candidat_id.nom ?? 'N/A' }} {{ demande.candidat_id.prenom ?? '' }}</div>
+                                        <div style="font-size: 12px; color: #94a3b8;">{{ demande.candidat_id.email ?? 'email inconnu' }}</div>
+                                    </td>
+                                    <td>{{ demande.date_demande|date('d/m/Y') }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ demande.statut_demande|lower|replace({' ': '-'}) }}">{{ demande.statut_demande }}</span>
+                                    </td>
+                                    <td>
+                                        {# Lien pour voir le CV (si cv_url est juste le nom du fichier) #}
+                                        {% if demande.cv_url %}
+                                            <a href="{{ asset('uploads/cv/' ~ demande.cv_url) }}" target="_blank" style="color: #A155B9; font-weight: 600; text-decoration: none;">Voir CV</a>
+                                        {% endif %}
+                                        {# Lien pour éditer la candidature #}
+                                        <a href="{{ path('app_demande_emploi_edit', {'id': demande.demande_id}) }}" style="margin-left: 10px; color: #4338ca; font-weight: 600; text-decoration: none;">Modifier</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

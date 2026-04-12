@@ -1,0 +1,174 @@
+{# templates/base_dashboard.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}StartHub Dashboard{% endblock %}</title>
+    
+    {# Styles CSS traduits de ton FXML #}
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fdf4fb; /* Le fond de ton BorderPane */
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR (Équivalent du <left>) */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(to bottom, #A155B9, #8a4ca0);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+
+        .logo-container {
+            padding: 30px 20px 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-container h1 { margin: 0; font-size: 20px; font-weight: 800; }
+
+        /* Navigation items (Équivalent des HBox) */
+        .nav-menu { flex-grow: 1; padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 11px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .nav-item:hover { background-color: rgba(255,255,255,0.1); }
+        .nav-icon { font-size: 16px; min-width: 28px; }
+
+        /* Séparateur pour l'admin */
+        .admin-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.6);
+            margin: 15px 0 5px 15px;
+            font-weight: bold;
+        }
+
+        /* Pied de page Sidebar (Profil utilisateur) */
+        .user-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 42px; height: 42px;
+            border: 2px solid #D08EC1;
+            border-radius: 50%;
+        }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 13px; font-weight: 700; }
+        .user-role { font-size: 11px; color: rgba(255,255,255,0.75); }
+
+        .btn-logout {
+            margin: 0 10px 10px 10px;
+            background-color: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn-logout:hover { background-color: rgba(255,255,255,0.25); }
+
+        /* CENTER CONTENT (Équivalent du <center>) */
+        .content-area {
+            flex-grow: 1;
+            padding: 28px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <!-- Logo -->
+        <div class="logo-container">
+            <div style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 10px;">🚀</div>
+            <h1>StartHub</h1>
+        </div>
+
+        <!-- Menu de navigation -->
+        <nav class="nav-menu">
+            {# MENU UTILISATEUR NORMAL (Visible par tout le monde) #}
+            <a href="#" class="nav-item">
+                <span class="nav-icon">👤</span> Mon Profil
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔔</span> Mes Réclamations
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">💼</span> Offres d'emploi
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📁</span> Mes Projets
+            </a>
+
+            {# MENU ADMIN (Traduction du visible="false" de JavaFX) #}
+            {% if true %}
+                <div class="admin-section-title">Administration</div>
+                
+                {# ATTENTION : Remplace les '#' par tes vraies routes Symfony, ex: path('admin_users_index') #}
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">👥</span> Gestion Utilisateurs
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📋</span> Gestion Réclamations
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📅</span> Gestion Événements
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">👔</span> Gestion Recrutement
+                </a>
+            {% endif %}
+        </nav>
+
+        <!-- Bouton Déconnexion -->
+       {# <a href="{{ path('app_logout') }}" class="btn-logout">⟲ Déconnexion</a>#}
+
+
+        <!-- Profil Utilisateur (En bas à gauche) -->
+        <div class="user-footer">
+            <img src="https://img.icons8.com/fluency/96/user-male-circle.png" class="user-avatar" alt="Avatar">
+            <div class="user-info">
+                {# app.user vérifie si l'utilisateur est connecté et affiche son identifiant #}
+                <span class="user-name">{{ app.user ? app.user.userIdentifier : 'Invité' }}</span>
+                <span class="user-role">
+                    {% if is_granted('ROLE_ADMIN') %}Administrateur{% else %}Utilisateur{% endif %}
+                </span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENT AREA (La zone qui change à chaque page) -->
+    <main class="content-area">
+        {% block body %}
+            {# Le contenu des pages viendra s'injecter ici #}
+        {% endblock %}
+    </main>
+
+</body>
+</html>
