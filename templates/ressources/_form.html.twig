@@ -71,13 +71,7 @@
         <hr class="divider">
 
         {{ form_start(form, {'attr': {'novalidate': true, 'id': 'ressource-form'}}) }}
-        {{ form_errors(form) }}
 
-        <!-- Validation Summary -->
-        <div id="validation-summary" class="validation-summary" style="display:none;">
-            <div class="validation-summary-title">⚠ Veuillez corriger les erreurs suivantes :</div>
-            <ul id="validation-errors-list"></ul>
-        </div>
 
         <div class="grid-2">
 
@@ -358,26 +352,20 @@
         });
 
         // Submit guard
-        form.addEventListener('submit', (e) => {
-            const { allOk, errors, first } = validateAll();
+            form.addEventListener('submit', (e) => {
+                const { allOk, first } = validateAll();
 
-            if (!allOk) {
-                e.preventDefault();
+                if (!allOk) {
+                    // Stop the form from submitting
+                    e.preventDefault();
 
-                // Show summary
-                errList.innerHTML = '';
-                errors.forEach(msg => {
-                    const li = document.createElement('li');
-                    li.textContent = msg;
-                    errList.appendChild(li);
-                });
-                summary.style.display = 'block';
-                summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                if (first) setTimeout(() => first.focus(), 500);
-            } else {
-                summary.style.display = 'none';
-            }
-        });
+                    // Simply scroll to and focus the first field that has an error
+                    if (first) {
+                        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => first.focus(), 500);
+                    }
+                }
+            });
     }
 
     document.addEventListener('DOMContentLoaded', init);
