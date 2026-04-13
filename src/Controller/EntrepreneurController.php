@@ -23,8 +23,16 @@ class EntrepreneurController extends AbstractController
     private function getAuthenticatedEntrepreneur(Request $request, EntityManagerInterface $em): ?Utilisateurs
     {
         $userId = $request->getSession()->get('user_id');
-        if (!$userId) return null;
-        return $em->getRepository(Utilisateurs::class)->find($userId);
+        if (!$userId) {
+            return null;
+        }
+
+        $user = $em->getRepository(Utilisateurs::class)->find($userId);
+        if (!$user || !$user->getRole() || $user->getRole()->getNomRole() !== 'Entrepreneur') {
+            return null;
+        }
+
+        return $user;
     }
 
     private function assertProjectOwnership(Projets $projet, ?Utilisateurs $entrepreneur): bool

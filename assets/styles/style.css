@@ -801,8 +801,30 @@ img { display: block; max-width: 100%; }
 }
 
 .form-input.is-invalid,
-.form-control.is-invalid { border-color: var(--danger); }
-.invalid-feedback { color: var(--danger); font-size: 0.78rem; margin-top: 4px; }
+.form-control.is-invalid,
+.profil-input.is-invalid,
+.profil-textarea.is-invalid,
+.auth-input.is-invalid { border-color: var(--danger); }
+
+.invalid-feedback,
+.form-error,
+.field-error,
+.field-error-msg,
+.error-hint,
+.small.text-danger {
+    color: var(--danger);
+}
+
+.form-error,
+.field-error,
+.field-error-msg,
+.error-hint {
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: block;
+}
+
+.invalid-feedback { font-size: 0.78rem; margin-top: 4px; }
 
 .form-textarea,
 .field textarea { resize: vertical; min-height: 100px; padding: 0.75rem 1rem; }
