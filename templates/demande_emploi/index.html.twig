@@ -40,21 +40,21 @@
             {# Calcul du nombre de candidatures en attente #}
             {# CORRECTION ICI : demande.statut_demande #}
             <div class="stat-value" style="color:#b45309;">
-                {{ demandes|filter(d => d.statut_demande == 'En attente')|length }}
+                {{ demandes|filter(d => d.getStatutDemande() == 'En attente')|length }}
             </div>
             <div class="stat-label">En attente</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">✅</div>
             <div class="stat-value" style="color:#28a745;">
-                {{ demandes|filter(d => d.statut_demande == 'Acceptée')|length }}
+                {{ demandes|filter(d => d.getStatutDemande() == 'Acceptée')|length }}
             </div>
             <div class="stat-label">Acceptées</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">❌</div>
             <div class="stat-value" style="color:#dc2626;">
-                {{ demandes|filter(d => d.statut_demande == 'Refusée')|length }}
+                {{ demandes|filter(d => d.getStatutDemande() == 'Refusée')|length }}
             </div>
             <div class="stat-label">Refusées</div>
         </div>
@@ -85,19 +85,19 @@
                     <tr>
                         <td>
                             {# CORRECTION ICI : demande.candidat_id #}
-                            {% if demande.candidat_id %}
-                                <div style="font-weight:600;">{{ demande.candidat_id.nom ?? 'N/A' }} {{ demande.candidat_id.prenom ?? '' }}</div>
-                                <div style="font-size:12px; color:#64748b;">{{ demande.candidat_id.email }}</div>
+                            {% if demande.getCandidat() %}
+                                <div style="font-weight:600;">{{ demande.getCandidat().nom ?? 'N/A' }} {{ demande.getCandidat().prenom ?? '' }}</div>
+                                <div style="font-size:12px; color:#64748b;">{{ demande.getCandidat().email }}</div>
                             {% else %}
                                 —
                             {% endif %}
                         </td>
                         <td>
                             {# CORRECTION ICI : demande.publication_id #}
-                            {% if demande.publication_id %}
-                                {# On utilise le getter publication_id pour avoir l'ID pour la route #}
-                                <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" style="color:#A155B9; font-weight:600; text-decoration:none;">
-                                    {{ demande.publication_id.titre }}
+                            {% if demande.getPublication() %}
+                                {# On utilise le getter publication pour avoir l'ID pour la route #}
+                                <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" style="color:#A155B9; font-weight:600; text-decoration:none;">
+                                    {{ demande.getPublication().titre }}
                                 </a>
                             {% else %}
                                 —
@@ -105,23 +105,23 @@
                         </td>
                         <td>
                             {# CORRECTION ICI : demande.date_demande #}
-                            {{ demande.date_demande|date('d/m/Y') }}
+                            {{ demande.getDateDemande()|date('d/m/Y') }}
                         </td>
                         <td>
                             {# CORRECTION ICI : demande.statut_demande #}
-                            <span class="badge badge-{{ demande.statut_demande|lower|replace({' ': '-'}) }}">
-                                {{ demande.statut_demande }}
+                            <span class="badge badge-{{ demande.getStatutDemande()|lower|replace({' ': '-'}) }}">
+                                {{ demande.getStatutDemande() }}
                             </span>
                         </td>
                         <td>
                             <div style="display:flex; gap:8px;">
                                 {# CORRECTION ICI : demande.demande_id #}
-                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.demande_id}) }}" class="action-btn btn-edit" title="Modifier">
+                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" class="action-btn btn-edit" title="Modifier">
                                     ✏️
                                 </a>
-                                <form method="post" action="{{ path('app_demande_emploi_delete', {'id': demande.demande_id}) }}"
+                                <form method="post" action="{{ path('app_demande_emploi_delete', {'id': demande.getDemande_id()}) }}"
                                       onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?')" style="margin:0;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ demande.demande_id) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ demande.getDemande_id()) }}">
                                     <button type="submit" class="action-btn btn-delete" title="Supprimer">
                                         🗑️
                                     </button>

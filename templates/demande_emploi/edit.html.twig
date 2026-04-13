@@ -10,20 +10,20 @@
         <div>
             <h1>Modifier la Candidature</h1>
             {# CORRECTION : Utilisation des propriétés snake_case #}
-            <p>Pour l'offre : {{ demande.publication_id.titre }}</p>
+            <p>Pour l'offre : {{ demande.getPublication().titre }}</p>
         </div>
-        <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" class="btn-outline">
+        <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="btn-outline">
             ← Retour à l'offre
         </a>
     </header>
 
     <main class="form-card" style="max-width: 700px;">
         {# CORRECTION : Logique de verrouillage basée sur statut_demande #}
-        {% set isLocked = demande.statut_demande != 'En attente' %}
+        {% set isLocked = demande.getStatutDemande() != 'En attente' %}
 
         {% if isLocked %}
             <div class="lock-info-label">
-                🔒 Cette candidature n'est plus modifiable car son statut est « {{ demande.statut_demande }} ».
+                🔒 Cette candidature n'est plus modifiable car son statut est « {{ demande.getStatutDemande() }} ».
             </div>
         {% endif %}
 
@@ -32,37 +32,37 @@
         <div class="form-grid">
             <label class="form-label">Candidat</label>
             <div>
-                <input type="text" value="{{ demande.candidat_id.nom ?? 'N/A' }}" disabled class="form-control-disabled">
+                <input type="text" value="{{ demande.getCandidat().nom ?? 'N/A' }}" disabled class="form-control-disabled">
             </div>
 
             <label class="form-label">CV (nom du fichier PDF) *</label>
             <div>
-                {{ form_widget(form.cv_url, {'attr': {'disabled': isLocked}}) }}
-                {{ form_errors(form.cv_url) }}
-                {% if demande.cv_url %}
-                    <div style="margin-top:6px; font-size:12px; color:#64748b;">Fichier actuel : {{ demande.cv_url }}</div>
+                {{ form_widget(form.cvUrl, {'attr': {'disabled': isLocked}}) }}
+                {{ form_errors(form.cvUrl) }}
+                {% if demande.getCvUrl() %}
+                    <div style="margin-top:6px; font-size:12px; color:#64748b;">Fichier actuel : {{ demande.getCvUrl() }}</div>
                 {% endif %}
             </div>
 
             <label class="form-label">Lettre de motivation *</label>
             <div>
-                {{ form_widget(form.lettre_motivation, {'attr': {'rows': 5, 'disabled': isLocked}}) }}
-                {{ form_errors(form.lettre_motivation) }}
+                {{ form_widget(form.lettreMotivation, {'attr': {'rows': 5, 'disabled': isLocked}}) }}
+                {{ form_errors(form.lettreMotivation) }}
             </div>
             
             <label class="form-label">Statut *</label>
             <div>
                 {# Si le statut est autre que 'En attente', le champ est désactivé (l'admin ne peut plus le changer) #}
                 {# Si vous voulez que l'admin puisse changer le statut, enlevez l'attribut 'disabled' ici #}
-                {{ form_widget(form.statut_demande, {'attr': {'disabled': isLocked }}) }}
-                {{ form_errors(form.statut_demande) }}
+                {{ form_widget(form.statutDemande, {'attr': {'disabled': isLocked }}) }}
+                {{ form_errors(form.statutDemande) }}
             </div>
         </div>
 
         <div class="form-divider"></div>
 
         <div class="form-actions">
-            <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}" class="btn-cancel">Annuler</a>
+            <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="btn-cancel">Annuler</a>
             <button type="submit" class="btn-submit" {{ isLocked ? 'disabled' : '' }}>
                 ✓ Enregistrer les modifications
             </button>

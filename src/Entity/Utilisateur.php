@@ -78,9 +78,13 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reservations::class, mappedBy: 'utilisateur')]
     private Collection $reservations;
 
+    #[ORM\OneToMany(targetEntity: Demande_emploi::class, mappedBy: 'candidat')]
+    private Collection $demande_emplois;
+
     public function __construct()
     {
         $this->reservations    = new ArrayCollection();
+        $this->demande_emplois = new ArrayCollection();
         $this->dateInscription = new \DateTime();
         $this->actif           = true;
         $this->idRole          = self::ROLE_ENTREPRENEUR_ID;
@@ -161,6 +165,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
             $this->reservations = new ArrayCollection();
         }
         return $this->reservations;
+    }
+
+    /**
+     * @return Collection<int, Demande_emploi>
+     */
+    public function getDemandeEmplois(): Collection
+    {
+        if (!$this->demande_emplois instanceof Collection) {
+            $this->demande_emplois = new ArrayCollection();
+        }
+        return $this->demande_emplois;
     }
 
     public function __toString(): string

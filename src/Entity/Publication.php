@@ -61,7 +61,7 @@ class Publication
     /**
      * @var Collection<int, Demande_emploi>
      */
-    #[ORM\OneToMany(mappedBy: "publication_id", targetEntity: Demande_emploi::class, cascade: ["remove"])]
+    #[ORM\OneToMany(mappedBy: "publication", targetEntity: Demande_emploi::class, cascade: ["remove"])]
     private Collection $demande_emplois;
 
     public function __construct()
@@ -130,7 +130,7 @@ class Publication
     {
         if (!$this->demande_emplois->contains($demande_emploi)) {
             $this->demande_emplois->add($demande_emploi);
-            $demande_emploi->setPublication_id($this); // Assure la cohérence de la relation
+            $demande_emploi->setPublication($this); // Assure la cohérence de la relation
         }
 
         return $this;
@@ -140,8 +140,8 @@ class Publication
     {
         if ($this->demande_emplois->removeElement($demande_emploi)) {
             // Met à jour l'autre côté de la relation pour éviter une demande "orpheline"
-            if ($demande_emploi->getPublication_id() === $this) {
-                $demande_emploi->setPublication_id(null);
+            if ($demande_emploi->getPublication() === $this) {
+                $demande_emploi->setPublication(null);
             }
         }
 

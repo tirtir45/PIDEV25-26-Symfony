@@ -19,14 +19,14 @@ class Demande_emploiType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('publication_id', EntityType::class, [
+            ->add('publication', EntityType::class, [
                 'class' => Publication::class,
                 'choice_label' => 'titre', // ou 'titre' selon votre entité
                 'label' => 'Offre concernée *',
                 'placeholder' => 'Choisir une offre',
                 'required' => true,
             ])
-            ->add('candidat_id', EntityType::class, [
+            ->add('candidat', EntityType::class, [
                 'class' => Utilisateur::class,
                 'choice_label' => function (Utilisateur $u) {
                     return $u->getNom() . ' (' . $u->getEmail() . ')';
@@ -35,7 +35,7 @@ class Demande_emploiType extends AbstractType
                 'placeholder' => 'Choisir un candidat',
                 'required' => true,
             ])
-            ->add('cv_url', TextType::class, [
+            ->add('cvUrl', TextType::class, [
                 'label' => 'CV (nom du fichier PDF) *',
                 'required' => true,
                 'attr' => [
@@ -43,7 +43,7 @@ class Demande_emploiType extends AbstractType
                 ],
                 'help' => 'Entrez le nom du fichier PDF (ex: cv-mon-nom.pdf).',
             ])
-            ->add('lettre_motivation', TextareaType::class, [
+            ->add('lettreMotivation', TextareaType::class, [
                 'label' => 'Lettre de motivation *',
                 'required' => true,
                 'attr' => [
@@ -51,7 +51,7 @@ class Demande_emploiType extends AbstractType
                     'placeholder' => 'Rédigez votre lettre de motivation...',
                 ],
             ])
-            ->add('motivation_ciblee', TextareaType::class, [
+            ->add('motivationCiblee', TextareaType::class, [
                 'label' => 'Motivation ciblée',
                 'required' => false,
                 'attr' => [
@@ -59,7 +59,7 @@ class Demande_emploiType extends AbstractType
                     'placeholder' => 'Motivation spécifique au poste (optionnel)...',
                 ],
             ])
-            ->add('statut_demande', ChoiceType::class, [
+            ->add('statutDemande', ChoiceType::class, [
                 'label' => 'Statut',
                 'choices' => [
                     'En attente' => 'En attente',
@@ -68,7 +68,7 @@ class Demande_emploiType extends AbstractType
                 ],
                 'required' => true,
             ])
-            ->add('date_demande', DateType::class, [
+            ->add('dateDemande', DateType::class, [
                 'label' => 'Date de candidature',
                 'widget' => 'single_text',
                 'required' => true,

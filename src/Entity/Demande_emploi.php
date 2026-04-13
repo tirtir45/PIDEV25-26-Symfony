@@ -19,12 +19,12 @@ class Demande_emploi
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: "demande_emplois")]
     #[ORM\JoinColumn(name: 'publication_id', referencedColumnName: 'publication_id', nullable: false)]
     #[Assert\NotNull(message: "L'offre d'emploi est obligatoire.")]
-    private ?Publication $publication_id = null;
+    private ?Publication $publication = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "demande_emplois")]
     #[ORM\JoinColumn(name: 'candidat_id', referencedColumnName: 'id_utilisateur', nullable: false)]
     #[Assert\NotNull(message: "Le candidat est obligatoire.")]
-    private ?Utilisateur $candidat_id = null;
+    private ?Utilisateur $candidat = null;
 
     /**
      * Nom du fichier CV (ex: 'cv-jean-dupont.pdf').
@@ -36,27 +36,27 @@ class Demande_emploi
         pattern: '/\.pdf$/i',
         message: "Le nom du fichier CV doit se terminer par .pdf"
     )]
-    private ?string $cv_url = null;
+    private ?string $cvUrl = null;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: "La lettre de motivation est obligatoire.")]
     #[Assert\Length(min: 50, minMessage: "Votre lettre de motivation doit faire au moins 50 caractères.")]
-    private ?string $lettre_motivation = null;
+    private ?string $lettreMotivation = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $motivation_ciblee = null;
+    private ?string $motivationCiblee = null;
 
     #[ORM\Column(name: "statut_demande", type: Types::STRING, length: 50)]
     #[Assert\NotBlank(message: "Le statut est obligatoire.")]
-    private ?string $statut_demande = null;
+    private ?string $statutDemande = null;
 
     #[ORM\Column(name: "date_demande", type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $date_demande = null;
+    private ?\DateTimeInterface $dateDemande = null;
 
     public function __construct()
     {
-        $this->date_demande = new \DateTime();
-        $this->statut_demande = 'En attente';
+        $this->dateDemande = new \DateTime();
+        $this->statutDemande = 'En attente';
     }
 
     // --- GETTERS / SETTERS ---
@@ -66,80 +66,80 @@ class Demande_emploi
         return $this->demande_id;
     }
 
-    public function getPublication_id(): ?Publication
+    public function getPublication(): ?Publication
     {
-        return $this->publication_id;
+        return $this->publication;
     }
 
-    public function setPublication_id(?Publication $publication_id): self
+    public function setPublication(?Publication $publication): self
     {
-        $this->publication_id = $publication_id;
+        $this->publication = $publication;
         return $this;
     }
 
-    public function getCandidat_id(): ?Utilisateur
+    public function getCandidat(): ?Utilisateur
     {
-        return $this->candidat_id;
+        return $this->candidat;
     }
 
-    public function setCandidat_id(?Utilisateur $candidat_id): self
+    public function setCandidat(?Utilisateur $candidat): self
     {
-        $this->candidat_id = $candidat_id;
+        $this->candidat = $candidat;
         return $this;
     }
 
-    public function getCv_url(): ?string
+    public function getCvUrl(): ?string
     {
-        return $this->cv_url;
+        return $this->cvUrl;
     }
 
-    public function setCv_url(?string $cv_url): self
+    public function setCvUrl(?string $cvUrl): self
     {
-        $this->cv_url = $cv_url;
+        $this->cvUrl = $cvUrl;
         return $this;
     }
 
-    public function getLettre_motivation(): ?string
+    public function getLettreMotivation(): ?string
     {
-        return $this->lettre_motivation;
+        return $this->lettreMotivation;
     }
 
-    public function setLettre_motivation(string $lettre_motivation): self
+    public function setLettreMotivation(string $lettreMotivation): self
     {
-        $this->lettre_motivation = $lettre_motivation;
+        $this->lettreMotivation = $lettreMotivation;
         return $this;
     }
 
-    public function getMotivation_ciblee(): ?string
+    public function getMotivationCiblee(): ?string
     {
-        return $this->motivation_ciblee;
+        return $this->motivationCiblee;
     }
 
-    public function setMotivation_ciblee(?string $motivation_ciblee): self
+    public function setMotivationCiblee(?string $motivationCiblee): self
     {
-        $this->motivation_ciblee = $motivation_ciblee;
+        $this->motivationCiblee = $motivationCiblee;
         return $this;
     }
 
-    public function getStatut_demande(): ?string
+    public function getStatutDemande(): ?string
     {
-        return $this->statut_demande;
+        return $this->statutDemande;
     }
 
-    public function setStatut_demande(string $statut_demande): self
+    public function setStatutDemande(string $statutDemande): self
     {
-        $this->statut_demande = $statut_demande;
+        $this->statutDemande = $statutDemande;
         return $this;
     }
 
-    public function getDate_demande(): ?\DateTimeInterface
+    public function getDateDemande(): ?\DateTimeInterface
     {
-        return $this->date_demande;
+        return $this->dateDemande;
     }
 
-    public function setDate_demande(\DateTimeInterface $date_demande): self
+    public function setDateDemande(\DateTimeInterface $dateDemande): self
     {
-        $this->date_demande = $date_demande;
+        $this->dateDemande = $dateDemande;
         return $this;
     }
 }

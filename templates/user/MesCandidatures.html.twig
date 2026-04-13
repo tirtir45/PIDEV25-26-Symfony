@@ -78,32 +78,32 @@
                     <div class="card-body">
                         <div class="card-meta" style="color:#A155B9; font-weight: 600;">
                             <span>🗓️</span>
-                            Postulé le {{ demande.date_demande|date('d/m/Y') }}
+                            Postulé le {{ demande.getDateDemande()|date('d/m/Y') }}
                         </div>
                         
                         <div style="margin: 12px 0;">
-                            <span class="badge badge-{{ demande.statut_demande|lower|replace({' ': '-'}) }}">
-                                Statut : {{ demande.statut_demande }}
+                            <span class="badge badge-{{ demande.getStatutDemande()|lower|replace({' ': '-'}) }}">
+                                Statut : {{ demande.getStatutDemande() }}
                             </span>
                         </div>
 
                         <p style="font-size: 13px; color: #4b5563; line-height: 1.6; margin-top: 16px; border-left: 3px solid #f3e8f9; padding-left: 12px;">
                            Votre lettre de motivation : <br>
-                           <em>"{{ demande.lettre_motivation|slice(0, 100) }}..."</em>
+                           <em>"{{ demande.getLettreMotivation()|slice(0, 100) }}..."</em>
                         </p>
 
                         {# Boutons d'action pour le candidat #}
                         <div style="display:flex; gap:10px; margin-top:16px;">
                             {# Bouton "Voir l'offre" #}
-                            <a href="{{ path('app_publication_show', {'publication_id': demande.publication_id.publication_id}) }}"
+                            <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}"
                                style="flex:1; background-color:#f3e8ff; color:#A155B9; border:1px solid #ead5f0; border-radius:10px;
                                       padding:9px; font-size:12px; font-weight:700; text-decoration:none; text-align:center;">
                                 Voir l'offre
                             </a>
 
                             {# Bouton "Modifier" : n'est cliquable que si le statut est "En attente" #}
-                            {% if demande.statut_demande == 'En attente' %}
-                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.demande_id}) }}"
+                            {% if demande.getStatutDemande() == 'En attente' %}
+                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}"
                                    style="flex:1; background-color:#eef2ff; color:#4338ca; border-radius:10px;
                                           padding:9px; font-size:12px; font-weight:700; text-decoration:none; text-align:center;">
                                     ✏️ Modifier ma candidature

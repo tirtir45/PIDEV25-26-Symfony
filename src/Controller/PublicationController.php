@@ -80,8 +80,8 @@ final class PublicationController extends AbstractController
 
         // Créer la nouvelle candidature
         $demande = new Demande_emploi();
-        $demande->setPublication_id($publication);
-        $demande->setCandidat_id($candidat);
+        $demande->setPublication($publication);
+        $demande->setCandidat($candidat);
         
         $entityManager->persist($demande);
         $entityManager->flush();

@@ -13,10 +13,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/demande-emploi')]
-#[IsGranted('ROLE_ADMIN')] // Protège toutes les routes d'admin (vous pourrez adapter par rôle ensuite)
 class Demande_emploiController extends AbstractController
 {
     #[Route('/', name: 'app_demande_emploi_index', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function index(Request $request, Demande_emploiRepository $demandeEmploiRepository): Response
     {
         $publicationId = $request->query->get('publication_id');
@@ -32,6 +32,7 @@ class Demande_emploiController extends AbstractController
     }
 
     #[Route('/new', name: 'app_demande_emploi_new', methods: ['GET', 'POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $demande = new Demande_emploi();
@@ -41,7 +42,7 @@ class Demande_emploiController extends AbstractController
         if ($publicationId) {
             $publication = $entityManager->getRepository(\App\Entity\Publication::class)->find($publicationId);
             if ($publication) {
-                $demande->setPublication_id($publication);
+                $demande->setPublication($publication);
             }
         }
 
@@ -56,7 +57,7 @@ class Demande_emploiController extends AbstractController
             $this->addFlash('success', 'La candidature a été ajoutée avec succès !');
 
             // Redirige vers la publication concernée (si connue), sinon vers la liste
-            $pub = $demande->getPublication_id();
+            $pub = $demande->getPublication();
             if ($pub) {
                 return $this->redirectToRoute('app_publication_show', [
                     'publication_id' => $pub->getPublication_id(),
@@ -72,13 +73,14 @@ class Demande_emploiController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_demande_emploi_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function edit(Request $request, Demande_emploi $demande, EntityManagerInterface $entityManager): Response
     {
         // Sécurité métier : on ne permet d'éditer que si le statut est "En attente"
-        if ($demande->getStatut_demande() !== 'En attente') {
-            $this->addFlash('error', 'Cette candidature n\'est plus modifiable (statut : ' . $demande->getStatut_demande() . ').');
+        if ($demande->getStatutDemande() !== 'En attente') {
+            $this->addFlash('error', 'Cette candidature n\'est plus modifiable (statut : ' . $demande->getStatutDemande() . ').');
             return $this->redirectToRoute('app_publication_show', [
-                'publication_id' => $demande->getPublication_id()->getPublication_id(),
+                'publication_id' => $demande->getPublication()->getPublication_id(),
             ]);
         }
 
@@ -91,7 +93,7 @@ class Demande_emploiController extends AbstractController
 
             $this->addFlash('success', 'La candidature a été modifiée !');
 
-            $pub = $demande->getPublication_id();
+            $pub = $demande->getPublication();
             if ($pub) {
                 return $this->redirectToRoute('app_publication_show', [
                     'publication_id' => $pub->getPublication_id(),
@@ -107,6 +109,7 @@ class Demande_emploiController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_demande_emploi_show', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function show(Demande_emploi $demande): Response
     {
         return $this->render('demande_emploi/show.html.twig', [
@@ -115,6 +118,7 @@ class Demande_emploiController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_demande_emploi_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Demande_emploi $demande, EntityManagerInterface $entityManager): Response
     {
         $id = $demande->getDemande_id();

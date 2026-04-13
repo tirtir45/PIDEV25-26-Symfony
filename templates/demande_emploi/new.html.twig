@@ -35,44 +35,44 @@
             {# CORRECTION : les noms de champs du formulaire sont en snake_case #}
             <label class="form-label">Offre concernée *</label>
             <div>
-                {{ form_widget(form.publication_id) }}
-                {{ form_errors(form.publication_id) }}
+                {{ form_widget(form.publication) }}
+                {{ form_errors(form.publication) }}
             </div>
 
             <label class="form-label">Candidat *</label>
             <div>
-                {{ form_widget(form.candidat_id) }}
-                {{ form_errors(form.candidat_id) }}
+                {{ form_widget(form.candidat) }}
+                {{ form_errors(form.candidat) }}
             </div>
 
             <label class="form-label">CV (nom du fichier PDF) *</label>
             <div>
-                {{ form_widget(form.cv_url) }}
-                {{ form_errors(form.cv_url) }}
+                {{ form_widget(form.cvUrl) }}
+                {{ form_errors(form.cvUrl) }}
             </div>
 
             <label class="form-label">Lettre de motivation *</label>
             <div style="grid-column: span 1;">
-                {{ form_widget(form.lettre_motivation) }}
-                {{ form_errors(form.lettre_motivation) }}
+                {{ form_widget(form.lettreMotivation) }}
+                {{ form_errors(form.lettreMotivation) }}
             </div>
 
             <label class="form-label">Motivation ciblée</label>
             <div style="grid-column: span 1;">
-                {{ form_widget(form.motivation_ciblee) }}
-                {{ form_errors(form.motivation_ciblee) }}
+                {{ form_widget(form.motivationCiblee) }}
+                {{ form_errors(form.motivationCiblee) }}
             </div>
 
             <label class="form-label">Statut *</label>
             <div>
-                {{ form_widget(form.statut_demande) }}
-                {{ form_errors(form.statut_demande) }}
+                {{ form_widget(form.statutDemande) }}
+                {{ form_errors(form.statutDemande) }}
             </div>
 
             <label class="form-label">Date de candidature *</label>
             <div>
-                {{ form_widget(form.date_demande) }}
-                {{ form_errors(form.date_demande) }}
+                {{ form_widget(form.dateDemande) }}
+                {{ form_errors(form.dateDemande) }}
             </div>
         </div>
 
