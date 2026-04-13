@@ -1,12 +1,12 @@
-{# templates/entrepreneur/nouveau_projet.html.twig #}
+{# templates/entrepreneur/modifier_projet.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block body %}
 <div class="container fade-in">
     <div class="card-modern" style="max-width: 1200px; margin: 0 auto;">
         <div class="card-header-modern">
-            <h3><i class="bi bi-plus-circle"></i> Soumettre un Nouveau Projet</h3>
-            <p class="text-muted mt-2">Tous les champs marqués d'un <span class="text-danger">*</span> sont obligatoires</p>
+            <h3><i class="bi bi-pencil"></i> Modifier le projet: {{ projet.titre }}</h3>
+            <p class="text-muted mt-2">Modifiez les informations de votre projet. Tous les champs marqués d'un <span class="text-danger">*</span> sont obligatoires.</p>
         </div>
         <div class="card-body-modern">
             {{ form_start(form, {'attr': {'id': 'projectForm', 'novalidate': 'novalidate'}})}}
@@ -17,16 +17,14 @@
                     <div class="row">
                         <div class="col-12 mb-3">
                             {{ form_label(form.titre, 'Titre du projet <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
-                            {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Application mobile pour la santé'}})}}
+                            {{ form_widget(form.titre, {'attr': {'class': 'form-control'}})}}
                             <div class="invalid-feedback" id="titreError"></div>
-                            <small class="text-muted">Minimum 3 caractères, maximum 150 caractères</small>
                         </div>
                         
                         <div class="col-12 mb-3">
                             {{ form_label(form.description, 'Description <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
-                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5, 'placeholder': 'Décrivez votre projet en détail...'}})}}
+                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5}})}}
                             <div class="invalid-feedback" id="descriptionError"></div>
-                            <small class="text-muted">Minimum 20 caractères</small>
                         </div>
                         
                         <div class="col-md-6 mb-3">
@@ -37,9 +35,8 @@
                         
                         <div class="col-md-6 mb-3">
                             {{ form_label(form.objectifs, 'Objectifs <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
-                            {{ form_widget(form.objectifs, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Quels sont vos objectifs ?'}})}}
+                            {{ form_widget(form.objectifs, {'attr': {'class': 'form-control', 'rows': 3}})}}
                             <div class="invalid-feedback" id="objectifsError"></div>
-                            <small class="text-muted">Minimum 10 caractères</small>
                         </div>
                     </div>
                 </div>
@@ -52,21 +49,18 @@
                             {{ form_label(form.budget_estime, 'Budget estimé (€) <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
                             {{ form_widget(form.budget_estime, {'attr': {'class': 'form-control'}})}}
                             <div class="invalid-feedback" id="budgetError"></div>
-                            <small class="text-muted">Entre 1 000 € et 10 000 000 €</small>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             {{ form_label(form.duree_estimee, 'Durée estimée (mois) <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
                             {{ form_widget(form.duree_estimee, {'attr': {'class': 'form-control'}})}}
                             <div class="invalid-feedback" id="dureeError"></div>
-                            <small class="text-muted">Entre 1 et 36 mois</small>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             {{ form_label(form.nb_membres_equipe, 'Nombre de membres <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
                             {{ form_widget(form.nb_membres_equipe, {'attr': {'class': 'form-control'}})}}
                             <div class="invalid-feedback" id="membresError"></div>
-                            <small class="text-muted">Entre 1 et 50 membres</small>
                         </div>
                         
                         <div class="col-md-6 mb-3">
@@ -84,7 +78,6 @@
                         <div class="col-12 mb-3">
                             {{ form_label(form.partenaires_potentiels, 'Partenaires potentiels', {'label_attr': {'class': 'form-label fw-bold'}})}}
                             {{ form_widget(form.partenaires_potentiels, {'attr': {'class': 'form-control'}})}}
-                            <small class="text-muted">Optionnel - Décrivez vos partenaires potentiels</small>
                         </div>
                     </div>
                 </div>
@@ -103,32 +96,30 @@
                             {{ form_label(form.telephone_contact, 'Téléphone <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
                             {{ form_widget(form.telephone_contact, {'attr': {'class': 'form-control'}})}}
                             <div class="invalid-feedback" id="telephoneError"></div>
-                            <small class="text-muted">Format: 06 12 34 56 78 ou +33612345678</small>
                         </div>
                         
                         <div class="col-md-12 mb-3">
                             {{ form_label(form.site_web, 'Site web', {'label_attr': {'class': 'form-label fw-bold'}})}}
                             {{ form_widget(form.site_web, {'attr': {'class': 'form-control'}})}}
-                            <small class="text-muted">Optionnel - Ex: https://www.monsite.com</small>
                         </div>
                         
                         <div class="col-12 mb-3">
                             {{ form_label(form.experiences_anterieures, 'Expériences antérieures', {'label_attr': {'class': 'form-label fw-bold'}})}}
                             {{ form_widget(form.experiences_anterieures, {'attr': {'class': 'form-control'}})}}
-                            <small class="text-muted">Optionnel - Décrivez vos expériences dans le domaine</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> Tous les champs marqués d'un <span class="text-danger">*</span> sont obligatoires.
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Attention:</strong> Seuls les projets en attente peuvent être modifiés.
                 </div>
                 
                 <div class="d-flex gap-3 mt-4">
                     <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
-                        <i class="bi bi-send"></i> Soumettre le projet
+                        <i class="bi bi-save"></i> Enregistrer les modifications
                     </button>
-                    <a href="{{ path('entrepreneur_dashboard') }}" class="btn btn-secondary btn-lg">
+                    <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" class="btn btn-secondary btn-lg">
                         <i class="bi bi-x-circle"></i> Annuler
                     </a>
                 </div>
@@ -139,6 +130,7 @@
 
 {% block javascripts %}
 <script>
+// Validation JavaScript similaire à celle du formulaire de création
 document.getElementById('projectForm').addEventListener('submit', function(e) {
     let isValid = true;
     
@@ -161,9 +153,6 @@ document.getElementById('projectForm').addEventListener('submit', function(e) {
         isValid = false;
     } else if (titre.value.trim().length < 3) {
         showFieldError(titre, 'titreError', 'Le titre doit contenir au moins 3 caractères');
-        isValid = false;
-    } else if (titre.value.trim().length > 150) {
-        showFieldError(titre, 'titreError', 'Le titre ne peut pas dépasser 150 caractères');
         isValid = false;
     } else {
         clearFieldError(titre, 'titreError');
@@ -244,22 +233,6 @@ document.getElementById('projectForm').addEventListener('submit', function(e) {
         clearFieldError(membres, 'membresError');
     }
     
-    // Validation du statut juridique
-    if (!statut.value) {
-        showFieldError(statut, 'statutError', 'Veuillez sélectionner un statut juridique');
-        isValid = false;
-    } else {
-        clearFieldError(statut, 'statutError');
-    }
-    
-    // Validation du financement
-    if (!financement.value) {
-        showFieldError(financement, 'financementError', 'Veuillez sélectionner votre type de financement');
-        isValid = false;
-    } else {
-        clearFieldError(financement, 'financementError');
-    }
-    
     // Validation de l'email
     const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/;
     if (!email.value.trim()) {
@@ -286,13 +259,12 @@ document.getElementById('projectForm').addEventListener('submit', function(e) {
     
     if (!isValid) {
         e.preventDefault();
-        // Scroll to first error
         const firstError = document.querySelector('.is-invalid');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstError.focus();
         }
-        showToast('Veuillez corriger les erreurs dans le formulaire', 'error');
+        alert('Veuillez corriger les erreurs dans le formulaire');
     }
 });
 
@@ -311,31 +283,6 @@ function clearFieldError(field, errorId) {
         errorDiv.textContent = '';
     }
 }
-
-function showToast(message, type = 'error') {
-    // Implémentez votre fonction toast ici
-    alert(message);
-}
-
-// Ajout des écouteurs d'événements pour effacer les erreurs en temps réel
-const fields = ['#projet_titre', '#projet_description', '#projet_secteur', '#projet_objectifs', 
-                '#projet_budget_estime', '#projet_duree_estimee', '#projet_nb_membres_equipe', 
-                '#projet_statut_juridique', '#projet_financement_actuel', '#projet_email_contact', 
-                '#projet_telephone_contact'];
-
-fields.forEach(fieldSelector => {
-    const field = document.querySelector(fieldSelector);
-    if (field) {
-        field.addEventListener('input', function() {
-            const errorId = this.id.replace('projet_', '') + 'Error';
-            clearFieldError(this, errorId);
-        });
-        field.addEventListener('change', function() {
-            const errorId = this.id.replace('projet_', '') + 'Error';
-            clearFieldError(this, errorId);
-        });
-    }
-});
 </script>
 {% endblock %}
 {% endblock %}

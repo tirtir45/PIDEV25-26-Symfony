@@ -8,8 +8,6 @@ use App\Entity\Taches;
 use App\Entity\Membres_equipe;
 use App\Entity\Utilisateurs;
 use App\Form\ProjetValidationType;
-use App\Form\MembreEquipeType;
-use App\Form\TacheType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,111 +64,71 @@ class AdminController extends AbstractController
     #[Route('/admin/projet/{id}/valider', name: 'admin_valider_projet')]
     public function validerProjet(Projets $projet, Request $request, EntityManagerInterface $em): Response
     {
-        $form = $this->createForm(ProjetValidationType::class, $projet);
-        $form->handleRequest($request);
+        // Vérifier que l'utilisateur est admin
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
+            return $this->redirectToRoute('app_login');
+        }
         
-        if ($form->isSubmitted() && $form->isValid()) {
-            $action = $form->get('action')->getData();
+        // Vérifier si c'est une soumission POST
+        if ($request->isMethod('POST')) {
+            $action = $request->request->get('action');
+            $commentaire = $request->request->get('commentaire_admin');
             
             if ($action === 'accepter') {
                 $projet->setEtat(Projets::ETAT_ACCEPTE);
+                if ($commentaire) {
+                    $projet->setCommentaire_admin($commentaire);
+                }
                 $this->addFlash('success', 'Projet accepté avec succès !');
+                $em->flush();
+                return $this->redirectToRoute('admin_gestion_projet', ['id' => $projet->getIdProjet()]);
+                
             } elseif ($action === 'refuser') {
                 $projet->setEtat(Projets::ETAT_REFUSE);
+                if ($commentaire) {
+                    $projet->setCommentaire_admin($commentaire);
+                }
                 $this->addFlash('warning', 'Projet refusé.');
+                $em->flush();
+                return $this->redirectToRoute('admin_dashboard');
             }
-            
-            $em->flush();
-            return $this->redirectToRoute('admin_dashboard');
         }
         
         return $this->render('admin/valider_projet.html.twig', [
-            'projet' => $projet,
-            'form' => $form->createView()
+            'projet' => $projet
         ]);
     }
 
-    // Route AJOUTÉE pour la gestion des projets par l'admin
+    // Route pour voir les détails du projet par l'admin (lecture seule)
     #[Route('/admin/projet/{id}/gestion', name: 'admin_gestion_projet')]
     public function gestionProjet(Projets $projet, Request $request, EntityManagerInterface $em): Response
     {
-        if ($projet->getEtat() !== Projets::ETAT_ACCEPTE && $projet->getEtat() !== Projets::ETAT_EN_COURS) {
-            $this->addFlash('error', 'Ce projet doit être accepté avant de pouvoir ajouter des membres et des tâches.');
-            return $this->redirectToRoute('admin_dashboard');
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
+            return $this->redirectToRoute('app_login');
         }
         
-        $membreForm = $this->createForm(MembreEquipeType::class);
-        $membreForm->handleRequest($request);
-        
-        if ($membreForm->isSubmitted() && $membreForm->isValid()) {
-            $membreEquipe = $membreForm->getData();
-            $membreEquipe->setIdProjet($projet);
-            
-            if (!$membreEquipe->getIdUtilisateur()) {
-                $this->addFlash('error', 'Veuillez sélectionner un membre.');
-            } else {
-                $em->persist($membreEquipe);
-                $em->flush();
-                $this->addFlash('success', 'Membre ajouté avec succès !');
-                return $this->redirectToRoute('admin_gestion_projet', ['id' => $projet->getIdProjet()]);
-            }
-        }
-        
-        $tacheForm = $this->createForm(TacheType::class);
-        $tacheForm->handleRequest($request);
-        
-        if ($tacheForm->isSubmitted() && $tacheForm->isValid()) {
-            $tache = $tacheForm->getData();
-            $tache->setIdProjet($projet);
-            
-            if (empty($tache->getTitre())) {
-                $this->addFlash('error', 'Le titre de la tâche est obligatoire.');
-            } else {
-                $em->persist($tache);
-                $em->flush();
-                $this->addFlash('success', 'Tâche ajoutée avec succès !');
-                return $this->redirectToRoute('admin_gestion_projet', ['id' => $projet->getIdProjet()]);
-            }
-        }
-        
+        // Récupérer les membres et tâches existants (lecture seule)
         $membres = $em->getRepository(Membres_equipe::class)->findBy(['id_projet' => $projet]);
         $taches = $em->getRepository(Taches::class)->findBy(['id_projet' => $projet]);
         
         return $this->render('admin/gestion_projet.html.twig', [
             'projet' => $projet,
             'membres' => $membres,
-            'taches' => $taches,
-            'membreForm' => $membreForm->createView(),
-            'tacheForm' => $tacheForm->createView()
+            'taches' => $taches
         ]);
     }
 
-    // Route AJOUTÉE pour supprimer une tâche
-    #[Route('/admin/tache/{id}/supprimer', name: 'admin_supprimer_tache')]
-    public function supprimerTache(Taches $tache, EntityManagerInterface $em): Response
-    {
-        $projetId = $tache->getIdProjet()->getIdProjet();
-        $em->remove($tache);
-        $em->flush();
-        $this->addFlash('success', 'Tâche supprimée avec succès !');
-        return $this->redirectToRoute('admin_gestion_projet', ['id' => $projetId]);
-    }
-
-    // Route AJOUTÉE pour supprimer un membre
-    #[Route('/admin/membre/{id}/supprimer', name: 'admin_supprimer_membre')]
-    public function supprimerMembre(Membres_equipe $membre, EntityManagerInterface $em): Response
-    {
-        $projetId = $membre->getIdProjet()->getIdProjet();
-        $em->remove($membre);
-        $em->flush();
-        $this->addFlash('success', 'Membre supprimé avec succès !');
-        return $this->redirectToRoute('admin_gestion_projet', ['id' => $projetId]);
-    }
-
-    // Route AJOUTÉE pour changer le statut d'un projet
+    // Route pour changer le statut d'un projet
     #[Route('/admin/projet/{id}/statut', name: 'admin_changer_statut_projet')]
     public function changerStatutProjet(Projets $projet, Request $request, EntityManagerInterface $em): Response
     {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
+            return $this->redirectToRoute('app_login');
+        }
+        
         if ($request->isMethod('POST')) {
             $nouveauStatut = $request->request->get('statut');
             if (in_array($nouveauStatut, [Projets::ETAT_EN_COURS, Projets::ETAT_TERMINE])) {

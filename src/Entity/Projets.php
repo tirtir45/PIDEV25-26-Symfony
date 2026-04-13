@@ -1,12 +1,15 @@
 <?php
+// src/Entity/Projets.php
 
 namespace App\Entity;
 
+use App\Repository\ProjetsRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ProjetsRepository::class)]
 #[ORM\Table(name: 'projets')]
 class Projets
 {
@@ -25,17 +28,82 @@ class Projets
     #[ORM\JoinColumn(name: 'id_entrepreneur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
     private ?Utilisateurs $id_entrepreneur = null;
 
-    #[ORM\Column(type: 'string', length: 150, nullable: true)]
+    #[ORM\Column(type: 'string', length: 150)]
+    #[Assert\NotBlank(message: 'Le titre du projet est obligatoire')]
+    #[Assert\Length(min: 3, max: 150, minMessage: 'Le titre doit contenir au moins {{ limit }} caractères', maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères')]
     private ?string $titre = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank(message: 'La description du projet est obligatoire')]
+    #[Assert\Length(min: 20, minMessage: 'La description doit contenir au moins {{ limit }} caractères')]
     private ?string $description = null;
 
-    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank(message: 'Veuillez sélectionner un secteur')]
     private ?string $secteur = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank(message: 'Les objectifs du projet sont obligatoires')]
+    #[Assert\Length(min: 10, minMessage: 'Les objectifs doivent contenir au moins {{ limit }} caractères')]
     private ?string $objectifs = null;
+
+    // Nouveaux champs obligatoires avec validation Range corrigée
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[Assert\NotBlank(message: 'Le budget estimé est obligatoire')]
+    #[Assert\Positive(message: 'Le budget doit être un nombre positif')]
+    #[Assert\Range(
+        min: 1000,
+        max: 10000000,
+        notInRangeMessage: 'Le budget doit être compris entre {{ min }} € et {{ max }} €'
+    )]
+    private ?float $budget_estime = null;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank(message: 'La durée estimée est obligatoire')]
+    #[Assert\Positive(message: 'La durée doit être un nombre positif')]
+    #[Assert\Range(
+        min: 1,
+        max: 36,
+        notInRangeMessage: 'La durée doit être comprise entre {{ min }} et {{ max }} mois'
+    )]
+    private ?int $duree_estimee = null;
+
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank(message: 'Le nombre de membres d\'équipe est obligatoire')]
+    #[Assert\Positive(message: 'Le nombre de membres doit être positif')]
+    #[Assert\Range(
+        min: 1,
+        max: 50,
+        notInRangeMessage: 'Le nombre de membres doit être compris entre {{ min }} et {{ max }}'
+    )]
+    private ?int $nb_membres_equipe = null;
+
+    #[ORM\Column(type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'Veuillez sélectionner le statut juridique')]
+    private ?string $statut_juridique = null;
+
+    #[ORM\Column(type: 'string', length: 20)]
+    #[Assert\NotBlank(message: 'Veuillez indiquer si vous avez un financement')]
+    private ?string $financement_actuel = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $partenaires_potentiels = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'L\'adresse email est obligatoire')]
+    #[Assert\Email(message: 'Veuillez entrer une adresse email valide')]
+    private ?string $email_contact = null;
+
+    #[ORM\Column(type: 'string', length: 20)]
+    #[Assert\NotBlank(message: 'Le numéro de téléphone est obligatoire')]
+    #[Assert\Regex(pattern: '/^[0-9+\-\s]{10,20}$/', message: 'Veuillez entrer un numéro de téléphone valide')]
+    private ?string $telephone_contact = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $site_web = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $experiences_anterieures = null;
 
     #[ORM\Column(type: 'string', options: ['default' => 'En attente'])]
     private ?string $etat = self::ETAT_EN_ATTENTE;
@@ -121,6 +189,36 @@ class Projets
 
     public function getObjectifs(): ?string { return $this->objectifs; }
     public function setObjectifs(?string $objectifs): static { $this->objectifs = $objectifs; return $this; }
+
+    public function getBudgetEstime(): ?float { return $this->budget_estime; }
+    public function setBudgetEstime(?float $budget_estime): static { $this->budget_estime = $budget_estime; return $this; }
+
+    public function getDureeEstimee(): ?int { return $this->duree_estimee; }
+    public function setDureeEstimee(?int $duree_estimee): static { $this->duree_estimee = $duree_estimee; return $this; }
+
+    public function getNbMembresEquipe(): ?int { return $this->nb_membres_equipe; }
+    public function setNbMembresEquipe(?int $nb_membres_equipe): static { $this->nb_membres_equipe = $nb_membres_equipe; return $this; }
+
+    public function getStatutJuridique(): ?string { return $this->statut_juridique; }
+    public function setStatutJuridique(?string $statut_juridique): static { $this->statut_juridique = $statut_juridique; return $this; }
+
+    public function getFinancementActuel(): ?string { return $this->financement_actuel; }
+    public function setFinancementActuel(?string $financement_actuel): static { $this->financement_actuel = $financement_actuel; return $this; }
+
+    public function getPartenairesPotentiels(): ?string { return $this->partenaires_potentiels; }
+    public function setPartenairesPotentiels(?string $partenaires_potentiels): static { $this->partenaires_potentiels = $partenaires_potentiels; return $this; }
+
+    public function getEmailContact(): ?string { return $this->email_contact; }
+    public function setEmailContact(?string $email_contact): static { $this->email_contact = $email_contact; return $this; }
+
+    public function getTelephoneContact(): ?string { return $this->telephone_contact; }
+    public function setTelephoneContact(?string $telephone_contact): static { $this->telephone_contact = $telephone_contact; return $this; }
+
+    public function getSiteWeb(): ?string { return $this->site_web; }
+    public function setSiteWeb(?string $site_web): static { $this->site_web = $site_web; return $this; }
+
+    public function getExperiencesAnterieures(): ?string { return $this->experiences_anterieures; }
+    public function setExperiencesAnterieures(?string $experiences_anterieures): static { $this->experiences_anterieures = $experiences_anterieures; return $this; }
 
     public function getEtat(): ?string { return $this->etat; }
     public function setEtat(string $etat): static { $this->etat = $etat; return $this; }

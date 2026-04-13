@@ -1,0 +1,212 @@
+{# templates/entrepreneur/liste_projets.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-folder2-open"></i> Mes Projets</h2>
+        <a href="{{ path('entrepreneur_nouveau_projet') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouveau Projet
+        </a>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total</h5>
+                    <h3>{{ stats.total }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">En attente</h5>
+                    <h3>{{ stats.en_attente }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Acceptés</h5>
+                    <h3>{{ stats.acceptes }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">En cours</h5>
+                    <h3>{{ stats.en_cours }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Terminés</h5>
+                    <h3>{{ stats.termines }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="En attente" {% if status == 'En attente' %}selected{% endif %}>En attente</option>
+                        <option value="Accepté" {% if status == 'Accepté' %}selected{% endif %}>Accepté</option>
+                        <option value="En cours" {% if status == 'En cours' %}selected{% endif %}>En cours</option>
+                        <option value="Terminé" {% if status == 'Terminé' %}selected{% endif %}>Terminé</option>
+                        <option value="Refusé" {% if status == 'Refusé' %}selected{% endif %}>Refusé</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-select">
+                        <option value="date_soumission" {% if sort == 'date_soumission' %}selected{% endif %}>Date de soumission</option>
+                        <option value="titre" {% if sort == 'titre' %}selected{% endif %}>Titre</option>
+                        <option value="etat" {% if sort == 'etat' %}selected{% endif %}>Statut</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Liste des projets -->
+    {% if projets|length > 0 %}
+        <div class="row">
+            {% for projet in projets %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">{{ projet.titre|slice(0, 50) }}{% if projet.titre|length > 50 %}...{% endif %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ projet.description|slice(0, 100) }}{% if projet.description|length > 100 %}...{% endif %}</p>
+                            <div class="mb-2">
+                                <strong>Secteur:</strong> {{ projet.secteur }}<br>
+                                <strong>Budget:</strong> {{ projet.budgetEstime|number_format(0, ',', ' ') }} €<br>
+                                <strong>Statut:</strong>
+                                {% if projet.etat == 'En attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elseif projet.etat == 'Accepté' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                {% elseif projet.etat == 'En cours' %}
+                                    <span class="badge bg-info">En cours</span>
+                                {% elseif projet.etat == 'Terminé' %}
+                                    <span class="badge bg-secondary">Terminé</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                {% endif %}
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: {{ projet.progression }}%" aria-valuenow="{{ projet.progression }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ projet.progression }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">Soumis le: {{ projet.dateSoumission|date('d/m/Y') }}</small>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Voir
+                                </a>
+                                {% if projet.etat == 'En attente' %}
+                                    <a href="{{ path('entrepreneur_projet_modifier', {'id': projet.idProjet}) }}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i> Modifier
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ projet.idProjet }}">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </button>
+                                {% endif %}
+                                {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+                                    <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-gear"></i> Gérer
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal de confirmation de suppression -->
+                <div class="modal fade" id="deleteModal{{ projet.idProjet }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmer la suppression</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                Êtes-vous sûr de vouloir supprimer le projet "{{ projet.titre }}" ?
+                                Cette action est irréversible.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <form method="post" action="{{ path('entrepreneur_projet_supprimer', {'id': projet.idProjet}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ projet.idProjet) }}">
+                                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> Aucun projet trouvé.
+            <a href="{{ path('entrepreneur_nouveau_projet') }}" class="alert-link">Créez votre premier projet</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.card-header {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    padding: 1rem;
+}
+
+.card-header h5 {
+    color: white;
+}
+
+.badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+}
+
+.btn-group .btn {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.card-footer {
+    padding: 0.75rem;
+}
+</style>
+{% endblock %}

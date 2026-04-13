@@ -6,7 +6,7 @@
     <div class="header">
         <div>
             <h1><i class="bi bi-folder2"></i> {{ projet.titre }}</h1>
-            <div class="page-subtitle">Gestion du projet - {{ projet.entrepreneur.nom ?? 'N/A' }}</div>
+            <div class="page-subtitle">Gestion du projet - {{ projet.id_entrepreneur.nom ?? 'N/A' }}</div>
         </div>
         <div class="header-actions">
             <span class="status-badge 
@@ -39,15 +39,128 @@
         </div>
     </div>
 
+    <!-- Section: Informations détaillées du projet -->
+    <div class="card-modern mb-4">
+        <div class="card-header-modern">
+            <h3><i class="bi bi-info-circle"></i> Informations détaillées du projet</h3>
+        </div>
+        <div class="card-body-modern">
+            <div class="row">
+                <!-- Informations générales -->
+                <div class="col-md-6">
+                    <h5 class="mb-3"><i class="bi bi-file-text"></i> Description</h5>
+                    <div class="detail-item">
+                        <label>Titre</label>
+                        <p><strong>{{ projet.titre }}</strong></p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Description</label>
+                        <p>{{ projet.description|nl2br }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Secteur</label>
+                        <p><span class="badge bg-primary">{{ projet.secteur }}</span></p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Objectifs</label>
+                        <p>{{ projet.objectifs|nl2br }}</p>
+                    </div>
+                </div>
+
+                <!-- Informations financières -->
+                <div class="col-md-6">
+                    <h5 class="mb-3"><i class="bi bi-calculator"></i> Aspects financiers</h5>
+                    <div class="detail-item">
+                        <label>Budget estimé</label>
+                        <p class="fs-4 fw-bold text-success">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Durée estimée</label>
+                        <p>{{ projet.dureeEstimee }} mois</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Nombre de membres</label>
+                        <p>{{ projet.nbMembresEquipe }} personnes</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Statut juridique</label>
+                        <p>{{ projet.statutJuridique }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Financement actuel</label>
+                        <p><span class="badge bg-info">{{ projet.financementActuel }}</span></p>
+                    </div>
+                    {% if projet.partenairesPotentiels %}
+                    <div class="detail-item">
+                        <label>Partenaires potentiels</label>
+                        <p>{{ projet.partenairesPotentiels|nl2br }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Coordonnées -->
+                <div class="col-md-6 mt-3">
+                    <h5 class="mb-3"><i class="bi bi-envelope"></i> Coordonnées</h5>
+                    <div class="detail-item">
+                        <label>Email de contact</label>
+                        <p><i class="bi bi-envelope"></i> <a href="mailto:{{ projet.emailContact }}">{{ projet.emailContact }}</a></p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Téléphone</label>
+                        <p><i class="bi bi-telephone"></i> <a href="tel:{{ projet.telephoneContact }}">{{ projet.telephoneContact }}</a></p>
+                    </div>
+                    {% if projet.siteWeb %}
+                    <div class="detail-item">
+                        <label>Site web</label>
+                        <p><i class="bi bi-globe"></i> <a href="{{ projet.siteWeb }}" target="_blank">{{ projet.siteWeb }}</a></p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Expériences -->
+                {% if projet.experiencesAnterieures %}
+                <div class="col-md-6 mt-3">
+                    <h5 class="mb-3"><i class="bi bi-briefcase"></i> Expériences antérieures</h5>
+                    <div class="detail-item">
+                        <p>{{ projet.experiencesAnterieures|nl2br }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Informations de soumission -->
+                <div class="col-12 mt-3">
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <label>Date de soumission</label>
+                                <p><i class="bi bi-calendar"></i> {{ projet.dateSoumission|date('d/m/Y H:i') }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <label>Entrepreneur</label>
+                                <p><i class="bi bi-person"></i> {{ projet.id_entrepreneur.nom ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <label>Statut actuel</label>
+                                <p>{{ projet.etat }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
-        <!-- Colonne gauche : Membres -->
+        <!-- Colonne gauche : Membres (lecture seule) -->
         <div class="col-lg-5 mb-4">
             <div class="card-modern">
                 <div class="card-header-modern">
                     <h3><i class="bi bi-people"></i> Membres de l'équipe</h3>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
-                        <i class="bi bi-plus-circle"></i> Ajouter
-                    </button>
                 </div>
                 <div class="card-body-modern">
                     {% if membres|length > 0 %}
@@ -59,16 +172,9 @@
                                         <i class="bi bi-person-circle fs-1"></i>
                                     </div>
                                     <div class="team-member-details">
-                                        <div class="team-member-name">{{ membre.membre.nom }}</div>
+                                        <div class="team-member-name">{{ membre.idUtilisateur.nom ?? membre.membre.nom ?? 'Membre' }}</div>
                                         <div class="team-member-role">{{ membre.roleEquipe }}</div>
                                     </div>
-                                </div>
-                                <div class="team-member-actions">
-                                    <a href="{{ path('admin_supprimer_membre', {'id': membre.idMembre}) }}" 
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Supprimer ce membre ?')">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -76,24 +182,19 @@
                     {% else %}
                         <div class="text-center py-4">
                             <i class="bi bi-people fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">Aucun membre dans l'équipe</p>
-                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addMemberModal">
-                                <i class="bi bi-plus-circle"></i> Ajouter un membre
-                            </button>
+                            <p class="text-muted mt-2">Aucun membre dans l'équipe pour le moment</p>
+                            <small class="text-muted">L'entrepreneur ajoutera les membres</small>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Colonne droite : Tâches -->
+        <!-- Colonne droite : Tâches (lecture seule) -->
         <div class="col-lg-7 mb-4">
             <div class="card-modern">
                 <div class="card-header-modern">
                     <h3><i class="bi bi-check2-square"></i> Tâches du projet</h3>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                        <i class="bi bi-plus-circle"></i> Ajouter
-                    </button>
                 </div>
                 <div class="card-body-modern">
                     {% if taches|length > 0 %}
@@ -110,23 +211,16 @@
                                             {{ tache.statut }}
                                         </span>
                                     </div>
-                                    <div class="task-actions">
-                                        <a href="{{ path('admin_supprimer_tache', {'id': tache.idTache}) }}" 
-                                           class="btn btn-sm btn-danger"
-                                           onclick="return confirm('Supprimer cette tâche ?')">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
                                 </div>
                                 {% if tache.description %}
                                 <div class="task-description">
-                                    {{ tache.description }}
+                                    {{ tache.description|nl2br }}
                                 </div>
                                 {% endif %}
                                 <div class="task-footer">
                                     <div class="task-assignee">
                                         <i class="bi bi-person"></i>
-                                        {{ tache.responsable.nom ?? 'Non assigné' }}
+                                        {{ tache.idUtilisateur.nom ?? tache.responsable.nom ?? 'Non assigné' }}
                                     </div>
                                     {% if tache.dateLimite %}
                                     <div class="task-deadline">
@@ -141,85 +235,20 @@
                     {% else %}
                         <div class="text-center py-4">
                             <i class="bi bi-check2-square fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">Aucune tâche créée</p>
-                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                                <i class="bi bi-plus-circle"></i> Créer une tâche
-                            </button>
+                            <p class="text-muted mt-2">Aucune tâche créée pour le moment</p>
+                            <small class="text-muted">L'entrepreneur ajoutera les tâches</small>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Modal Ajouter Membre -->
-<div class="modal fade" id="addMemberModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white;">
-                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Ajouter un membre</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                {{ form_start(membreForm, {'attr': {'id': 'memberForm'}})}}
-                    <div class="mb-3">
-                        {{ form_label(membreForm.membre, 'Membre', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                        {{ form_widget(membreForm.membre, {'attr': {'class': 'form-control', 'required': true}})}}
-                    </div>
-                    <div class="mb-3">
-                        {{ form_label(membreForm.role_equipe, 'Rôle dans l\'équipe', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                        {{ form_widget(membreForm.role_equipe, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Développeur Frontend', 'required': true}})}}
-                    </div>
-                {{ form_end(membreForm) }}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="submitMemberForm()">Ajouter</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Ajouter Tâche -->
-<div class="modal fade" id="addTaskModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white;">
-                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Ajouter une tâche</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                {{ form_start(tacheForm, {'attr': {'id': 'taskForm'}})}}
-                    <div class="mb-3">
-                        {{ form_label(tacheForm.titre, 'Titre de la tâche', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                        {{ form_widget(tacheForm.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Développer la page d\'accueil', 'required': true}})}}
-                    </div>
-                    <div class="mb-3">
-                        {{ form_label(tacheForm.description, 'Description', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                        {{ form_widget(tacheForm.description, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Description détaillée...'}})}}
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            {{ form_label(tacheForm.date_limite, 'Date limite', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                            {{ form_widget(tacheForm.date_limite, {'attr': {'class': 'form-control'}})}}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_label(tacheForm.responsable, 'Responsable', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                            {{ form_widget(tacheForm.responsable, {'attr': {'class': 'form-control'}})}}
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        {{ form_label(tacheForm.statut, 'Statut initial', {'label_attr': {'class': 'form-label fw-bold'}})}}
-                        {{ form_widget(tacheForm.statut, {'attr': {'class': 'form-control'}})}}
-                    </div>
-                {{ form_end(tacheForm) }}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="submitTaskForm()">Ajouter la tâche</button>
-            </div>
-        </div>
+    
+    <!-- Bouton retour -->
+    <div class="text-center mt-3 mb-4">
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+        </a>
     </div>
 </div>
 
@@ -257,6 +286,25 @@
     border-radius: 16px;
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
+}
+
+.detail-item {
+    margin-bottom: 1rem;
+}
+
+.detail-item label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-gray);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.detail-item p {
+    margin: 0;
+    color: var(--color-dark);
 }
 
 .team-grid {
@@ -378,45 +426,15 @@
     gap: 1rem;
     align-items: center;
 }
+
+.badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+hr {
+    margin: 1rem 0;
+}
 </style>
-
-<script>
-function submitMemberForm() {
-    const membre = document.querySelector('#memberForm select[name="membre_equipe[membre]"]');
-    const role = document.querySelector('#memberForm input[name="membre_equipe[role_equipe]"]');
-    
-    if (!membre.value) {
-        showToast('Veuillez sélectionner un membre', 'error');
-        membre.classList.add('is-invalid');
-        return;
-    }
-    
-    if (!role.value.trim()) {
-        showToast('Veuillez entrer un rôle', 'error');
-        role.classList.add('is-invalid');
-        return;
-    }
-    
-    document.getElementById('memberForm').submit();
-}
-
-function submitTaskForm() {
-    const titre = document.querySelector('#taskForm input[name="tache[titre]"]');
-    
-    if (!titre.value.trim()) {
-        showToast('Le titre de la tâche est obligatoire', 'error');
-        titre.classList.add('is-invalid');
-        return;
-    }
-    
-    document.getElementById('taskForm').submit();
-}
-
-// Remove invalid class on input
-document.querySelectorAll('#memberForm select, #memberForm input, #taskForm input').forEach(field => {
-    field.addEventListener('input', function() {
-        this.classList.remove('is-invalid');
-    });
-});
-</script>
 {% endblock %}

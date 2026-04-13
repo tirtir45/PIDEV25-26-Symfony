@@ -9,7 +9,7 @@
             <h1>{{ projet.titre }}</h1>
             <div class="page-subtitle">
                 Soumis le {{ projet.dateSoumission|date('d/m/Y H:i') }} - 
-                Entrepreneur: {{ projet.entrepreneur.nom ?? 'N/A' }}
+                Entrepreneur: {{ projet.id_entrepreneur.nom ?? 'N/A' }}
             </div>
         </div>
         <div>
@@ -69,6 +69,94 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Nouvelle section: Informations financières -->
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <h3><i class="bi bi-calculator"></i> Informations financières</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Budget estimé</label>
+                                <p class="fs-4 fw-bold text-success">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Durée estimée</label>
+                                <p><i class="bi bi-calendar"></i> {{ projet.dureeEstimee }} mois</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Nombre de membres</label>
+                                <p><i class="bi bi-people"></i> {{ projet.nbMembresEquipe }} personnes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Statut juridique</label>
+                                <p>{{ projet.statutJuridique }}</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Financement actuel</label>
+                                <p><span class="badge bg-info">{{ projet.financementActuel }}</span></p>
+                            </div>
+                        </div>
+                        {% if projet.partenairesPotentiels %}
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Partenaires potentiels</label>
+                                <p>{{ projet.partenairesPotentiels }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nouvelle section: Coordonnées -->
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <h3><i class="bi bi-envelope"></i> Coordonnées</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Email de contact</label>
+                                <p><i class="bi bi-envelope"></i> <a href="mailto:{{ projet.emailContact }}">{{ projet.emailContact }}</a></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Téléphone</label>
+                                <p><i class="bi bi-telephone"></i> <a href="tel:{{ projet.telephoneContact }}">{{ projet.telephoneContact }}</a></p>
+                            </div>
+                        </div>
+                        {% if projet.siteWeb %}
+                        <div class="col-md-12">
+                            <div class="detail-item">
+                                <label>Site web</label>
+                                <p><i class="bi bi-globe"></i> <a href="{{ projet.siteWeb }}" target="_blank">{{ projet.siteWeb }}</a></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if projet.experiencesAnterieures %}
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Expériences antérieures</label>
+                                <p>{{ projet.experiencesAnterieures }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Statistiques -->
@@ -94,6 +182,14 @@
                         <span>Tâches en cours</span>
                         <strong>{{ taches|filter(t => t.statut == 'En cours')|length }}</strong>
                     </div>
+                    <div class="stat-item">
+                        <span>Budget par mois</span>
+                        <strong>{{ (projet.budgetEstime / projet.dureeEstimee)|number_format(0, ',', ' ') }} €/mois</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Coût par membre</span>
+                        <strong>{{ (projet.budgetEstime / projet.nbMembresEquipe)|number_format(0, ',', ' ') }} €/pers</strong>
+                    </div>
                 </div>
             </div>
             
@@ -108,6 +204,25 @@
                 </div>
             </div>
             {% endif %}
+            
+            <!-- Boutons d'action -->
+            <div class="mt-4">
+                <div class="d-grid gap-2">
+                    {% if projet.etat == 'En attente' %}
+                        <a href="{{ path('entrepreneur_projet_modifier', {'id': projet.idProjet}) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Modifier le projet
+                        </a>
+                    {% endif %}
+                    {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+                        <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="btn btn-success">
+                            <i class="bi bi-gear"></i> Gérer le projet
+                        </a>
+                    {% endif %}
+                    <a href="{{ path('entrepreneur_projets_liste') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour à la liste
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -127,7 +242,7 @@
                                     <i class="bi bi-person-circle fs-3"></i>
                                 </div>
                                 <div class="member-info">
-                                    <div class="member-name">{{ membre.membre.nom }}</div>
+                                    <div class="member-name">{{ membre.idUtilisateur.nom ?? 'Membre' }}</div>
                                     <div class="member-role">{{ membre.roleEquipe }}</div>
                                 </div>
                             </div>
@@ -161,7 +276,7 @@
                                 <div class="task-content">
                                     <div class="task-title">{{ tache.titre }}</div>
                                     <div class="task-meta">
-                                        <span><i class="bi bi-person"></i> {{ tache.responsable.nom ?? 'Non assigné' }}</span>
+                                        <span><i class="bi bi-person"></i> {{ tache.idUtilisateur.nom ?? 'Non assigné' }}</span>
                                         {% if tache.dateLimite %}
                                         <span><i class="bi bi-calendar"></i> {{ tache.dateLimite|date('d/m/Y') }}</span>
                                         {% endif %}
@@ -174,7 +289,7 @@
                                         </span>
                                     </div>
                                     {% if tache.description %}
-                                    <div class="task-description-small">{{ tache.description|slice(0, 100) }}...</div>
+                                    <div class="task-description-small">{{ tache.description|slice(0, 100) }}{% if tache.description|length > 100 %}...{% endif %}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -334,6 +449,72 @@
     font-size: 0.85rem;
     color: var(--color-gray);
     line-height: 1.4;
+}
+
+/* Améliorations responsives */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .stat-item strong {
+        font-size: 1rem;
+    }
+    
+    .task-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card-modern {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Style pour les badges */
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Style pour les liens */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+}
+
+/* Style pour les boutons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 </style>
 {% endblock %}

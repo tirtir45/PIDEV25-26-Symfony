@@ -11,56 +11,113 @@
         
         <div class="project-details">
             <h3>{{ projet.titre }}</h3>
-            <div class="details-grid">
-                <div class="detail-item">
-                    <label>Entrepreneur</label>
-                    <p>{{ projet.entrepreneur.nom ?? 'N/A' }}</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Entrepreneur</label>
+                        <p>{{ projet.id_entrepreneur.nom ?? 'N/A' }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Secteur</label>
+                        <p>{{ projet.secteur }}</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Date de soumission</label>
+                        <p>{{ projet.dateSoumission|date('d/m/Y H:i') }}</p>
+                    </div>
                 </div>
-                <div class="detail-item">
-                    <label>Secteur</label>
-                    <p>{{ projet.secteur }}</p>
-                </div>
-                <div class="detail-item">
-                    <label>Date de soumission</label>
-                    <p>{{ projet.dateSoumission|date('d/m/Y H:i') }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Budget estimé</label>
+                        <p class="fw-bold text-success">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Durée estimée</label>
+                        <p>{{ projet.dureeEstimee }} mois</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Nombre de membres</label>
+                        <p>{{ projet.nbMembresEquipe }} personnes</p>
+                    </div>
                 </div>
             </div>
             
             <div class="detail-item full-width">
                 <label>Description</label>
-                <p>{{ projet.description }}</p>
+                <p>{{ projet.description|nl2br }}</p>
             </div>
             
             <div class="detail-item full-width">
                 <label>Objectifs</label>
-                <p>{{ projet.objectifs }}</p>
-            </div>
-        </div>
-        
-        {{ form_start(form, {'attr': {'id': 'validationForm', 'class': 'validation-form'}})}}
-            <div class="form-group">
-                {{ form_label(form.commentaire_admin) }}
-                {{ form_widget(form.commentaire_admin) }}
+                <p>{{ projet.objectifs|nl2br }}</p>
             </div>
             
-            <div class="decision-group">
-                <label>Décision</label>
-                <div class="decision-options">
-                    {% for child in form.action %}
-                        <label class="decision-option {% if child.vars.value == 'accepter' %}accept{% else %}refuse{% endif %}">
-                            {{ form_widget(child) }}
-                            <i class="bi bi-{% if child.vars.value == 'accepter' %}check-circle{% else %}x-circle{% endif %}"></i>
-                            <span>{{ child.vars.label }}</span>
-                        </label>
-                    {% endfor %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Statut juridique</label>
+                        <p>{{ projet.statutJuridique }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Financement actuel</label>
+                        <p>{{ projet.financementActuel }}</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-lg">Confirmer la décision</button>
-                <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary btn-lg">Annuler</a>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Email contact</label>
+                        <p><a href="mailto:{{ projet.emailContact }}">{{ projet.emailContact }}</a></p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label>Téléphone</label>
+                        <p>{{ projet.telephoneContact }}</p>
+                    </div>
+                </div>
             </div>
-        {{ form_end(form) }}
+            
+            {% if projet.partenairesPotentiels %}
+            <div class="detail-item full-width">
+                <label>Partenaires potentiels</label>
+                <p>{{ projet.partenairesPotentiels|nl2br }}</p>
+            </div>
+            {% endif %}
+            
+            {% if projet.experiencesAnterieures %}
+            <div class="detail-item full-width">
+                <label>Expériences antérieures</label>
+                <p>{{ projet.experiencesAnterieures|nl2br }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <form method="post" id="validationForm" class="validation-form">
+            <div class="form-group">
+                <label class="form-label fw-bold">Commentaire (optionnel pour acceptation, recommandé pour refus)</label>
+                <textarea name="commentaire_admin" class="form-control" rows="4" placeholder="Ajoutez un commentaire pour l'entrepreneur...">{{ projet.commentaire_admin }}</textarea>
+            </div>
+            
+            <div class="decision-group">
+                <label class="fw-bold mb-3">Décision finale</label>
+                <div class="decision-buttons">
+                    <button type="submit" name="action" value="accepter" class="decision-btn accept-btn">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Accepter le projet</span>
+                    </button>
+                    <button type="submit" name="action" value="refuser" class="decision-btn refuse-btn">
+                        <i class="bi bi-x-circle"></i>
+                        <span>Refuser le projet</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -70,6 +127,8 @@
     border-radius: 24px;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .validation-header {
@@ -79,6 +138,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .validation-header h2 {
@@ -98,11 +159,8 @@
     color: var(--color-dark);
 }
 
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+.detail-item {
+    margin-bottom: 1rem;
 }
 
 .detail-item label {
@@ -122,109 +180,107 @@
 }
 
 .full-width {
-    grid-column: 1 / -1;
+    margin-top: 0.5rem;
 }
 
 .validation-form {
     padding: 2rem;
 }
 
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
 .decision-group {
     margin: 1.5rem 0;
 }
 
-.decision-group > label {
-    font-weight: 600;
-    margin-bottom: 1rem;
-    display: block;
-    color: var(--color-dark);
-}
-
-.decision-options {
+.decision-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
+    justify-content: center;
     flex-wrap: wrap;
 }
 
-.decision-option {
+.decision-btn {
     flex: 1;
-    padding: 1rem;
-    border: 2px solid #e2e8f0;
+    min-width: 200px;
+    padding: 1rem 2rem;
+    border: none;
     border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
+}
+
+.decision-btn i {
+    font-size: 1.5rem;
+}
+
+.accept-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.accept-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.refuse-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.refuse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
 }
 
-.decision-option:hover {
-    border-color: var(--color-primary);
-    background: rgba(161, 85, 185, 0.05);
-}
-
-.decision-option.accept.selected {
-    border-color: var(--color-success);
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--color-success);
-}
-
-.decision-option.refuse.selected {
-    border-color: var(--color-danger);
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--color-danger);
-}
-
-.decision-option input {
-    display: none;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e2e8f0;
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
 }
 
 @media (max-width: 768px) {
-    .decision-options {
+    .decision-buttons {
         flex-direction: column;
     }
     
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .form-actions .btn {
+    .decision-btn {
         width: 100%;
+    }
+    
+    .validation-header {
+        flex-direction: column;
+        text-align: center;
     }
 }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const decisionOptions = document.querySelectorAll('.decision-option');
-    const radioInputs = document.querySelectorAll('input[name="projet_validation[action]"]');
+document.getElementById('validationForm').addEventListener('submit', function(e) {
+    const commentaire = document.querySelector('textarea[name="commentaire_admin"]').value;
+    const action = e.submitter ? e.submitter.value : null;
     
-    decisionOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                decisionOptions.forEach(opt => opt.classList.remove('selected'));
-                this.classList.add('selected');
-            }
-        });
-    });
-    
-    // Vérifier quelle option est sélectionnée au chargement
-    radioInputs.forEach(radio => {
-        if (radio.checked) {
-            radio.closest('.decision-option').classList.add('selected');
-        }
-    });
+    if (action === 'refuser' && !commentaire.trim()) {
+        e.preventDefault();
+        alert('Veuillez ajouter un commentaire expliquant pourquoi vous refusez ce projet.');
+        document.querySelector('textarea[name="commentaire_admin"]').focus();
+    }
 });
 </script>
 {% endblock %}
