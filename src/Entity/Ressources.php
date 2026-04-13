@@ -64,6 +64,15 @@ class Ressources
     #[ORM\Column(name: "created_at", type: "datetime_immutable")]
     private ?\DateTimeImmutable $created_at = null;
 
+    #[ORM\Column(type: "boolean")]
+    private bool $is_banned = false;
+
+    #[ORM\Column(type: "integer")]
+    private int $moderation_score = 0;
+
+    #[ORM\Column(type: "string", length: 255, nullable: true)]
+    private ?string $moderation_reason = null;
+
     public function getId_ressource()
     {
         return $this->id_ressource;
@@ -315,4 +324,13 @@ class Ressources
     {
         $this->setUnite_louer($value);
     }
+
+    public function isBanned(): bool { return $this->is_banned; }
+    public function setIsBanned(bool $b): self { $this->is_banned = $b; return $this; }
+
+    public function getModerationScore(): int { return $this->moderation_score; }
+    public function setModerationScore(int $s): self { $this->moderation_score = $s; return $this; }
+
+    public function getModerationReason(): ?string { return $this->moderation_reason; }
+    public function setModerationReason(?string $r): self { $this->moderation_reason = $r; return $this; }
 }

@@ -27,19 +27,88 @@
                     </div>
                 {% endif %}
 
-                <form method="POST" action="{{ path('app_login') }}" class="auth-form" novalidate>
+                <form method="POST" action="{{ path('app_login') }}" class="auth-form" id="loginForm" novalidate>
                     <div class="auth-field">
                         <label class="auth-label">Email</label>
-                        <input type="email" name="email" class="auth-input" placeholder="mail@example.com" required>
+                        <input type="email" name="email" id="email" class="auth-input" placeholder="mail@example.com" required>
+                        <span class="small text-danger" id="email-error"></span>
                     </div>
 
                     <div class="auth-field">
                         <label class="auth-label">Mot de passe</label>
-                        <input type="password" name="password" class="auth-input" placeholder="••••••••" required>
+                        <input type="password" name="password" id="password" class="auth-input" placeholder="••••••••" required>
+                        <span class="small text-danger" id="password-error"></span>
                     </div>
 
                     <button type="submit" class="btn-auth">Se connecter</button>
                 </form>
+
+                <script>
+                const loginForm = document.getElementById('loginForm');
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password');
+
+                function validateLoginEmail() {
+                    const val = emailInput.value.trim();
+                    const errorSpan = document.getElementById('email-error');
+                    
+                    if (val === '') {
+                        emailInput.classList.add('is-invalid');
+                        emailInput.classList.remove('is-valid');
+                        errorSpan.textContent = 'L\'adresse email est requise.';
+                        errorSpan.style.display = 'block';
+                        return false;
+                    }
+
+                    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                    if (!isValid) {
+                        emailInput.classList.add('is-invalid');
+                        emailInput.classList.remove('is-valid');
+                        errorSpan.textContent = 'Veuillez entrer un email valide.';
+                        errorSpan.style.display = 'block';
+                        return false;
+                    } else {
+                        emailInput.classList.remove('is-invalid');
+                        emailInput.classList.add('is-valid');
+                        errorSpan.textContent = '';
+                        errorSpan.style.display = 'none';
+                        return true;
+                    }
+                }
+
+                function validateLoginPassword() {
+                    const val = passwordInput.value.trim();
+                    const errorSpan = document.getElementById('password-error');
+                    
+                    if (val === '') {
+                        passwordInput.classList.add('is-invalid');
+                        passwordInput.classList.remove('is-valid');
+                        errorSpan.textContent = 'Le mot de passe est requis.';
+                        errorSpan.style.display = 'block';
+                        return false;
+                    } else {
+                        passwordInput.classList.remove('is-invalid');
+                        passwordInput.classList.add('is-valid');
+                        errorSpan.textContent = '';
+                        errorSpan.style.display = 'none';
+                        return true;
+                    }
+                }
+
+                emailInput.addEventListener('input', validateLoginEmail);
+                passwordInput.addEventListener('input', validateLoginPassword);
+
+                loginForm.addEventListener('submit', function(e) {
+                    const isEmailValid = validateLoginEmail();
+                    const isPasswordValid = validateLoginPassword();
+
+                    if (!isEmailValid || !isPasswordValid) {
+                        e.preventDefault();
+                        if (!isEmailValid) emailInput.focus();
+                        else if (!isPasswordValid) passwordInput.focus();
+                    }
+                });
+                </script>
 
                 <div class="auth-footer">
                     <p>Vous n'avez pas de compte ? <a href="{{ path('app_register') }}">S'inscrire</a></p>

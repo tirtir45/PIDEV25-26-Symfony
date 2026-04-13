@@ -1,115 +1,136 @@
+{# templates/reclamation/index.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Mes Réclamations - StartHub{% endblock %}
 
 {% block body %}
-<div class="reclamation-container">
-
-    <div class="reclamation-header">
-        <h1 class="reclamation-title">Mes Réclamations</h1>
-        {% if not showForm %}
-            <a href="{{ path('reclamation_index', {new: 1}) }}" class="btn-nouvelle">+ Nouvelle réclamation</a>
-        {% endif %}
+<div class="container-fluid fade-in">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Mes Réclamations</h1>
+            <div class="page-subtitle">Consultez l'état de vos demandes et soumettez-en de nouvelles</div>
+        </div>
+        <div class="header-actions">
+            {% if not showForm %}
+                <a href="{{ path('reclamation_index', {new: 1}) }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i> Nouvelle Réclamation
+                </a>
+            {% endif %}
+        </div>
     </div>
 
     {% if showForm %}
-    <div class="reclamation-form-card">
-        <h2 class="reclamation-form-title">Nouvelle réclamation</h2>
+    <!-- Form Card -->
+    <div class="row justify-content-center mt-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card-modern shadow-lg">
+                <div class="card-header-modern p-4 border-bottom">
+                    <h4 class="mb-0">Soumettre une Réclamation</h4>
+                </div>
+                <div class="card-body-modern p-4">
+                    {% if error %}
+                        <div class="alert alert-danger rounded-3 mb-4">{{ error }}</div>
+                    {% endif %}
 
-        {% if error %}
-            <div class="flash flash-error">{{ error }}</div>
-        {% endif %}
+                    <form method="POST" action="{{ path('reclamation_index') }}" id="reclamForm" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label text-muted small fw-bold">Sujet de la demande</label>
+                            <input type="text" name="sujet" id="sujet" class="form-control"
+                                   placeholder="Ex: Problème d'accès, Bug technique..." required>
+                            <div class="invalid-feedback" id="sujet-error"></div>
+                        </div>
 
-        <form method="POST" action="{{ path('reclamation_index') }}" id="reclamForm">
-            <div class="reclamation-field">
-                <label class="reclamation-label">Sujet <span style="color:#dc2626">*</span></label>
-                <input type="text" name="sujet" id="sujet" class="reclamation-input"
-                       placeholder="Entrez le sujet de votre réclamation">
-                <span class="field-error" id="sujet-error"></span>
+                        <div class="col-12">
+                            <label class="form-label text-muted small fw-bold">Description détaillée</label>
+                            <textarea name="description" id="description" class="form-control"
+                                      placeholder="Décrivez votre problème en détail..." rows="5" required></textarea>
+                            <div class="invalid-feedback" id="description-error"></div>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2 justify-content-end mt-4">
+                            <a href="{{ path('reclamation_index') }}" class="btn btn-outline-secondary px-4">Annuler</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-send me-2"></i> Envoyer la demande
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <div class="reclamation-field">
-                <label class="reclamation-label">Description <span style="color:#dc2626">*</span></label>
-                <textarea name="description" id="description" class="reclamation-textarea"
-                          placeholder="Décrivez votre réclamation en détail" rows="5"></textarea>
-                <span class="field-error" id="description-error"></span>
-            </div>
-
-            <div class="reclamation-actions">
-                <button type="submit" class="btn-soumettre">Soumettre</button>
-                <a href="{{ path('reclamation_index') }}" class="btn-annuler">Annuler</a>
-            </div>
-        </form>
-
-        <script>
-        document.getElementById('reclamForm').addEventListener('submit', function(e) {
-            let valid = true;
-
-            const sujet = document.getElementById('sujet').value.trim();
-            const desc  = document.getElementById('description').value.trim();
-
-            if (sujet.length < 3) {
-                document.getElementById('sujet').style.borderColor = '#dc2626';
-                document.getElementById('sujet-error').textContent = 'Le sujet est obligatoire (min. 3 caractères)';
-                valid = false;
-            } else {
-                document.getElementById('sujet').style.borderColor = '#10b981';
-                document.getElementById('sujet-error').textContent = '';
-            }
-
-            if (desc.length < 10) {
-                document.getElementById('description').style.borderColor = '#dc2626';
-                document.getElementById('description-error').textContent = 'La description est obligatoire (min. 10 caractères)';
-                valid = false;
-            } else {
-                document.getElementById('description').style.borderColor = '#10b981';
-                document.getElementById('description-error').textContent = '';
-            }
-
-            if (!valid) e.preventDefault();
-        });
-
-        document.getElementById('sujet').addEventListener('input', function() {
-            if (this.value.trim().length >= 3) {
-                this.style.borderColor = '#10b981';
-                document.getElementById('sujet-error').textContent = '';
-            } else {
-                this.style.borderColor = '#dc2626';
-                document.getElementById('sujet-error').textContent = 'Min. 3 caractères';
-            }
-        });
-
-        document.getElementById('description').addEventListener('input', function() {
-            if (this.value.trim().length >= 10) {
-                this.style.borderColor = '#10b981';
-                document.getElementById('description-error').textContent = '';
-            } else {
-                this.style.borderColor = '#dc2626';
-                document.getElementById('description-error').textContent = 'Min. 10 caractères';
-            }
-        });
-        </script>
-    </div>
-    {% endif %}
-
-    {% if reclamations is not empty %}
-    <div class="reclamation-list">
-        {% for r in reclamations %}
-        <div class="reclamation-item">
-            <div class="reclamation-item-header">
-                <span class="reclamation-sujet">{{ r.sujet }}</span>
-                <span class="reclamation-statut statut-{{ r.statut|lower }}">{{ r.statut }}</span>
-            </div>
-            <div class="reclamation-desc">{{ r.description }}</div>
-            <div class="reclamation-date">{{ r.dateCreation|date('d/m/Y H:i') }}</div>
         </div>
-        {% endfor %}
     </div>
-    {% elseif not showForm %}
-    <div class="reclamation-empty">
-        <p>Vous n'avez aucune réclamation pour le moment.</p>
-    </div>
+
+    <script>
+    document.getElementById('reclamForm').addEventListener('submit', function(e) {
+        let valid = true;
+        const sujet = document.getElementById('sujet').value.trim();
+        const desc  = document.getElementById('description').value.trim();
+
+        if (sujet.length < 3) {
+            document.getElementById('sujet').classList.add('is-invalid');
+            document.getElementById('sujet-error').textContent = 'Le sujet doit contenir au moins 3 caractères';
+            valid = false;
+        } else {
+            document.getElementById('sujet').classList.remove('is-invalid');
+            document.getElementById('sujet').classList.add('is-valid');
+        }
+
+        if (desc.length < 10) {
+            document.getElementById('description').classList.add('is-invalid');
+            document.getElementById('description-error').textContent = 'La description doit contenir au moins 10 caractères';
+            valid = false;
+        } else {
+            document.getElementById('description').classList.remove('is-invalid');
+            document.getElementById('description').classList.add('is-valid');
+        }
+
+        if (!valid) e.preventDefault();
+    });
+    </script>
     {% endif %}
 
+    <!-- List Section -->
+    <div class="mt-4">
+        {% if reclamations is not empty %}
+            <div class="row g-4">
+                {% for r in reclamations %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="resource-card h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge {{ r.statut == 'EN_ATTENTE' ? 'bg-warning-subtle text-warning' : (r.statut == 'RESOLU' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger') }} rounded-pill px-3">
+                                    {{ r.statut|replace({'_': ' '}) }}
+                                </span>
+                                <div class="text-muted small">
+                                    <i class="bi bi-calendar3"></i> {{ r.dateCreation|date('d/m/Y') }}
+                                </div>
+                            </div>
+                            
+                            <h5 class="resource-title mb-3 text-main">{{ r.sujet }}</h5>
+                            
+                            <p class="resource-description text-muted small mb-0">
+                                {{ r.description|slice(0, 200) }}{% if r.description|length > 200 %}...{% endif %}
+                            </p>
+                            
+                            {% if r.statut == 'RESOLU' %}
+                                <div class="mt-3 p-2 bg-success-subtle text-success rounded-3 small text-center">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Cette demande a été traitée.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% elseif not showForm %}
+            <div class="card-modern">
+                <div class="card-body-modern text-center py-5">
+                    <i class="bi bi-journal-text display-1 text-muted opacity-25"></i>
+                    <p class="text-muted mt-3">Vous n'avez soumis aucune réclamation pour le moment.</p>
+                    <a href="{{ path('reclamation_index', {new: 1}) }}" class="btn btn-primary mt-3">
+                        Démarrer une réclamation
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

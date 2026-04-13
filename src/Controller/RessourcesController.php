@@ -5,9 +5,12 @@ namespace App\Controller;
 use App\Entity\Ressources;
 use App\Form\RessourceType;
 use App\Repository\RessourcesRepository;
+use App\Service\RecommendationService;
+use App\Service\SmartModerationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,7 +97,7 @@ final class RessourcesController extends AbstractController
     }
 
     #[Route(name: 'app_ressources_index', methods: ['GET'])]
-    public function index(Request $request, RessourcesRepository $ressourcesRepository): Response
+    public function index(Request $request, RessourcesRepository $ressourcesRepository, RecommendationService $recommendationService, SmartModerationService $moderationService): Response
     {
         $isFournisseurCatalog = ($request->getSession()->get('user_role') === 'Fournisseur');
         $request->getSession()->set('nav_ctx', $isFournisseurCatalog ? 'fournisseur' : 'entrepreneur');
@@ -121,6 +124,9 @@ final class RessourcesController extends AbstractController
         $baseRessources = $isFournisseurCatalog
             ? $allRessources
             : array_values(array_filter($allRessources, static function (Ressources $ressource): bool {
+                if ($ressource->isBanned()) {
+                    return false;
+                }
                 $quantity = max(0, (int) $ressource->getQuantite());
                 if ($quantity === 0) {
                     return true;
@@ -215,8 +221,19 @@ final class RessourcesController extends AbstractController
             }
         }
 
+        $userId = $request->getSession()->get('user_id');
+        $currentUser = $userId ? $ressourcesRepository->getEntityManager()->getRepository(\App\Entity\Utilisateurs::class)->find($userId) : null;
+        $recommendedData = $recommendationService->getRecommendations($currentUser, $baseRessources);
+
+        $recommendationMap = [];
+        foreach ($recommendedData as $item) {
+            $recommendationMap[$item['ressource']->getId_ressource()] = $item;
+        }
+
         return $this->render('ressources/index.html.twig', [
             'ressources'        => $ressources,
+            'rec_map'           => $recommendationMap,
+            'has_projects'      => $currentUser ? !$currentUser->getProjetss()->isEmpty() : false,
             'catalog_mode'      => $isFournisseurCatalog ? 'fournisseur' : 'entrepreneur',
             'cart_count'        => is_array($cart) ? count($cart) : 0,
             'filters'           => $filters,
@@ -232,7 +249,7 @@ final class RessourcesController extends AbstractController
     }
 
     #[Route('/new', name: 'app_ressources_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, SmartModerationService $moderationService): Response
     {
         $this->syncNavContextFromRequest($request);
         $request->getSession()->set('nav_ctx', 'fournisseur');
@@ -260,14 +277,22 @@ final class RessourcesController extends AbstractController
                 . DIRECTORY_SEPARATOR . 'uploads'
                 . DIRECTORY_SEPARATOR . 'ressources';
 
-            $newFilename = $this->handleImageUpload($request, $uploadDir);
+            $newFilename = $this->handleImageUpload($form, $uploadDir);
             if ($newFilename !== null) {
                 $ressource->setImage_r($newFilename);
             }
 
             $this->normalizeOfferDependentFields($ressource);
+            
+            // Run Smart Moderation
+            $moderationService->moderate($ressource);
+            
             $entityManager->persist($ressource);
             $entityManager->flush();
+
+            if ($ressource->isBanned()) {
+                $this->addFlash('warning', 'Votre ressource a été signalée par notre système de sécurité et sera modérée par un administrateur.');
+            }
 
             return $this->redirectToRoute('app_fournisseur_ressources', [], Response::HTTP_SEE_OTHER);
         }
@@ -279,7 +304,7 @@ final class RessourcesController extends AbstractController
     }
 
     #[Route('/{idRessource}/edit', name: 'app_ressources_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, #[MapEntity(mapping: ['idRessource' => 'id_ressource'])] Ressources $ressource, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, #[MapEntity(mapping: ['idRessource' => 'id_ressource'])] Ressources $ressource, EntityManagerInterface $entityManager, SmartModerationService $moderationService): Response
     {
         $this->syncNavContextFromRequest($request);
         $request->getSession()->set('nav_ctx', 'fournisseur');
@@ -293,13 +318,21 @@ final class RessourcesController extends AbstractController
                 . DIRECTORY_SEPARATOR . 'uploads'
                 . DIRECTORY_SEPARATOR . 'ressources';
 
-            $newFilename = $this->handleImageUpload($request, $uploadDir);
+            $newFilename = $this->handleImageUpload($form, $uploadDir);
             if ($newFilename !== null) {
                 $ressource->setImage_r($newFilename);
             }
 
             $this->normalizeOfferDependentFields($ressource);
+            
+            // Re-run moderation on edit
+            $moderationService->moderate($ressource);
+            
             $entityManager->flush();
+
+            if ($ressource->isBanned()) {
+                $this->addFlash('warning', 'Modifications enregistrées. Note : Cet article est actuellement suspendu pour modération.');
+            }
 
             return $this->redirectToRoute('app_fournisseur_ressources', [], Response::HTTP_SEE_OTHER);
         }
@@ -336,10 +369,10 @@ final class RessourcesController extends AbstractController
 
     // ── Private helpers ───────────────────────────────────────────────────
 
-    private function handleImageUpload(Request $request, string $uploadDir): ?string
+    private function handleImageUpload(FormInterface $form, string $uploadDir): ?string
     {
         /** @var UploadedFile|null $file */
-        $file = $request->files->get('image_r_file');
+        $file = $form->get('image_r')->getData();
 
         if (!$file instanceof UploadedFile) {
             return null;

@@ -157,5 +157,192 @@
             showToast('{{ message|escape('js') }}', 'error');
         {% endfor %}
     </script>
+
+    {# ── Dynamic Per-Page Search (filters as you type) ── #}
+    <script>
+    (function() {
+        // ── Utility: debounce ──
+        function debounce(fn, ms) {
+            var timer;
+            return function() {
+                var ctx = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
+            };
+        }
+
+        // ── 1. Table-based pages (fournisseur_dashboard, fournisseur_ventes) ──
+        //    Targets: .search-input inside .filter-bar, filtering <tbody> rows
+        document.querySelectorAll('.filter-bar .search-input').forEach(function(input) {
+            var filterBar = input.closest('.filter-bar');
+            if (!filterBar) return;
+
+            // Find the table — look for .table-container after the filter bar
+            var tableContainer = filterBar.nextElementSibling;
+            while (tableContainer && !tableContainer.classList.contains('table-container')) {
+                tableContainer = tableContainer.nextElementSibling;
+            }
+            if (!tableContainer) return;
+
+            var tbody = tableContainer.querySelector('tbody');
+            if (!tbody) return;
+
+            // Store original rows
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                rows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Update the count pill if present
+                var pill = filterBar.querySelector('.count-pill');
+                if (pill) {
+                    pill.textContent = matchCount + (matchCount === 1 ? ' résultat' : ' résultats');
+                }
+
+                // Show/hide empty state
+                var emptyState = tableContainer.querySelector('.empty-state, .dynamic-no-results');
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state dynamic-no-results';
+                        emptyState.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucun élément ne correspond à votre recherche.</p>';
+                        tableContainer.appendChild(emptyState);
+                    }
+                    emptyState.style.display = '';
+                } else if (emptyState && emptyState.classList.contains('dynamic-no-results')) {
+                    emptyState.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent the form from submitting on Enter in the search field
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // ── 2. Card-based pages (ressources catalog) ──
+        //    Targets: .catalog-search-input, filtering .resource-card
+        document.querySelectorAll('.catalog-search-input').forEach(function(input) {
+            var form = input.closest('form');
+            if (!form) return;
+
+            // Find the catalog cards container
+            var cardsContainer = document.querySelector('.catalog-cards');
+            if (!cardsContainer) return;
+
+            var cards = Array.from(cardsContainer.querySelectorAll('.resource-card'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                cards.forEach(function(card) {
+                    var text = card.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    card.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Show/hide empty message
+                var panel = cardsContainer.closest('.catalog-panel');
+                var emptyMsg = panel ? panel.querySelector('.dynamic-no-results') : null;
+
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyMsg && panel) {
+                        emptyMsg = document.createElement('div');
+                        emptyMsg.className = 'empty-state dynamic-no-results';
+                        emptyMsg.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucune ressource ne correspond à votre recherche.</p>';
+                        panel.appendChild(emptyMsg);
+                    }
+                    if (emptyMsg) emptyMsg.style.display = '';
+                } else if (emptyMsg) {
+                    emptyMsg.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent form submission on Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // ── 3. Entrepreneur dashboard (.search-filters .search-box input) ──
+        //    Targets: input inside .search-box within .search-filters, filtering .custom-table rows
+        document.querySelectorAll('.search-filters .search-box input').forEach(function(input) {
+            var filtersBlock = input.closest('.search-filters');
+            if (!filtersBlock) return;
+
+            // Find the table — may be inside .card-modern further down
+            var tbody = document.querySelector('.custom-table tbody');
+            if (!tbody) return;
+
+            var tableWrap = tbody.closest('.card-modern') || tbody.closest('.custom-table-wrap');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                rows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Update badge count if present
+                var badge = document.querySelector('.card-header-modern .badge');
+                if (badge) {
+                    badge.textContent = matchCount + ' projet' + (matchCount !== 1 ? 's' : '');
+                }
+
+                // Show/hide empty state
+                var container = tableWrap || tbody.parentElement;
+                var emptyState = container.querySelector('.dynamic-no-results');
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state dynamic-no-results';
+                        emptyState.style.margin = '20px';
+                        emptyState.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucun projet ne correspond à votre recherche.</p>';
+                        container.appendChild(emptyState);
+                    }
+                    emptyState.style.display = '';
+                } else if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent form submission on Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
+

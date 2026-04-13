@@ -11,27 +11,35 @@
         </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stats-card stats-card-1">
-            <i class="bi bi-clock-history stats-icon" style="color: var(--color-warning);"></i>
-            <h6>En Attente</h6>
-            <h3>{{ stats.en_attente }}</h3>
+    <!-- Global Stats Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stats-card stats-card-4">
+                <i class="bi bi-people stats-icon" style="color: var(--primary);"></i>
+                <h6>Total Utilisateurs</h6>
+                <h3>{{ stats.total_users }}</h3>
+            </div>
         </div>
-        <div class="stats-card stats-card-2">
-            <i class="bi bi-check-circle stats-icon" style="color: var(--color-success);"></i>
-            <h6>Acceptés</h6>
-            <h3>{{ stats.acceptes }}</h3>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-2">
+                <i class="bi bi-folder stats-icon" style="color: var(--color-success);"></i>
+                <h6>Total Projets</h6>
+                <h3>{{ stats.total_projets }}</h3>
+            </div>
         </div>
-        <div class="stats-card stats-card-3">
-            <i class="bi bi-x-circle stats-icon" style="color: var(--color-danger);"></i>
-            <h6>Refusés</h6>
-            <h3>{{ stats.refuses }}</h3>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-1">
+                <i class="bi bi-exclamation-triangle stats-icon" style="color: var(--color-warning);"></i>
+                <h6>Réclamations (Attente)</h6>
+                <h3>{{ stats.total_reclam }}</h3>
+            </div>
         </div>
-        <div class="stats-card stats-card-4">
-            <i class="bi bi-play-circle stats-icon" style="color: var(--color-info);"></i>
-            <h6>En Cours</h6>
-            <h3>{{ stats.en_cours }}</h3>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-3">
+                <i class="bi bi-clock-history stats-icon" style="color: var(--color-info);"></i>
+                <h6>Projets en Attente</h6>
+                <h3>{{ stats.en_attente }}</h3>
+            </div>
         </div>
     </div>
 

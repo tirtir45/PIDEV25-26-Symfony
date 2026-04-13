@@ -59,7 +59,7 @@
                                 <select name="role_id" id="role" class="auth-input">
                                     <option value="">-- Choisir un rôle --</option>
                                     {% for role in roles %}
-                                        {% if role.nomRole in ['Administrateur', 'Candidat', 'Entrepreneur', 'Fournisseur', 'Membre equipe'] %}
+                                        {% if role.nomRole in ['Candidat', 'Entrepreneur', 'Fournisseur'] %}
                                             <option value="{{ role.id }}">{{ role.nomRole }}</option>
                                         {% endif %}
                                     {% endfor %}
@@ -97,47 +97,94 @@
 
     <script>
     const form = document.getElementById('registerForm');
+    const inputs = form.querySelectorAll('.auth-input');
 
-    function showError(fieldId, errorId, message) {
-        const field = document.getElementById(fieldId);
-        const error = document.getElementById(errorId);
-        field.style.borderColor = '#ef4444';
-        error.textContent = message;
+    const validationRules = {
+        nom: {
+            test: (val) => /^[a-zA-ZÀ-ÿ\s\-]{2,50}$/.test(val),
+            requiredMsg: 'Le nom est obligatoire.',
+            invalidMsg: 'Le nom doit contenir entre 2 et 50 lettres (sans chiffres).'
+        },
+        email: {
+            test: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+            requiredMsg: 'L\'adresse email est obligatoire.',
+            invalidMsg: 'Veuillez entrer une adresse email valide.'
+        },
+        telephone: {
+            test: (val) => !val || /^[0-9]{8,15}$/.test(val),
+            requiredMsg: '', // Optional in model
+            invalidMsg: 'Le numéro de téléphone doit contenir 8 à 15 chiffres.'
+        },
+        role: {
+            test: (val) => val !== '',
+            requiredMsg: 'Veuillez choisir un rôle.',
+            invalidMsg: 'Veuillez choisir un rôle.'
+        },
+        password: {
+            test: (val) => val.length >= 6,
+            requiredMsg: 'Le mot de passe est obligatoire.',
+            invalidMsg: 'Le mot de passe doit contenir au moins 6 caractères.'
+        },
+        confirm: {
+            test: (val) => val === document.getElementById('password').value,
+            requiredMsg: 'Veuillez confirmer votre mot de passe.',
+            invalidMsg: 'Les mots de passe ne correspondent pas.'
+        }
+    };
+
+    function validateField(fieldId) {
+        const input = document.getElementById(fieldId);
+        const val = input.value.trim();
+        const rule = validationRules[fieldId === 'role' ? 'role' : fieldId];
+        const errorSpan = document.getElementById(`${fieldId}-error`);
+
+        if (!rule) return true;
+
+        if (val === '' && rule.requiredMsg) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            errorSpan.textContent = rule.requiredMsg;
+            errorSpan.style.display = 'block';
+            return false;
+        } else if (!rule.test(val)) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            errorSpan.textContent = rule.invalidMsg;
+            errorSpan.style.display = 'block';
+            return false;
+        } else {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+            return true;
+        }
     }
 
-    function clearError(fieldId, errorId) {
-        const field = document.getElementById(fieldId);
-        const error = document.getElementById(errorId);
-        field.style.borderColor = '#10b981';
-        error.textContent = '';
-    }
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            validateField(input.id);
+            if (input.id === 'password') validateField('confirm');
+        });
 
-    // Basic Validation logic
-    // ... (Keep the user's validation logic but update selectors if needed)
+        if (input.tagName === 'SELECT') {
+            input.addEventListener('change', () => validateField(input.id));
+        }
+    });
+
     form.addEventListener('submit', function(e) {
-        let valid = true;
-        const nom = document.getElementById('nom').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const role = document.getElementById('role').value;
-        const password = document.getElementById('password').value;
-        const confirm = document.getElementById('confirm').value;
+        let isFormValid = true;
+        inputs.forEach(input => {
+            if (!validateField(input.id)) {
+                isFormValid = false;
+            }
+        });
 
-        if (nom.length < 2) { showError('nom', 'nom-error', 'Le nom est obligatoire'); valid = false; }
-        else clearError('nom', 'nom-error');
-
-        if (!email.includes('@')) { showError('email', 'email-error', 'Email invalide'); valid = false; }
-        else clearError('email', 'email-error');
-
-        if (!role) { showError('role', 'role-error', 'Veuillez choisir un rôle'); valid = false; }
-        else clearError('role', 'role-error');
-
-        if (password.length < 6) { showError('password', 'password-error', 'Min. 6 caractères'); valid = false; }
-        else clearError('password', 'password-error');
-
-        if (password !== confirm) { showError('confirm', 'confirm-error', 'Les mots de passe ne correspondent pas'); valid = false; }
-        else clearError('confirm', 'confirm-error');
-
-        if (!valid) e.preventDefault();
+        if (!isFormValid) {
+            e.preventDefault();
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) firstError.focus();
+        }
     });
     </script>
 {% endblock %}

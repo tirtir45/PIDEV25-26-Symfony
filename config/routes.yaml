@@ -12,7 +12,7 @@ index:
 
 # Routes Admin
 admin_dashboard:
-    path: /admin-demo
+    path: /admin/dashboard
     controller: App\Controller\AdminController::dashboard
 
 admin_valider_projet:
@@ -37,7 +37,7 @@ admin_changer_statut_projet:
 
 # Routes Entrepreneur
 entrepreneur_dashboard:
-    path: /entrepreneur-demo
+    path: /entrepreneur/dashboard
     controller: App\Controller\EntrepreneurController::dashboard
 
 entrepreneur_nouveau_projet:

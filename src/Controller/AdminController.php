@@ -14,17 +14,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class AdminController extends AbstractController
 {
-    #[Route('/admin-demo', name: 'admin_dashboard')]
+    #[Route('/admin/dashboard', name: 'admin_dashboard')]
     public function dashboard(Request $request, EntityManagerInterface $em): Response
     {
-        $userId = $request->getSession()->get('user_id');
-        if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
+        if (!$request->getSession()->get('user_id') || $request->getSession()->get('user_role') !== 'Administrateur') {
             return $this->redirectToRoute('app_login');
         }
+
         $search = $request->query->get('search', '');
         $status = $request->query->get('status', '');
         $sort = $request->query->get('sort', 'date_soumission');
@@ -50,7 +50,9 @@ class AdminController extends AbstractController
             'refuses' => $em->getRepository(Projets::class)->count(['etat' => Projets::ETAT_REFUSE]),
             'en_cours' => $em->getRepository(Projets::class)->count(['etat' => Projets::ETAT_EN_COURS]),
             'termines' => $em->getRepository(Projets::class)->count(['etat' => Projets::ETAT_TERMINE]),
-            'total' => $em->getRepository(Projets::class)->count([])
+            'total_users' => $em->getRepository(Utilisateurs::class)->count([]),
+            'total_reclam' => $em->getRepository(\App\Entity\Reclamations::class)->count(['statut' => 'EN_ATTENTE']),
+            'total_projets' => $em->getRepository(Projets::class)->count([])
         ];
         
         return $this->render('admin/dashboard.html.twig', [

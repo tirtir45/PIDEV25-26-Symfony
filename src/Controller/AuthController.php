@@ -16,7 +16,7 @@ class AuthController extends AbstractController
     public function login(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em): Response
     {
         if ($request->getSession()->get('user_id')) {
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectByRole($request->getSession()->get('user_role'));
         }
 
         $error = null;
@@ -47,7 +47,7 @@ class AuthController extends AbstractController
                         $request->getSession()->set('user_nom',   $user->getNom());
                         $request->getSession()->set('user_email', $user->getEmail());
                         $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
-                        return $this->redirectToRoute('app_dashboard');
+                        return $this->redirectByRole($request->getSession()->get('user_role'));
                     }
 
                     $error = 'Email ou mot de passe incorrect.';
@@ -123,7 +123,7 @@ class AuthController extends AbstractController
                     $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
 
                     $this->addFlash('success', 'Compte créé avec succès. Bienvenue !');
-                    return $this->redirectToRoute('app_dashboard');
+                    return $this->redirectByRole($request->getSession()->get('user_role'));
                 } catch (\Exception $e) {
                     $error = 'Erreur lors de la création : ' . $e->getMessage();
                 }
@@ -140,32 +140,25 @@ class AuthController extends AbstractController
         if (!$userId) {
             return $this->redirectToRoute('app_login');
         }
-
-        if (!$request->getSession()->get('user_nom')) {
-            $user = $repo->find($userId);
-            if ($user) {
-                $request->getSession()->set('user_nom',   $user->getNom());
-                $request->getSession()->set('user_email', $user->getEmail());
-                $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
-            }
-        }
-
-        $isAdmin     = $request->getSession()->get('user_role') === 'Administrateur';
-        $totalUsers  = count($repo->findAll());
-        $totalReclam = $isAdmin ? count($reclamRepo->findAll()) : count($reclamRepo->findBy(['utilisateur' => $userId]));
-        $pending     = $isAdmin ? count($reclamRepo->findBy(['statut' => 'EN_ATTENTE'])) : count($reclamRepo->findBy(['utilisateur' => $userId, 'statut' => 'EN_ATTENTE']));
-        $resolved    = $isAdmin ? count($reclamRepo->findBy(['statut' => 'RESOLU'])) : count($reclamRepo->findBy(['utilisateur' => $userId, 'statut' => 'RESOLU']));
-
-        return $this->render('dashboard/index.html.twig', [
-            'isAdmin' => $isAdmin,
-            'stats'   => [
-                'users'        => $totalUsers,
-                'reclamations' => $totalReclam,
-                'pending'      => $pending,
-                'resolved'     => $resolved,
-            ],
-        ]);
+        
+        // Always redirect to specific dashboard if it's a known role
+        return $this->redirectByRole($request->getSession()->get('user_role'));
     }
+
+    private function redirectByRole(?string $role): Response
+    {
+        return match ($role) {
+            'Administrateur' => $this->redirectToRoute('admin_dashboard'),
+            'Entrepreneur'   => $this->redirectToRoute('entrepreneur_dashboard'),
+            'Fournisseur'    => $this->redirectToRoute('app_fournisseur_ressources'),
+            default          => $this->render('dashboard/index.html.twig', [
+                'isAdmin' => false,
+                'stats'   => [ 'users' => 0, 'reclamations' => 0, 'pending' => 0, 'resolved' => 0 ], // Dummy stats if role is unknown
+            ]),
+        };
+    }
+
+
 
     #[Route('/deconnexion', name: 'app_logout')]
     public function logout(Request $request): Response

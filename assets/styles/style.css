@@ -1508,6 +1508,70 @@ img { display: block; max-width: 100%; }
 
 .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
 
+.auth-field { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.auth-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.auth-input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: #f8fafc;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1);
+}
+
+.auth-input.is-invalid {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.auth-input.is-valid {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
+}
+
+.auth-input.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+.auth-input.is-valid:focus {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+
+.btn-auth {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.75rem;
+}
+
+.btn-auth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.3);
+}
+
+.btn-auth:active { transform: translateY(0); }
+
 .auth-footer {
     margin-top: 2rem;
     text-align: center;
@@ -1705,4 +1769,67 @@ img { display: block; max-width: 100%; }
     .table-actions { flex-direction: column; gap: 3px; }
     .btn-icon { padding: 5px; }
     .catalog-cards { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   ADMIN HUB & PROFILE ENHANCEMENTS
+   ============================================================ */
+.avatar-large {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 8px 16px rgba(168, 85, 247, 0.2);
+}
+
+.avatar-upload-label {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-upload-label:hover {
+    transform: scale(1.05);
+}
+
+.badge.bg-primary-subtle {
+    background-color: rgba(168, 85, 247, 0.1) !important;
+    color: var(--primary) !important;
+}
+
+.badge.bg-warning-subtle {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    color: var(--warning) !important;
+}
+
+.badge.bg-success-subtle {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    color: var(--success) !important;
+}
+
+.badge.bg-danger-subtle {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: var(--danger) !important;
+}
+
+/* Form refinement for cards */
+.card-header-modern {
+    background-color: #fafafa;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.search-filters {
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
 }

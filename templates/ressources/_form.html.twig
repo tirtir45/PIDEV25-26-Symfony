@@ -171,7 +171,7 @@
                 <div class="field">
                     {{ form_label(form.image_r, 'Photo de ressource') }}
                     <div class="upload-row">
-                        <label class="btn-upload" for="image_r_picker">
+                        <label class="btn-upload" for="{{ form.image_r.vars.id }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                                 <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -179,15 +179,13 @@
                             </svg>
                             Choisir une image
                         </label>
-                        <input type="file"
-                               id="image_r_picker"
-                               accept="image/*"
-                               class="resource-file-input"
-                               onchange="syncImageFilename(this)">
-                        {{ form_widget(form.image_r, {'attr': {
-                            'class': 'resource-image-field',
-                            'id': form.image_r.vars.id
-                        }}) }}
+                        {{ form_widget(form.image_r, {
+                            'attr': {
+                                'class': 'resource-file-input',
+                                'accept': 'image/*',
+                                'onchange': 'syncImageFilename(this)'
+                            }
+                        }) }}
                         <span class="upload-label" id="img-filename">Aucune image sélectionnée</span>
                     </div>
                     {{ form_errors(form.image_r) }}
@@ -225,15 +223,11 @@
 
     // ── Helpers ───────────────────────────────────────────────────────────
     window.syncImageFilename = function (filePicker) {
-        const tf = document.getElementById(ID.image);
         const lb = document.getElementById('img-filename');
         if (filePicker.files && filePicker.files[0]) {
-            const n = filePicker.files[0].name;
-            if (tf) tf.value = n;
-            if (lb) lb.textContent = n;
+            lb.textContent = filePicker.files[0].name;
         } else {
-            if (tf) tf.value = '';
-            if (lb) lb.textContent = 'Aucune image sélectionnée';
+            lb.textContent = 'Aucune image sélectionnée';
         }
     };
 

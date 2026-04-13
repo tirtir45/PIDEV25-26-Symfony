@@ -6,6 +6,7 @@ use App\Entity\Ressources;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -53,9 +54,22 @@ class RessourceType extends AbstractType
                     new Assert\NotBlank(['message' => 'Veuillez choisir un type']),
                 ]
             ])
-            ->add('image_r', TextType::class, [
+            ->add('image_r', FileType::class, [
+                'label' => 'Photo de ressource',
+                'mapped' => false,
                 'required' => false,
-                'empty_data' => '',
+                'constraints' => [
+                    new Assert\File([
+                        'maxSize' => '5024k',
+                        'mimeTypes' => [
+                            'image/jpeg',
+                            'image/png',
+                            'image/webp',
+                            'image/gif',
+                        ],
+                        'mimeTypesMessage' => 'Veuillez uploader une image valide (JPEG, PNG, WEBP, GIF)',
+                    ])
+                ],
             ])
             ->add('prix_achat', NumberType::class, [
                 'required' => false,

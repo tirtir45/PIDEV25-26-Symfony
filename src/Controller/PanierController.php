@@ -7,6 +7,8 @@ use App\Entity\Lignes_commande;
 use App\Entity\Ressources;
 use App\Entity\Utilisateurs;
 use App\Repository\RessourcesRepository;
+use App\Service\EmailService;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,8 +19,11 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/panier')]
 final class PanierController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly PdfService $pdfService,
+        private readonly EmailService $emailService
+    ) {
     }
 
     #[Route('', name: 'app_panier_index', methods: ['GET'])]
@@ -320,6 +325,44 @@ final class PanierController extends AbstractController
 
             $this->entityManager->persist($commande);
             $ordersCreated++;
+
+            // ─── Email & PDF Generation ───
+            try {
+                $attachments = [];
+                $resourceNames = $this->buildResourceNamesMap($lines, $ressourcesRepository);
+                
+                // 1. Generate Receipt PDF
+                $receiptContent = $this->pdfService->generatePdf('emails/receipt_pdf.html.twig', [
+                    'order' => $commande,
+                    'lines' => $lines,
+                    'resource_names' => $resourceNames,
+                ]);
+                $attachments['recu_commande_' . $commande->getIdCommande() . '.pdf'] = $receiptContent;
+
+                // 2. Generate Contracts for "Espace" resources
+                foreach ($lines as $line) {
+                    $res = $line->getId_ressource();
+                    if ($res instanceof Ressources && mb_strtolower(trim((string) $res->getType_r())) === 'espace') {
+                        $contractContent = $this->pdfService->generatePdf('emails/contract_pdf.html.twig', [
+                            'order' => $commande,
+                            'line' => $line,
+                            'resource' => $res,
+                        ]);
+                        $attachments['contrat_espace_' . $res->getId_ressource() . '.pdf'] = $contractContent;
+                    }
+                }
+
+                // 3. Send Email
+                if ($entrepreneur && $entrepreneur->getEmail()) {
+                    $this->emailService->sendOrderConfirmation(
+                        $entrepreneur->getEmail(),
+                        $entrepreneur->getNom() ?? 'Client',
+                        $attachments
+                    );
+                }
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur Email : ' . $e->getMessage());
+            }
         }
 
         $this->entityManager->flush();
@@ -335,7 +378,7 @@ final class PanierController extends AbstractController
         }
 
         $this->removeSelectedLineIds($request, $selectedLineIds);
-        $this->addFlash('success', sprintf('%d commande(s) enregistrée(s) avec succès.', $ordersCreated));
+        $this->addFlash('success', sprintf('%d commande(s) enregistrée(s) avec succès. Email envoyé à : %s', $ordersCreated, $entrepreneur->getEmail()));
 
         return $this->redirectToRoute('app_commandes_index', [], Response::HTTP_SEE_OTHER);
     }
@@ -670,5 +713,18 @@ final class PanierController extends AbstractController
         }
 
         return $this->entityManager->getRepository(Utilisateurs::class)->find($userId);
+    }
+
+    private function buildResourceNamesMap(array $lines, RessourcesRepository $repo): array
+    {
+        $map = [];
+        foreach ($lines as $line) {
+            $r = $line->getId_ressource();
+            if ($r instanceof Ressources) {
+                $map[(int) $r->getId_ressource()] = $r->getNom();
+            }
+        }
+
+        return $map;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Reclamation;
-use App\Repository\ReclamationRepository;
+use App\Entity\Reclamations;
+use App\Repository\ReclamationsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +19,7 @@ class AdminReclamationController extends AbstractController
     }
 
     #[Route('/admin/reclamations', name: 'admin_reclamation_index', methods: ['GET'])]
-    public function index(Request $request, ReclamationRepository $repo): Response
+    public function index(Request $request, ReclamationsRepository $repo): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -61,7 +61,7 @@ class AdminReclamationController extends AbstractController
     }
 
     #[Route('/admin/reclamations/{id}/statut', name: 'admin_reclamation_statut', methods: ['POST'])]
-    public function updateStatut(int $id, Request $request, ReclamationRepository $repo, EntityManagerInterface $em): Response
+    public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -78,7 +78,7 @@ class AdminReclamationController extends AbstractController
     }
 
     #[Route('/admin/reclamations/{id}/supprimer', name: 'admin_reclamation_delete', methods: ['POST'])]
-    public function delete(int $id, ReclamationRepository $repo, EntityManagerInterface $em, Request $request): Response
+    public function delete(int $id, ReclamationsRepository $repo, EntityManagerInterface $em, Request $request): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');

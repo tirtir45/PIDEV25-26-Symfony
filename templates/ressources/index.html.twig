@@ -5,6 +5,57 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .recommendation-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .recommendation-header h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .match-badge {
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .resource-card.recommended-card {
+            border: 2px solid transparent;
+            background-clip: padding-box, border-box;
+            background-origin: padding-box, border-box;
+            background-image: linear-gradient(white, white), linear-gradient(to right, #6366f1, #a855f7);
+            transform: scale(1.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .resource-card.recommended-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -71,72 +122,19 @@
         <a href="{{ path('app_ressources_index') }}" class="btn btn-ghost btn-compact">Annuler</a>
     </form>
 
+
     <section class="catalog-panel">
-        <h2>Recommandations basees sur votre projet</h2>
+        <div class="recommendation-header">
+            <h2 style="background: none; -webkit-text-fill-color: initial; font-weight: 700;">Toutes les ressources</h2>
+        </div>
         <div class="catalog-cards">
             {% for ressource in ressources %}
-                {% set imageSrc = ressource.image_r and (ressource.image_r starts with 'http://' or ressource.image_r starts with 'https://')
-                    ? ressource.image_r
-                    : (ressource.image_r ? asset('uploads/ressources/' ~ ressource.image_r) : '') %}
-                {% set offreNormalized = ressource.offre ? ressource.offre|lower : '' %}
-                {% set qty = ressource.quantite|default(0) %}
-                {% set canAdd = (ressource.disponibilite and qty > 0) %}
-                {% set displayUnit = (offreNormalized == 'louer' and ressource.unite_louer) ? ressource.unite_louer : '-' %}
-
-                <article class="resource-card">
-                    <div class="resource-badge">
-                        Recommande — {{ ressource.type_r ?: 'Ressource' }}
-                    </div>
-
-                    <div class="resource-image-wrap">
-                        {% if imageSrc %}
-                            <img src="{{ imageSrc }}" alt="{{ ressource.nom ?: 'Ressource' }}"
-                                 onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
-                            <div class="image-fallback" hidden>Image indisponible</div>
-                        {% else %}
-                            <div class="image-fallback">Aucune image</div>
-                        {% endif %}
-                    </div>
-
-                    <h3>{{ ressource.nom ?: 'Sans nom' }}</h3>
-                    <p>{{ ressource.description ? ressource.description|slice(0, 75) ~ (ressource.description|length > 75 ? '...' : '') : 'Aucune description' }}</p>
-
-                    <div class="resource-meta">
-                        <span>Quantite: {{ ressource.quantite ?? '-' }}</span>
-                        <span>Unite: {{ displayUnit }}</span>
-                    </div>
-
-                    <div class="resource-footer">
-                        <div class="price">
-                            {% if offreNormalized == 'achat' and ressource.prix_achat is not null %}
-                                {{ ressource.prix_achat }} DT
-                            {% elseif offreNormalized == 'louer' and ressource.prix_louer is not null %}
-                                {{ ressource.prix_louer }} DT{{ displayUnit != '-' ? ' / ' ~ displayUnit : '' }}
-                            {% elseif ressource.prix_achat is not null %}
-                                {{ ressource.prix_achat }} DT
-                            {% elseif ressource.prix_louer is not null %}
-                                {{ ressource.prix_louer }} DT{{ ressource.unite_louer ? ' / ' ~ ressource.unite_louer : '' }}
-                            {% else %}
-                                Prix indisponible
-                            {% endif %}
-                        </div>
-                        {% set isAvailable = (ressource.disponibilite and qty > 0) %}
-                        <span class="status {{ isAvailable ? 'ok' : 'ko' }}">
-                            {% if qty <= 0 %}
-                                Rupture de stock
-                            {% elseif ressource.disponibilite %}
-                                Disponible
-                            {% else %}
-                                Indisponible
-                            {% endif %}
-                        </span>
-                    </div>
-
-                    <form class="card-links card-links-form" method="post" action="{{ path('app_panier_add', {'idRessource': ressource.id_ressource}) }}">
-                        <input type="hidden" name="quantite" value="1">
-                        <button type="submit" {% if not canAdd %}disabled{% endif %}>Ajouter au panier</button>
-                    </form>
-                </article>
+                {% set rec_data = rec_map[ressource.id_ressource]|default(null) %}
+                {% include 'ressources/_card.html.twig' with {
+                    'ressource': ressource,
+                    'is_recommended': rec_data is not null,
+                    'recommended_for': rec_data ? rec_data.project : null
+                } %}
             {% else %}
                 <div class="empty-state">
                     Aucune ressource disponible pour le moment.
