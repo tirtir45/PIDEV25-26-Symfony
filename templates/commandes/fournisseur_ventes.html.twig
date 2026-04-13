@@ -112,7 +112,7 @@
                             {% set dateDeb = line.date_deb %}
                             {% set dateFin = line.date_fin %}
                             <tr>
-                                <td><strong>#{{ commande.id_commande }}</strong></td>
+                                <td><strong>#{{ commande.idCommande }}</strong></td>
                                 <td>
                                     {% if status == 'COMPLETED' %}
                                         <span class="badge badge-green">COMPLETED</span>
@@ -134,8 +134,8 @@
                                 <td><strong style="color: #059669;">{{ sale.line_total|number_format(2, '.', ' ') }} DT</strong></td>
                                 <td>
                                     {% if status == 'SUBMITTED' %}
-                                        <form method="post" action="{{ path('app_fournisseur_ventes_complete', {'idCommande': commande.id_commande}) }}" onsubmit="return confirm('Marquer cette commande comme livrée ?');" style="display:inline;">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('complete-vente-' ~ commande.id_commande) }}">
+                                        <form method="post" action="{{ path('app_fournisseur_ventes_complete', {'idCommande': commande.idCommande}) }}" onsubmit="return confirm('Marquer cette commande comme livrée ?');" style="display:inline;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('complete-vente-' ~ commande.idCommande) }}">
                                             <button type="submit" class="btn btn-primary" style="padding: 8px 12px;">Confirmer livraison</button>
                                         </form>
                                     {% elseif status == 'CANCELLED' %}

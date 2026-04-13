@@ -7,7 +7,7 @@
     <section class="orders-hero">
         <div>
             <h1>Mes Commandes</h1>
-            <p>Suivez l’état de vos commandes</p>
+            <p>Suivez l'état de vos commandes</p>
         </div>
         <div class="orders-hero-icon">🧾</div>
     </section>
@@ -19,7 +19,7 @@
                 <article class="order-card">
                     <header class="order-card-header">
                         <div>
-                            <h2>Commande #{{ order.order_number ?? commande.id_commande }}</h2>
+                            <h2>Commande #{{ order.order_number ?? commande.idCommande }}</h2>
                             {% set status = commande.statut|upper %}
                             {% set badge_class = '' %}
                             {% if status == 'SUBMITTED' %}
@@ -33,13 +33,13 @@
                             <span class="order-badge {{ badge_class }}">{{ status }}</span>
                             
                             {% if status == 'SUBMITTED' %}
-                                <form method="post" action="{{ path('app_commandes_cancel', {'idCommande': commande.id_commande}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette commande ?');" style="display:inline;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ commande.id_commande) }}">
+                                <form method="post" action="{{ path('app_commandes_cancel', {'idCommande': commande.idCommande}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette commande ?');" style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ commande.idCommande) }}">
                                     <button type="submit" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; margin-left: 10px;">Annuler</button>
                                 </form>
                             {% endif %}
                         </div>
-                        <div class="order-total">Total TTC: {{ commande.total_global }} DT</div>
+                        <div class="order-total">Total TTC: {{ commande.totalGlobal }} DT</div>
                     </header>
                     <div class="order-lines">
                         {% for line in order.lines %}

@@ -210,7 +210,7 @@ final class CommandesController extends AbstractController
             /** @var Commandes $rightCommande */
             $rightCommande = $right['commande'];
 
-            $dateCompare = $rightCommande->getDate_creation() <=> $leftCommande->getDate_creation();
+            $dateCompare = $rightCommande->getDateCreation() <=> $leftCommande->getDateCreation();
             if ($dateCompare !== 0) {
                 return $dateCompare;
             }
@@ -440,7 +440,7 @@ final class CommandesController extends AbstractController
     private function buildOrderNumbers(array $commandes): array
     {
         usort($commandes, static function (Commandes $left, Commandes $right): int {
-            $dateCompare = $left->getDate_creation() <=> $right->getDate_creation();
+            $dateCompare = $left->getDateCreation() <=> $right->getDateCreation();
             if ($dateCompare !== 0) {
                 return $dateCompare;
             }

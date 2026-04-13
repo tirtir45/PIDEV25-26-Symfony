@@ -300,9 +300,6 @@ final class PanierController extends AbstractController
             $commande->setCodePostal($dummyCommande->getCodePostal());
             $commande->setTelephoneLivraison($dummyCommande->getTelephoneLivraison());
 
-            $this->entityManager->persist($commande);
-            $this->entityManager->flush();
-
             $subtotal = 0.0;
             foreach ($lines as $line) {
                 $ressource = $line->getId_ressource();
@@ -319,7 +316,9 @@ final class PanierController extends AbstractController
 
             $tva = $subtotal * 0.19;
             $totalTtc = $subtotal + $tva;
-            $commande->setTotal_global(number_format($totalTtc, 2, '.', ''));
+            $commande->setTotalGlobal(number_format($totalTtc, 2, '.', ''));
+
+            $this->entityManager->persist($commande);
             $ordersCreated++;
         }
 
@@ -407,13 +406,13 @@ final class PanierController extends AbstractController
         }
  
         $draft = new Commandes();
-        $draft->setId_commande($this->nextCommandeId($entityManager));
-        $draft->setId_entrepreneur($entrepreneur);
+        $draft->setIdCommande($this->nextCommandeId($entityManager));
+        $draft->setIdEntrepreneur($entrepreneur);
         $draft->setStatut('PANIER');
-        $draft->setDate_creation(new \DateTime());
-        $draft->setTotal_global('0.00');
-        $draft->setTracking_number('');
-        $draft->setCarrier_code('');
+        $draft->setDateCreation(new \DateTime());
+        $draft->setTotalGlobal('0.00');
+        $draft->setTrackingNumber('');
+        $draft->setCarrierCode('');
 
         $entityManager->persist($draft);
         $entityManager->flush();
