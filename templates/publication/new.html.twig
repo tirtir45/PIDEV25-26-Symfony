@@ -17,7 +17,7 @@
             <p style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin: 0;">Renseignez les informations de l'offre</p>
         </div>
 
-        <a href="{{ path('app_publication_index') }}"
+        <a href="{{ path('app_admin_publication_index') }}"
            style="background-color: #F765A3; color: white; font-size: 13px; font-weight: 700;
                   border-radius: 10px; cursor: pointer; padding: 10px 20px;
                   box-shadow: 0 3px 10px rgba(247, 101, 163, 0.45);
@@ -73,8 +73,8 @@
                 Type contrat *
             </label>
             <div>
-                {{ form_widget(form.typeContrat, {'attr': {'placeholder': 'Choisir un type'}}) }}
-                {{ form_errors(form.typeContrat) }}
+                {{ form_widget(form.type_contrat, {'attr': {'placeholder': 'Choisir un type'}}) }}
+                {{ form_errors(form.type_contrat) }}
             </div>
 
             {# --- Departement (à ajouter dans votre FormType) --- #}
@@ -92,8 +92,8 @@
                 Localisation *
             </label>
             <div>
-                {{ form_widget(form.lieu, {'attr': {'placeholder': 'Ex: Tunis, Tunisie'}}) }}
-                {{ form_errors(form.lieu) }}
+                {{ form_widget(form.localisation, {'attr': {'placeholder': 'Ex: Tunis, Tunisie'}}) }}
+                {{ form_errors(form.localisation) }}
             </div>
 
             {# --- Date Expiration (à ajouter dans votre FormType) --- #}
@@ -101,9 +101,9 @@
                 Date expiration *
             </label>
             <div>
-                {# Assurez-vous d'avoir un champ 'dateExpiration' dans votre PublicationType #}
-                {{ form_widget(form.dateExpiration) }}
-                {{ form_errors(form.dateExpiration) }}
+                {# Assurez-vous d'avoir un champ 'date_expiration' dans votre FormType #}
+                {{ form_widget(form.date_expiration) }}
+                {{ form_errors(form.date_expiration) }}
             </div>
 
             {# --- Statut --- #}
@@ -121,7 +121,7 @@
 
         <!-- ACTION BUTTONS (matches button row) -->
         <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
-            <a href="{{ path('app_publication_index') }}"
+            <a href="{{ path('app_admin_publication_index') }}"
                style="background-color: transparent; color: #64748b; font-size: 15px; font-weight: 600;
                       border-radius: 8px; cursor: pointer; height: 45px; width: 160px;
                       border: 1.5px solid #cbd5e1; text-decoration: none;
