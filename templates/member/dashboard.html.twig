@@ -37,7 +37,7 @@
     
     <!-- Filters -->
     <div class="search-filters">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3 dynamic-filter">
             <div class="col-md-4">
                 <select name="status" class="form-select" onchange="this.form.submit()">
                     <option value="all" {{ currentStatus == 'all' or currentStatus is null ? 'selected' : '' }}>Toutes les tâches</option>

@@ -81,7 +81,7 @@
     </div>
 
     <!-- Filters & Search -->
-    <form class="filter-bar" method="get" action="{{ path('app_fournisseur_ressources') }}">
+    <form class="filter-bar dynamic-filter" method="get" action="{{ path('app_fournisseur_ressources') }}">
         <input
             type="text"
             name="q"
@@ -97,7 +97,6 @@
             <option value="price_asc" {% if (filters.sort|default('created_desc')) == 'price_asc' %}selected{% endif %}>Prix (croissant)</option>
             <option value="price_desc" {% if (filters.sort|default('created_desc')) == 'price_desc' %}selected{% endif %}>Prix (décroissant)</option>
         </select>
-        <button class="btn btn-secondary" type="submit">Appliquer</button>
     </form>
 
     <!-- Resources Table -->

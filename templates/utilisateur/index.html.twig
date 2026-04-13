@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ path('utilisateur_index') }}" class="gestion-filters">
+    <form method="GET" action="{{ path('utilisateur_index') }}" class="gestion-filters dynamic-filter">
         <div class="filter-group">
             <label class="filter-label">Rechercher</label>
             <input type="text" name="search" class="filter-input"
@@ -42,7 +42,6 @@
             </select>
         </div>
         <input type="hidden" name="order" value="{{ order }}">
-        <button type="submit" class="btn-actualiser">⟳ Actualiser</button>
     </form>
 
     {% if utilisateurs is empty %}

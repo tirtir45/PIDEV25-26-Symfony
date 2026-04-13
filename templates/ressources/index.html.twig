@@ -35,7 +35,7 @@
         </article>
     </section>
 
-    <form method="get" action="{{ path('app_ressources_index') }}" class="catalog-toolbar catalog-toolbar-clean">
+    <form method="get" action="{{ path('app_ressources_index') }}" class="catalog-toolbar catalog-toolbar-clean dynamic-filter">
         <input type="text" name="q" value="{{ filters.q|default('') }}" class="catalog-search-input" placeholder="Rechercher">
 
         <select name="offer" class="catalog-select">
@@ -66,9 +66,6 @@
             <option value="quantity_asc" {% if (filters.sort|default('name_asc')) == 'quantity_asc' %}selected{% endif %}>Quantite +</option>
             <option value="quantity_desc" {% if (filters.sort|default('name_asc')) == 'quantity_desc' %}selected{% endif %}>Quantite -</option>
         </select>
-
-        <button type="submit" class="btn btn-secondary btn-compact">Appliquer</button>
-        <a href="{{ path('app_ressources_index') }}" class="btn btn-ghost btn-compact">Annuler</a>
     </form>
 
     <section class="catalog-panel">

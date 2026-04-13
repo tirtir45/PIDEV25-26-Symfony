@@ -26,6 +26,9 @@ class Membres_equipe
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $role_equipe = null;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $champs_personnalises = null;
+
     #[ORM\OneToMany(mappedBy: 'id_membre_equipe', targetEntity: User_story_assignments::class)]
     private Collection $user_story_assignmentss;
 
@@ -77,6 +80,17 @@ class Membres_equipe
     public function setRoleEquipe(?string $role_equipe): static
     {
         $this->role_equipe = $role_equipe;
+        return $this;
+    }
+
+    public function getChampsPersonnalises(): ?array
+    {
+        return $this->champs_personnalises;
+    }
+
+    public function setChampsPersonnalises(?array $champs_personnalises): static
+    {
+        $this->champs_personnalises = $champs_personnalises;
         return $this;
     }
 

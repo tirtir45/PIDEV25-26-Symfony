@@ -1,92 +1,226 @@
+{# templates/entrepreneur/modifier_tache.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier la tâche{% endblock %}
-
 {% block body %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title mb-0">
-                        <i class="bi bi-pencil-square"></i> Modifier la tâche
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Projet:</strong> {{ projet.titre }}
-                    </div>
+<div class="mt-root">
+  <div class="mt-card">
 
-                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="mt-card-accent"></div>
 
-                        <div class="mb-3">
-                            {{ form_label(form.titre, 'Titre de la tâche', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Développer la page d\'accueil'}}) }}
-                            {% if form.titre.vars.errors|length > 0 %}
-                                <div class="text-danger">
-                                    {{ form_errors(form.titre) }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Décrivez la tâche en détail...'}}) }}
-                            {% if form.description.vars.errors|length > 0 %}
-                                <div class="text-danger">
-                                    {{ form_errors(form.description) }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    {{ form_label(form.date_limite, 'Date limite', {'label_attr': {'class': 'form-label'}}) }}
-                                    {{ form_widget(form.date_limite, {'attr': {'class': 'form-control'}}) }}
-                                    {% if form.date_limite.vars.errors|length > 0 %}
-                                        <div class="text-danger">
-                                            {{ form_errors(form.date_limite) }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    {{ form_label(form.statut, 'Statut', {'label_attr': {'class': 'form-label'}}) }}
-                                    {{ form_widget(form.statut, {'attr': {'class': 'form-control'}}) }}
-                                    {% if form.statut.vars.errors|length > 0 %}
-                                        <div class="text-danger">
-                                            {{ form_errors(form.statut) }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form_label(form.id_responsable, 'Responsable', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.id_responsable, {'attr': {'class': 'form-control'}}) }}
-                            {% if form.id_responsable.vars.errors|length > 0 %}
-                                <div class="text-danger">
-                                    {{ form_errors(form.id_responsable) }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Retour
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Modifier la tâche
-                            </button>
-                        </div>
-
-                    {{ form_end(form) }}
-                </div>
-            </div>
+    <div class="mt-header">
+      <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="mt-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Gestion du projet
+      </a>
+      <div class="mt-header-content">
+        <div class="mt-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </div>
+        <div>
+          <h1 class="mt-title">Modifier la tâche</h1>
+          <p class="mt-subtitle">{{ projet.titre }}</p>
+        </div>
+      </div>
     </div>
+
+    <div class="mt-body">
+      {{ form_start(form, {'attr': {'id': 'tacheForm', 'novalidate': 'novalidate'}}) }}
+
+        {% for type, messages in app.flashes %}
+          {% for message in messages %}
+            <div class="mt-flash mt-flash--{{ type }}">{{ message }}</div>
+          {% endfor %}
+        {% endfor %}
+
+        <div class="mt-field">
+          {{ form_label(form.titre) }}
+          {{ form_widget(form.titre, {'attr': {'class': 'mt-input', 'placeholder': 'Ex: Développer la page d\'accueil'}}) }}
+          {{ form_errors(form.titre) }}
+          <p class="mt-hint">3 à 150 caractères</p>
+        </div>
+
+        <div class="mt-field">
+          {{ form_label(form.description) }}
+          {{ form_widget(form.description, {'attr': {'class': 'mt-input', 'rows': 3, 'placeholder': 'Description détaillée de la tâche…'}}) }}
+        </div>
+
+        <div class="mt-row">
+          <div class="mt-field">
+            {{ form_label(form.statut) }}
+            {{ form_widget(form.statut, {'attr': {'class': 'mt-input'}}) }}
+          </div>
+          <div class="mt-field">
+            {{ form_label(form.date_limite) }}
+            {{ form_widget(form.date_limite, {'attr': {'class': 'mt-input', 'id': 'dateLimiteInput', 'min': 'now'|date('Y-m-d')}}) }}
+            {{ form_errors(form.date_limite) }}
+            <p class="mt-hint" id="dateHint">Les dates passées ne sont pas autorisées.</p>
+          </div>
+        </div>
+
+        <div class="mt-field">
+          {{ form_label(form.id_responsable) }}
+          {{ form_widget(form.id_responsable, {'attr': {'class': 'mt-input'}}) }}
+        </div>
+
+        <div class="mt-actions">
+          <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="mt-btn-ghost">Annuler</a>
+          <button type="submit" class="mt-btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Enregistrer
+          </button>
+        </div>
+
+      {{ form_end(form) }}
+    </div>
+  </div>
 </div>
+
+<style>
+:root {
+  --v50: #f3f0ff; --v100: #e9e3ff; --v200: #d4c8ff;
+  --v600: #7c3aed; --v700: #6d28d9;
+  --ink: #1a1523; --ink2: #4c4566; --ink3: #8b7fa8;
+  --border: rgba(124,58,237,.15); --border2: rgba(124,58,237,.3);
+  --radius: 10px; --radius-lg: 18px;
+}
+
+.mt-root {
+  min-height: 100vh; display: flex; align-items: flex-start;
+  justify-content: center; padding: 2.5rem 1rem;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, var(--v100), transparent),
+              linear-gradient(160deg, #faf9ff 0%, #f8f5ff 100%);
+}
+
+.mt-card {
+  width: 100%; max-width: 580px; background: white;
+  border-radius: var(--radius-lg); box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
+  border: 1px solid var(--border); overflow: hidden; position: relative;
+}
+
+.mt-card-accent {
+  height: 4px;
+  background: linear-gradient(90deg, var(--v600) 0%, #a78bfa 60%, #c4b5fd 100%);
+}
+
+.mt-header {
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: #faf9ff;
+}
+
+.mt-back {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .75rem; color: var(--v600); text-decoration: none; font-weight: 500;
+  padding: .25rem .5rem; border-radius: 6px; transition: background .15s;
+  margin-bottom: .75rem;
+}
+.mt-back:hover { background: var(--v50); }
+
+.mt-header-content { display: flex; align-items: center; gap: .9rem; }
+
+.mt-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--v100); color: var(--v700);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.mt-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
+.mt-subtitle { margin: 0; font-size: .78rem; color: var(--ink3); margin-top: .15rem; }
+
+.mt-body { padding: 1.5rem 1.75rem; }
+
+/* Flash */
+.mt-flash {
+  padding: .65rem .9rem; border-radius: 8px;
+  margin-bottom: 1rem; font-size: .8rem; font-weight: 500;
+}
+.mt-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.mt-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+.mt-flash--warning { background: #fef9c3; color: #854d0e; border-left: 3px solid #ca8a04; }
+
+/* Fields */
+.mt-field { margin-bottom: 1.1rem; }
+.mt-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.mt-field label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink2); margin-bottom: .35rem; }
+.mt-input {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--border2); border-radius: 9px;
+  padding: .6rem .85rem; font-size: .875rem; color: var(--ink);
+  background: white; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.mt-input:focus {
+  outline: none; border-color: var(--v600);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+}
+.mt-input.error { border-color: #dc2626; }
+.mt-hint { font-size: .7rem; color: var(--ink3); margin-top: .25rem; }
+.mt-hint.error-hint { color: #dc2626; }
+
+/* Actions */
+.mt-actions {
+  display: flex; gap: .75rem; margin-top: 1.75rem;
+  padding-top: 1.25rem; border-top: 1px solid var(--border);
+}
+.mt-btn-primary {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: .45rem;
+  background: var(--v600); color: white; border: none;
+  padding: .7rem 1.25rem; border-radius: 10px; font-size: .875rem;
+  font-weight: 600; cursor: pointer; transition: background .15s, transform .15s;
+}
+.mt-btn-primary:hover { background: var(--v700); transform: translateY(-1px); }
+.mt-btn-ghost {
+  padding: .7rem 1.25rem; border: 1.5px solid var(--border2); border-radius: 10px;
+  background: transparent; color: var(--ink2); font-size: .875rem;
+  font-weight: 500; cursor: pointer; text-decoration: none;
+  display: flex; align-items: center; transition: background .15s;
+}
+.mt-btn-ghost:hover { background: var(--v50); }
+
+@media (max-width: 480px) {
+  .mt-row { grid-template-columns: 1fr; }
+  .mt-actions { flex-direction: column; }
+}
+</style>
+
+<script>
+(function() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dateInput = document.getElementById('dateLimiteInput');
+  const hint = document.getElementById('dateHint');
+
+  if (dateInput) {
+    dateInput.min = today.toISOString().split('T')[0];
+    dateInput.addEventListener('change', function() {
+      const val = new Date(this.value);
+      if (this.value && val < today) {
+        this.classList.add('error');
+        hint.classList.add('error-hint');
+        hint.textContent = 'La date limite ne peut pas être dans le passé.';
+      } else {
+        this.classList.remove('error');
+        hint.classList.remove('error-hint');
+        hint.textContent = 'Les dates passées ne sont pas autorisées.';
+      }
+    });
+  }
+
+  document.getElementById('tacheForm').addEventListener('submit', function(e) {
+    let valid = true;
+    const titre = this.querySelector('[name*="titre"]');
+    if (titre && titre.value.trim().length < 3) {
+      titre.classList.add('error'); valid = false;
+    } else if (titre) {
+      titre.classList.remove('error');
+    }
+
+    if (dateInput && dateInput.value) {
+      const val = new Date(dateInput.value);
+      if (val < today) { e.preventDefault(); valid = false; }
+    }
+
+    if (!valid) e.preventDefault();
+  });
+})();
+</script>
 {% endblock %}

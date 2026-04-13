@@ -11,7 +11,7 @@
     </div>
 
     <!-- Filtres -->
-    <form method="GET" action="{{ path('admin_reclamation_index') }}" class="gestion-filters">
+    <form method="GET" action="{{ path('admin_reclamation_index') }}" class="gestion-filters dynamic-filter">
         <div class="filter-group">
             <label class="filter-label">Rechercher</label>
             <input type="text" name="search" class="filter-input"
@@ -37,8 +37,6 @@
                 <option value="statut" {{ sort == 'statut' ? 'selected' : '' }}>Statut</option>
             </select>
         </div>
-
-        <button type="submit" class="btn-actualiser">⟳ Actualiser</button>
     </form>
 
     <!-- Liste -->

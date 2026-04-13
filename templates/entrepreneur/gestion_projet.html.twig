@@ -1,236 +1,597 @@
 {# templates/entrepreneur/gestion_projet.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block page_title %}
-    Gestion du projet : {{ projet.titre }}
-{% endblock %}
-
 {% block body %}
-<div class="page-content">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="page-title-main">{{ projet.titre }}</h1>
-            <div class="page-subtitle text-muted">
-                <i class="bi bi-person-circle"></i> {{ projet.entrepreneur.nom ?? 'N/A' }}
-            </div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <span class="badge status-badge-lg 
-                {% if projet.etat == 'En attente' %}status-pending
-                {% elseif projet.etat == 'Accepté' %}status-accepted
-                {% elseif projet.etat == 'Refusé' %}status-refused
-                {% elseif projet.etat == 'En cours' %}status-in-progress
-                {% else %}status-completed{% endif %}">
-                {{ projet.etat }}
-            </span>
-            {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
-            <form method="post" action="{{ path('entrepreneur_changer_statut_projet', {'id': projet.idProjet}) }}" class="d-inline">
-                <select name="statut" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option>Changer le statut...</option>
-                    <option value="En cours">📊 Passer En cours</option>
-                    <option value="Terminé">✅ Marquer Terminé</option>
-                </select>
-            </form>
-            {% endif %}
-        </div>
+<div class="gp-root">
+  {# ── Top bar ── #}
+  <header class="gp-topbar">
+    <div class="gp-topbar-left">
+      <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" class="gp-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Retour
+      </a>
+      <div class="gp-project-id">Projet #{{ projet.idProjet }}</div>
     </div>
-
-    <!-- Progression -->
-    <div class="card-ui mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-                <h5 class="card-title-small">Progression globale</h5>
-                <span class="fw-bold text-primary">{{ projet.progression }}%</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ projet.progression }}%" aria-valuenow="{{ projet.progression }}" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-        </div>
+    <div class="gp-topbar-center">
+      <h1 class="gp-title">{{ projet.titre }}</h1>
     </div>
-
-    <div class="row">
-        <!-- Colonne gauche : Membres -->
-        <div class="col-lg-5 mb-4">
-            <div class="card-ui h-100">
-                <div class="card-header-ui">
-                    <h3 class="card-title-ui"><i class="bi bi-people-fill"></i> Membres de l'équipe</h3>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
-                        <i class="bi bi-plus-circle"></i> Ajouter
-                    </button>
-                </div>
-                <div class="card-body">
-                    {% if membres|length > 0 %}
-                        <ul class="list-group list-group-flush">
-                            {% for membre in membres %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        {{ membre.idUtilisateur.nom|slice(0, 1)|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold">{{ membre.idUtilisateur.nom }}</div>
-                                        <div class="text-muted small">{{ membre.roleEquipe }}</div>
-                                    </div>
-                                </div>
-                                <a href="{{ path('entrepreneur_supprimer_membre', {'id': membre.idMembre}) }}" 
-                                   class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce membre ?')">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-people display-4 text-muted"></i>
-                            <p class="text-muted mt-3">Aucun membre dans l'équipe pour le moment.</p>
-                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addMemberModal">
-                                <i class="bi bi-plus-circle"></i> Ajouter un membre
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Colonne droite : Tâches -->
-        <div class="col-lg-7 mb-4">
-            <div class="card-ui h-100">
-                <div class="card-header-ui">
-                    <h3 class="card-title-ui"><i class="bi bi-list-check"></i> Tâches du projet</h3>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                        <i class="bi bi-plus-circle"></i> Ajouter
-                    </button>
-                </div>
-                <div class="card-body">
-                    {% if taches|length > 0 %}
-                        <ul class="list-group list-group-flush">
-                            {% for tache in taches %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold">{{ tache.titre }}</div>
-                                    <div class="text-muted small">
-                                        {% if tache.id_responsable %}
-                                            Assignée à: {{ tache.id_responsable.nom }}
-                                        {% else %}
-                                            Non assignée
-                                        {% endif %}
-                                        - <span class="badge bg-light text-dark">{{ tache.statut }}</span>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    {# Actions pour les tâches (ex: modifier, supprimer) #}
-                                    <a href="{{ path('entrepreneur_supprimer_tache', {'id': tache.idTache}) }}" 
-                                       class="btn btn-sm btn-outline-danger"
-                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-list-check display-4 text-muted"></i>
-                            <p class="text-muted mt-3">Aucune tâche définie pour ce projet.</p>
-                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                                <i class="bi bi-plus-circle"></i> Ajouter une tâche
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    <div class="gp-topbar-right">
+      <span class="gp-badge gp-badge--{{ projet.etat|lower|replace({' ': '-', 'é': 'e', 'ê': 'e', 'è': 'e'}) }}">{{ projet.etat }}</span>
+      {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+      <form method="post" action="{{ path('entrepreneur_changer_statut_projet', {'id': projet.idProjet}) }}">
+        <select name="statut" class="gp-status-select" onchange="this.form.submit()">
+          <option value="">Changer le statut</option>
+          {% if projet.etat == 'Accepté' %}<option value="En cours">Passer en cours</option>{% endif %}
+          {% if projet.etat == 'En cours' %}<option value="Terminé">Marquer terminé</option>{% endif %}
+        </select>
+      </form>
+      {% endif %}
     </div>
-</div>
+  </header>
 
-<!-- Modal Ajouter Membre -->
-<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addMemberModalLabel">Ajouter un membre à l'équipe</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  {# ── Flash messages ── #}
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}
+      <div class="gp-flash gp-flash--{{ type }}">{{ message }}</div>
+    {% endfor %}
+  {% endfor %}
+
+  {# ── Progress ── #}
+  <div class="gp-progress-bar">
+    <div class="gp-progress-fill" style="width: {{ projet.progression }}%"></div>
+  </div>
+  <div class="gp-progress-label">
+    <span>Progression globale</span>
+    <strong>{{ projet.progression }}%</strong>
+  </div>
+
+  {# ── Two-column grid ── #}
+  <div class="gp-grid">
+
+    {# ── Équipe ── #}
+    <section class="gp-panel">
+      <div class="gp-panel-head">
+        <div class="gp-panel-head-left">
+          <div class="gp-panel-icon gp-panel-icon--team">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+          </div>
+          <h2>Équipe</h2>
+          <span class="gp-count">{{ membres|length }}</span>
+        </div>
+        <button class="gp-btn-add" onclick="openPanel('memberPanel')" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Inviter
+        </button>
       </div>
-      <div class="modal-body">
-        {{ form_start(membreForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
-            {{ form_widget(membreForm) }}
-            <div class="d-grid mt-3">
-                <button type="submit" class="btn btn-primary">Ajouter le membre</button>
-            </div>
-        {{ form_end(membreForm) }}
+      <div class="gp-panel-body">
+        {% if membres|length > 0 %}
+          <ul class="gp-member-list">
+            {% for membre in membres %}
+            <li class="gp-member">
+              <div class="gp-avatar">{{ (membre.idUtilisateur.nom ?? 'M')|slice(0,1)|upper }}</div>
+              <div class="gp-member-info">
+                <span class="gp-member-name">{{ membre.idUtilisateur.nom ?? 'Membre' }}</span>
+                <span class="gp-member-role">{{ membre.roleEquipe ?? 'N/A' }}</span>
+              </div>
+              <div class="gp-row-actions">
+                <a href="{{ path('entrepreneur_modifier_membre', {'id': membre.idMembre}) }}" class="gp-icon-btn gp-icon-btn--edit" title="Modifier">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+                <form method="post" action="{{ path('entrepreneur_supprimer_membre', {'id': membre.idMembre}) }}" onsubmit="return confirm('Retirer ce membre ?')">
+                  <input type="hidden" name="_token" value="{{ csrf_token('delete_membre_' ~ membre.idMembre) }}">
+                  <button type="submit" class="gp-icon-btn gp-icon-btn--del" title="Retirer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="gp-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity=".35"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+            <p>Aucun membre pour l'instant</p>
+            <button class="gp-btn-sm" onclick="openPanel('memberPanel')" type="button">Inviter un membre</button>
+          </div>
+        {% endif %}
       </div>
+    </section>
+
+    {# ── Tâches ── #}
+    <section class="gp-panel">
+      <div class="gp-panel-head">
+        <div class="gp-panel-head-left">
+          <div class="gp-panel-icon gp-panel-icon--task">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <h2>Tâches</h2>
+          <span class="gp-count">{{ taches|length }}</span>
+        </div>
+        <button class="gp-btn-add" onclick="openPanel('taskPanel')" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Ajouter
+        </button>
+      </div>
+      <div class="gp-panel-body">
+        {% if taches|length > 0 %}
+          <ul class="gp-task-list">
+            {% for tache in taches %}
+            <li class="gp-task gp-task--{{ tache.statut|lower|replace({'à ': 'a-', ' ': '-', 'é': 'e', 'ê': 'e'}) }}">
+              <div class="gp-task-dot"></div>
+              <div class="gp-task-body">
+                <div class="gp-task-head">
+                  <span class="gp-task-title">{{ tache.titre }}</span>
+                  <span class="gp-pill gp-pill--{{ tache.statut|lower|replace({'à ': 'a-', ' ': '-', 'é': 'e'}) }}">{{ tache.statut }}</span>
+                </div>
+                <div class="gp-task-meta">
+                  {% if tache.idResponsable %}
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0 1 16 0v1"/></svg>
+                      {{ tache.idResponsable.nom }}
+                    </span>
+                  {% endif %}
+                  {% if tache.dateLimite %}
+                    <span class="{{ tache.dateLimite < date() ? 'gp-overdue' : '' }}">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      {{ tache.dateLimite|date('d/m/Y') }}
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="gp-row-actions">
+                <a href="{{ path('entrepreneur_modifier_tache', {'id': tache.idTache}) }}" class="gp-icon-btn gp-icon-btn--edit" title="Modifier">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </a>
+                <form method="post" action="{{ path('entrepreneur_supprimer_tache', {'id': tache.idTache}) }}" onsubmit="return confirm('Supprimer cette tâche ?')">
+                  <input type="hidden" name="_token" value="{{ csrf_token('delete_tache_' ~ tache.idTache) }}">
+                  <button type="submit" class="gp-icon-btn gp-icon-btn--del" title="Supprimer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="gp-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity=".35"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <p>Aucune tâche définie</p>
+            <button class="gp-btn-sm" onclick="openPanel('taskPanel')" type="button">Créer une tâche</button>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>{# /gp-grid #}
+</div>{# /gp-root #}
+
+{# ══════════════ SLIDE-IN PANELS ══════════════ #}
+
+{# Member panel #}
+<div id="memberPanel" class="gp-drawer" aria-hidden="true">
+  <div class="gp-drawer-inner">
+    <div class="gp-drawer-head">
+      <h3>Inviter un membre</h3>
+      <button class="gp-drawer-close" onclick="closePanel('memberPanel')" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="gp-drawer-body">
+      {{ form_start(membreForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
+        {{ form_errors(membreForm) }}
+
+        {% if membreForm.id_utilisateur is defined %}
+        <div class="gp-field">
+          {{ form_label(membreForm.id_utilisateur) }}
+          {{ form_widget(membreForm.id_utilisateur) }}
+          {{ form_errors(membreForm.id_utilisateur) }}
+          <p class="gp-field-hint">Seuls les entrepreneurs et candidats sont invitables.</p>
+        </div>
+        {% endif %}
+
+        <div class="gp-field">
+          {{ form_label(membreForm.role_equipe) }}
+          {{ form_widget(membreForm.role_equipe) }}
+          {{ form_errors(membreForm.role_equipe) }}
+        </div>
+
+        <div class="gp-custom-fields" id="customFieldsContainer">
+          <div class="gp-custom-fields-head">
+            <span>Champs personnalisés</span>
+            <button type="button" class="gp-btn-text" onclick="addCustomField()">+ Ajouter un champ</button>
+          </div>
+          <div id="customFieldsList"></div>
+        </div>
+
+        <div class="gp-drawer-actions">
+          <button type="button" class="gp-btn-ghost" onclick="closePanel('memberPanel')">Annuler</button>
+          <button type="submit" class="gp-btn-primary">Inviter</button>
+        </div>
+      {{ form_end(membreForm) }}
     </div>
   </div>
 </div>
 
-<!-- Modal Ajouter Tâche -->
-<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addTaskModalLabel">Ajouter une nouvelle tâche</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {{ form_start(tacheForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
-            {{ form_widget(tacheForm) }}
-            <div class="d-grid mt-3">
-                <button type="submit" class="btn btn-primary">Créer la tâche</button>
-            </div>
-        {{ form_end(tacheForm) }}
-      </div>
+{# Task panel #}
+<div id="taskPanel" class="gp-drawer" aria-hidden="true">
+  <div class="gp-drawer-inner">
+    <div class="gp-drawer-head">
+      <h3>Nouvelle tâche</h3>
+      <button class="gp-drawer-close" onclick="closePanel('taskPanel')" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="gp-drawer-body">
+      {{ form_start(tacheForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
+        {{ form_errors(tacheForm) }}
+
+        <div class="gp-field">
+          {{ form_label(tacheForm.titre) }}
+          {{ form_widget(tacheForm.titre) }}
+          {{ form_errors(tacheForm.titre) }}
+        </div>
+        <div class="gp-field">
+          {{ form_label(tacheForm.description) }}
+          {{ form_widget(tacheForm.description) }}
+        </div>
+        <div class="gp-field-row">
+          <div class="gp-field">
+            {{ form_label(tacheForm.statut) }}
+            {{ form_widget(tacheForm.statut) }}
+          </div>
+          <div class="gp-field">
+            {{ form_label(tacheForm.date_limite) }}
+            {{ form_widget(tacheForm.date_limite) }}
+            {{ form_errors(tacheForm.date_limite) }}
+            <p class="gp-field-hint">Les dates passées ne sont pas autorisées.</p>
+          </div>
+        </div>
+        <div class="gp-field">
+          {{ form_label(tacheForm.id_responsable) }}
+          {{ form_widget(tacheForm.id_responsable) }}
+        </div>
+
+        <div class="gp-drawer-actions">
+          <button type="button" class="gp-btn-ghost" onclick="closePanel('taskPanel')">Annuler</button>
+          <button type="submit" class="gp-btn-primary">Créer la tâche</button>
+        </div>
+      {{ form_end(tacheForm) }}
     </div>
   </div>
 </div>
-{% endblock %}
+<div class="gp-overlay" id="overlay" onclick="closeAllPanels()"></div>
 
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .page-content { padding: 2rem; }
-        .page-title-main { font-size: 2rem; font-weight: 700; }
-        .card-ui {
-            background-color: #fff;
-            border: 1px solid #e3e6f0;
-            border-radius: .75rem;
-            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
-        }
-        .card-header-ui {
-            padding: 1rem 1.25rem;
-            background-color: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .card-title-ui {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #5a5c69;
-        }
-        .avatar-sm {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #4e73df;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
-        .status-badge-lg {
-            padding: .5em .75em;
-            font-size: .9rem;
-            font-weight: 700;
-        }
-        .status-pending { background-color: #f6c23e; color: #fff; }
-        .status-accepted { background-color: #1cc88a; color: #fff; }
-        .status-refused { background-color: #e74a3b; color: #fff; }
-        .status-in-progress { background-color: #36b9cc; color: #fff; }
-        .status-completed { background-color: #858796; color: #fff; }
-    </style>
+<style>
+/* ─── Design tokens ─── */
+:root {
+  --v50: #f3f0ff;
+  --v100: #e9e3ff;
+  --v200: #d4c8ff;
+  --v400: #a78bfa;
+  --v600: #7c3aed;
+  --v700: #6d28d9;
+  --v900: #2e1065;
+  --ink: #1a1523;
+  --ink2: #4c4566;
+  --ink3: #8b7fa8;
+  --surface: #ffffff;
+  --surface2: #faf9ff;
+  --border: rgba(124,58,237,.12);
+  --border2: rgba(124,58,237,.25);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --transition: .18s cubic-bezier(.4,0,.2,1);
+}
+
+/* ─── Layout ─── */
+.gp-root { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+/* ─── Top bar ─── */
+.gp-topbar {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; padding: 1.25rem 0; gap: 1rem;
+  border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+.gp-topbar-left { display: flex; align-items: center; gap: .75rem; }
+.gp-topbar-center { justify-self: center; }
+.gp-topbar-right { display: flex; align-items: center; gap: .75rem; justify-content: flex-end; flex-wrap: wrap; }
+.gp-back {
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: var(--v600); font-size: .8rem; text-decoration: none; font-weight: 500;
+  padding: .3rem .6rem; border-radius: 6px; transition: background var(--transition);
+}
+.gp-back:hover { background: var(--v50); }
+.gp-project-id { font-size: .75rem; color: var(--ink3); letter-spacing: .04em; }
+.gp-title { font-size: 1.1rem; font-weight: 600; color: var(--ink); text-align: center; margin: 0; }
+
+/* ─── Status badge ─── */
+.gp-badge {
+  display: inline-block; padding: .3rem .8rem; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .03em;
+}
+.gp-badge--en-attente { background: #fef9c3; color: #854d0e; }
+.gp-badge--accepte, .gp-badge--accept { background: #dcfce7; color: #166534; }
+.gp-badge--en-cours { background: var(--v100); color: var(--v700); }
+.gp-badge--termine, .gp-badge--termin { background: #f1f5f9; color: #475569; }
+.gp-badge--refuse, .gp-badge--refus { background: #fee2e2; color: #991b1b; }
+
+/* Status select */
+.gp-status-select {
+  font-size: .78rem; border: 1px solid var(--border2); border-radius: 8px;
+  background: white; color: var(--v700); padding: .3rem .6rem; cursor: pointer;
+}
+
+/* ─── Flash ─── */
+.gp-flash {
+  padding: .75rem 1rem; border-radius: var(--radius); margin-bottom: 1rem;
+  font-size: .875rem; font-weight: 500;
+}
+.gp-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.gp-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+.gp-flash--warning { background: #fef9c3; color: #854d0e; border-left: 3px solid #ca8a04; }
+
+/* ─── Progress ─── */
+.gp-progress-bar {
+  height: 5px; background: var(--v100); border-radius: 99px; overflow: hidden; margin-bottom: .4rem;
+}
+.gp-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--v600), var(--v400));
+  border-radius: 99px; transition: width .6s ease;
+}
+.gp-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: .78rem; color: var(--ink3); margin-bottom: 1.75rem;
+}
+.gp-progress-label strong { color: var(--v600); }
+
+/* ─── Grid ─── */
+.gp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; }
+
+/* ─── Panel ─── */
+.gp-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow);
+}
+.gp-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.gp-panel-head-left { display: flex; align-items: center; gap: .6rem; }
+.gp-panel-head-left h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--ink); }
+.gp-panel-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.gp-panel-icon--team { background: var(--v100); color: var(--v700); }
+.gp-panel-icon--task { background: #e0fdf4; color: #0d9488; }
+.gp-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  background: var(--v200); color: var(--v700); border-radius: 99px;
+  font-size: .7rem; font-weight: 700;
+}
+.gp-btn-add {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--v600); color: white; border: none;
+  padding: .45rem .9rem; border-radius: 8px; font-size: .78rem;
+  font-weight: 600; cursor: pointer; transition: background var(--transition), transform var(--transition);
+}
+.gp-btn-add:hover { background: var(--v700); transform: translateY(-1px); }
+.gp-panel-body { padding: 1rem 1.25rem; min-height: 120px; }
+
+/* ─── Members list ─── */
+.gp-member-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.gp-member {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .65rem .75rem; border-radius: var(--radius);
+  border: 1px solid var(--border); transition: border-color var(--transition), background var(--transition);
+}
+.gp-member:hover { border-color: var(--border2); background: var(--v50); }
+.gp-avatar {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--v600), var(--v400));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: .85rem; font-weight: 700;
+}
+.gp-member-info { flex: 1; min-width: 0; }
+.gp-member-name { display: block; font-weight: 600; font-size: .875rem; color: var(--ink); }
+.gp-member-role { display: block; font-size: .75rem; color: var(--ink3); }
+
+/* ─── Tasks list ─── */
+.gp-task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.gp-task {
+  display: flex; align-items: flex-start; gap: .75rem;
+  padding: .75rem; border-radius: var(--radius);
+  border: 1px solid var(--border); border-left-width: 3px;
+  transition: border-color var(--transition), background var(--transition);
+}
+.gp-task:hover { background: var(--v50); }
+.gp-task--a-faire { border-left-color: #f59e0b; }
+.gp-task--en-cours { border-left-color: var(--v600); }
+.gp-task--terminee { border-left-color: #10b981; }
+.gp-task-dot {
+  flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 5px;
+}
+.gp-task--a-faire .gp-task-dot { background: #f59e0b; }
+.gp-task--en-cours .gp-task-dot { background: var(--v600); }
+.gp-task--terminee .gp-task-dot { background: #10b981; }
+.gp-task-body { flex: 1; min-width: 0; }
+.gp-task-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .35rem; }
+.gp-task-title { font-weight: 600; font-size: .875rem; color: var(--ink); }
+.gp-pill {
+  display: inline-block; padding: .15rem .55rem; border-radius: 99px;
+  font-size: .65rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap;
+}
+.gp-pill--a-faire { background: #fef3c7; color: #92400e; }
+.gp-pill--en-cours { background: var(--v100); color: var(--v700); }
+.gp-pill--terminee { background: #d1fae5; color: #065f46; }
+.gp-task-meta {
+  display: flex; flex-wrap: wrap; gap: .6rem;
+  font-size: .72rem; color: var(--ink3); align-items: center;
+}
+.gp-task-meta svg { vertical-align: middle; margin-right: .2rem; }
+.gp-overdue { color: #dc2626 !important; }
+
+/* ─── Row actions ─── */
+.gp-row-actions { display: flex; gap: .3rem; flex-shrink: 0; }
+.gp-icon-btn {
+  width: 28px; height: 28px; border-radius: 7px; border: 1px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; cursor: pointer; transition: background var(--transition), border-color var(--transition);
+  text-decoration: none;
+}
+.gp-icon-btn--edit:hover { background: var(--v50); border-color: var(--border2); color: var(--v700); }
+.gp-icon-btn--del:hover  { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+/* ─── Empty state ─── */
+.gp-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 2.5rem 1rem; text-align: center; gap: .75rem;
+}
+.gp-empty p { font-size: .875rem; color: var(--ink3); margin: 0; }
+.gp-btn-sm {
+  padding: .4rem .9rem; border: 1.5px solid var(--v400); border-radius: 8px;
+  background: white; color: var(--v600); font-size: .78rem; font-weight: 600;
+  cursor: pointer; transition: background var(--transition);
+}
+.gp-btn-sm:hover { background: var(--v50); }
+
+/* ─── Slide-in Drawer ─── */
+.gp-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  z-index: 100; backdrop-filter: blur(2px);
+}
+.gp-overlay.active { display: block; }
+.gp-drawer {
+  position: fixed; right: 0; top: 0; height: 100%; width: min(440px, 100vw);
+  background: white; z-index: 101; transform: translateX(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; box-shadow: -8px 0 30px rgba(0,0,0,.12);
+}
+.gp-drawer.open { transform: translateX(0); }
+.gp-drawer-inner { display: flex; flex-direction: column; height: 100%; }
+.gp-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.gp-drawer-head h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--ink); }
+.gp-drawer-close {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer; color: var(--ink3); border-radius: 6px;
+  transition: background var(--transition);
+}
+.gp-drawer-close:hover { background: var(--v50); color: var(--v700); }
+.gp-drawer-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.gp-drawer-actions {
+  display: flex; gap: .75rem; padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
+
+/* ─── Form fields ─── */
+.gp-field { margin-bottom: 1rem; }
+.gp-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1rem; }
+.gp-field label, .gp-drawer-body label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink2); margin-bottom: .35rem; }
+.gp-field input, .gp-field select, .gp-field textarea,
+.gp-drawer-body input[type="text"], .gp-drawer-body input[type="date"], .gp-drawer-body input[type="email"],
+.gp-drawer-body select, .gp-drawer-body textarea {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--border2); border-radius: 8px;
+  padding: .55rem .75rem; font-size: .875rem; color: var(--ink);
+  background: white; transition: border-color var(--transition), box-shadow var(--transition);
+  font-family: inherit;
+}
+.gp-drawer-body input:focus, .gp-drawer-body select:focus, .gp-drawer-body textarea:focus {
+  outline: none; border-color: var(--v600); box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+}
+.gp-field-hint { font-size: .72rem; color: var(--ink3); margin-top: .25rem; }
+
+/* Custom fields */
+.gp-custom-fields { margin-top: 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.gp-custom-fields-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+.gp-custom-fields-head span { font-size: .78rem; font-weight: 600; color: var(--ink2); }
+.gp-btn-text { background: none; border: none; color: var(--v600); font-size: .78rem; font-weight: 600; cursor: pointer; padding: 0; }
+.gp-btn-text:hover { text-decoration: underline; }
+.gp-custom-field-row { display: flex; gap: .5rem; margin-bottom: .5rem; align-items: center; }
+.gp-custom-field-row input { flex: 1; }
+.gp-custom-field-remove {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 6px; border: 1px solid #fca5a5;
+  background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; line-height: 1;
+}
+
+/* Drawer buttons */
+.gp-btn-primary {
+  flex: 1; background: var(--v600); color: white; border: none;
+  padding: .6rem 1rem; border-radius: 9px; font-size: .875rem; font-weight: 600;
+  cursor: pointer; transition: background var(--transition);
+}
+.gp-btn-primary:hover { background: var(--v700); }
+.gp-btn-ghost {
+  flex: 1; background: transparent; color: var(--ink2); border: 1.5px solid var(--border2);
+  padding: .6rem 1rem; border-radius: 9px; font-size: .875rem; font-weight: 500;
+  cursor: pointer; transition: background var(--transition);
+}
+.gp-btn-ghost:hover { background: var(--v50); }
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .gp-topbar { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+  .gp-topbar-center { order: -1; }
+  .gp-title { font-size: 1rem; }
+  .gp-grid { grid-template-columns: 1fr; }
+  .gp-field-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+function openPanel(id) {
+  document.getElementById(id).classList.add('open');
+  document.getElementById('overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closePanel(id) {
+  document.getElementById(id).classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function closeAllPanels() {
+  document.querySelectorAll('.gp-drawer').forEach(d => d.classList.remove('open'));
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+let customFieldCount = 0;
+function addCustomField() {
+  customFieldCount++;
+  const list = document.getElementById('customFieldsList');
+  const row = document.createElement('div');
+  row.className = 'gp-custom-field-row';
+  row.innerHTML = `
+    <input type="text" name="membre_custom_key_${customFieldCount}" placeholder="Nom du champ" style="flex:1">
+    <input type="text" name="membre_custom_val_${customFieldCount}" placeholder="Valeur" style="flex:1">
+    <button type="button" class="gp-custom-field-remove" onclick="this.parentNode.remove()" title="Supprimer">&times;</button>
+  `;
+  list.appendChild(row);
+}
+
+// Task date validation
+document.querySelectorAll('.gp-drawer form').forEach(form => {
+  form.addEventListener('submit', function(e) {
+    const dateInput = this.querySelector('input[type="date"]');
+    if (dateInput && dateInput.value) {
+      const selected = new Date(dateInput.value);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (selected < today) {
+        e.preventDefault();
+        const hint = dateInput.closest('.gp-field')?.querySelector('.gp-field-hint');
+        if (hint) hint.style.color = '#dc2626';
+        dateInput.style.borderColor = '#dc2626';
+        alert('La date limite ne peut pas être dans le passé.');
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

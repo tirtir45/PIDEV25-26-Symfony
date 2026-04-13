@@ -156,6 +156,31 @@
         {% for message in app.flashes('error') %}
             showToast('{{ message|escape('js') }}', 'error');
         {% endfor %}
+
+        function initDynamicFilterForms() {
+            const debounce = (fn, delay = 300) => {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn(...args), delay);
+                };
+            };
+
+            document.querySelectorAll('form.dynamic-filter').forEach(form => {
+                const textInputs = form.querySelectorAll('input[type="text"], input[type="search"], textarea');
+                textInputs.forEach(input => {
+                    input.addEventListener('input', debounce(() => form.requestSubmit(), 350));
+                });
+
+                const changeInputs = form.querySelectorAll('select, input[type="checkbox"], input[type="radio"]');
+                changeInputs.forEach(input => {
+                    input.addEventListener('change', () => form.requestSubmit());
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initDynamicFilterForms);
+        document.addEventListener('turbo:load', initDynamicFilterForms);
     </script>
 </body>
 </html>
