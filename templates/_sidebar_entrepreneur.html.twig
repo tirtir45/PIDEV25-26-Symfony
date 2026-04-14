@@ -41,6 +41,15 @@
             <span>Nouveau Projet</span>
         </a>
 
+        {% if app.session.get('is_member') %}
+        <a href="{{ path('member_mes_taches') }}" class="nav-item {{ currentRoute starts with 'member_' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 16.17l-3.88-3.88L3 14.41 9 20.41 21 8.41 18.88 6.29z"/>
+            </svg>
+            <span>Mes Tâches Assignées</span>
+        </a>
+        {% endif %}
+
         <span class="sidebar-nav-section">Commerce</span>
 
         <a href="{{ path('app_panier_index') }}" class="nav-item {{ currentRoute starts with 'app_panier_' ? 'is-active' : '' }}">

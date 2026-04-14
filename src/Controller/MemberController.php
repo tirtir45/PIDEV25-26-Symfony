@@ -28,7 +28,9 @@ class MemberController extends AbstractController
         }
         
         $queryBuilder = $em->getRepository(Taches::class)->createQueryBuilder('t');
-        $queryBuilder->where('t.id_responsable = :membre')
+        $queryBuilder->join('t.id_projet', 'p')
+            ->join('p.membres_equipes', 'me')
+            ->where('me.id_utilisateur = :membre')
             ->setParameter('membre', $membre);
         
         // Filtre par statut
@@ -64,6 +66,22 @@ class MemberController extends AbstractController
     #[Route('/member/tache/{id}/modifier-statut', name: 'member_modifier_statut_tache')]
     public function modifierStatutTache(Taches $tache, Request $request, EntityManagerInterface $em): Response
     {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $user = $em->getRepository(Utilisateurs::class)->find($userId);
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        // Vérifier que l'utilisateur est le responsable de la tâche
+        if ($tache->getIdResponsable() !== $user) {
+            $this->addFlash('error', 'Vous n\'êtes pas autorisé à modifier cette tâche.');
+            return $this->redirectToRoute('member_mes_taches');
+        }
+
         if ($request->isMethod('POST')) {
             $nouveauStatut = $request->request->get('statut');
             $commentaire = $request->request->get('commentaire');
@@ -85,6 +103,53 @@ class MemberController extends AbstractController
             }
         }
         
-        return $this->redirectToRoute('member_dashboard');
+        return $this->redirectToRoute('member_mes_taches');
+    }
+
+    #[Route('/member/mes-taches', name: 'member_mes_taches')]
+    public function mesTaches(Request $request, EntityManagerInterface $em): Response
+    {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $membre = $em->getRepository(Utilisateurs::class)->find($userId);
+        if (!$membre) {
+            return $this->redirectToRoute('app_login');
+        }
+        
+        $queryBuilder = $em->getRepository(Taches::class)->createQueryBuilder('t');
+        $queryBuilder->where('t.id_responsable = :membre')
+            ->setParameter('membre', $membre);
+        
+        // Filtre par statut
+        $statusFilter = $request->query->get('status');
+        if ($statusFilter && $statusFilter !== 'all') {
+            $queryBuilder->andWhere('t.statut = :status')
+            ->setParameter('status', $statusFilter);
+        }
+        
+        // Tri
+        $sort = $request->query->get('sort', 'date_limite');
+        $order = $request->query->get('order', 'ASC');
+        $queryBuilder->orderBy('t.' . $sort, $order);
+        
+        $taches = $queryBuilder->getQuery()->getResult();
+        
+        $stats = [
+            'total_taches' => count($taches),
+            'a_faire' => count(array_filter($taches, fn($t) => $t->getStatut() === Taches::STATUT_A_FAIRE)),
+            'en_cours' => count(array_filter($taches, fn($t) => $t->getStatut() === Taches::STATUT_EN_COURS)),
+            'terminees' => count(array_filter($taches, fn($t) => $t->getStatut() === Taches::STATUT_TERMINEE)),
+        ];
+        
+        return $this->render('member/mes_taches.html.twig', [
+            'taches' => $taches,
+            'stats' => $stats,
+            'currentStatus' => $statusFilter,
+            'sort' => $sort,
+            'order' => $order
+        ]);
     }
 }

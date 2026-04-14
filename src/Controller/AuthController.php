@@ -47,6 +47,11 @@ class AuthController extends AbstractController
                         $request->getSession()->set('user_nom',   $user->getNom());
                         $request->getSession()->set('user_email', $user->getEmail());
                         $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
+                        
+                        // Check if user is a team member
+                        $isMember = $em->getRepository(\App\Entity\Membres_equipe::class)->findOneBy(['id_utilisateur' => $user]);
+                        $request->getSession()->set('is_member', $isMember !== null);
+                        
                         return $this->redirectToRoute('app_dashboard');
                     }
 
@@ -147,6 +152,10 @@ class AuthController extends AbstractController
                 $request->getSession()->set('user_nom',   $user->getNom());
                 $request->getSession()->set('user_email', $user->getEmail());
                 $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
+                
+                // Check if user is a team member
+                $isMember = $this->getDoctrine()->getRepository(\App\Entity\Membres_equipe::class)->findOneBy(['id_utilisateur' => $user]);
+                $request->getSession()->set('is_member', $isMember !== null);
             }
         }
 

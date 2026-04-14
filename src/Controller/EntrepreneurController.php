@@ -268,6 +268,19 @@ class EntrepreneurController extends AbstractController
                 $responsable = $em->getRepository(Utilisateurs::class)->find($responsableId);
                 if ($responsable) {
                     $tache->setId_responsable($responsable);
+                    
+                    // Ensure the responsable is a team member
+                    $membreEquipe = $em->getRepository(Membres_equipe::class)->findOneBy([
+                        'id_projet' => $projet,
+                        'id_utilisateur' => $responsable
+                    ]);
+                    if (!$membreEquipe) {
+                        $membreEquipe = new Membres_equipe();
+                        $membreEquipe->setId_projet($projet);
+                        $membreEquipe->setId_utilisateur($responsable);
+                        $membreEquipe->setRole_equipe('Membre');
+                        $em->persist($membreEquipe);
+                    }
                 }
             }
 

@@ -1,13 +1,14 @@
-{% set currentRoute = app.request.attributes.get('_route')|default('') %}
+{% set userRole = app.session.get('user_role')|default('') %}
+{% set isMember = app.session.get('is_member')|default(false) %}
 
-{% if currentRoute starts with 'admin_' %}
+{% if userRole == 'Administrateur' %}
     {{ include('_sidebar_admin.html.twig') }}
-{% elseif currentRoute starts with 'entrepreneur_' %}
-    {{ include('_sidebar_entrepreneur.html.twig') }}
-{% elseif currentRoute starts with 'app_fournisseur_' %}
-    {{ include('_sidebar_fournisseur.html.twig') }}
-{% elseif currentRoute starts with 'member_' %}
+{% elseif userRole == 'Membre' or isMember %}
     {{ include('_sidebar_membre.html.twig') }}
+{% elseif userRole == 'Entrepreneur' %}
+    {{ include('_sidebar_entrepreneur.html.twig') }}
+{% elseif userRole == 'Fournisseur' %}
+    {{ include('_sidebar_fournisseur.html.twig') }}
 {% else %}
     {# Fallback or default sidebar #}
     {{ include('_sidebar_entrepreneur.html.twig') }}
