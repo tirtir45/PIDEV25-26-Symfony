@@ -84,7 +84,6 @@
                     {% for demande in demandes %}
                     <tr>
                         <td>
-                            {# CORRECTION ICI : demande.candidat_id #}
                             {% if demande.getCandidat() %}
                                 <div style="font-weight:600;">{{ demande.getCandidat().nom ?? 'N/A' }} {{ demande.getCandidat().prenom ?? '' }}</div>
                                 <div style="font-size:12px; color:#64748b;">{{ demande.getCandidat().email }}</div>
@@ -93,7 +92,6 @@
                             {% endif %}
                         </td>
                         <td>
-                            {# CORRECTION ICI : demande.publication_id #}
                             {% if demande.getPublication() %}
                                 {# On utilise le getter publication pour avoir l'ID pour la route #}
                                 <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" style="color:#A155B9; font-weight:600; text-decoration:none;">

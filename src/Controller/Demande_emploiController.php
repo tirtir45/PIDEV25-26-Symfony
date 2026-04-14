@@ -17,11 +17,12 @@ class Demande_emploiController extends AbstractController
 {
     #[Route('/', name: 'app_demande_emploi_index', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function index(Request $request, Demande_emploiRepository $demandeEmploiRepository): Response
+    public function index(Request $request, Demande_emploiRepository $demandeEmploiRepository, EntityManagerInterface $entityManager): Response
     {
         $publicationId = $request->query->get('publication_id');
         if ($publicationId) {
-            $demandes = $demandeEmploiRepository->findBy(['publication_id' => $publicationId]);
+            $publication = $entityManager->getRepository(\App\Entity\Publication::class)->find($publicationId);
+            $demandes = $demandeEmploiRepository->findBy(['publication' => $publication]);
         } else {
             $demandes = $demandeEmploiRepository->findAll();
         }

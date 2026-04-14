@@ -18,7 +18,7 @@ class CandidatController extends AbstractController
         $user = $this->getUser();
 
         // Récupérer toutes les candidatures de l'utilisateur connecté
-        $candidatures = $demandeEmploiRepository->findBy(['candidat_id' => $user]);
+        $candidatures = $demandeEmploiRepository->findBy(['candidat' => $user]);
 
         return $this->render('user/MesCandidatures.html.twig', [
             'candidatures' => $candidatures,

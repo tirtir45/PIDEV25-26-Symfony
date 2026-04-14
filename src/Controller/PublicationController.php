@@ -69,8 +69,8 @@ final class PublicationController extends AbstractController
 
         // Vérifier que le candidat n'a pas déjà postulé
         $demandeExistante = $entityManager->getRepository(Demande_emploi::class)->findOneBy([
-            'publication_id' => $publication,
-            'candidat_id' => $candidat,
+            'publication' => $publication,
+            'candidat' => $candidat,
         ]);
 
         if ($demandeExistante) {

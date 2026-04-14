@@ -66,12 +66,12 @@
             {% for demande in candidatures %}
                 <div class="candidature-card">
                     {# L'en-tête de la carte, avec l'offre d'emploi concernée #}
-                    <div class="card-header {% if demande.publication_id.dateExpiration < "now"|date("Y-m-d") %}card-header-expired{% endif %}">
+                    <div class="card-header {% if demande.getPublication() and demande.getPublication().dateExpiration < "now"|date("Y-m-d") %}card-header-expired{% endif %}">
                         <p class="card-title">
-                            {% if demande.publication_id %}{{ demande.publication_id.titre }}{% else %}Offre inconnue{% endif %}
+                            {% if demande.getPublication() %}{{ demande.getPublication().titre }}{% else %}Offre inconnue{% endif %}
                         </p>
                         <p class="card-subtitle">
-                            {% if demande.publication_id %}📍 {{ demande.publication_id.lieu }}{% endif %}
+                            {% if demande.getPublication() %}📍 {{ demande.getPublication().lieu }}{% endif %}
                         </p>
                     </div>
 
