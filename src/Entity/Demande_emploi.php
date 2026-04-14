@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\DemandeEmploiRepository;
+use App\Repository\Demande_emploiRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\Utilisateur;
 
-#[ORM\Entity(repositoryClass: DemandeEmploiRepository::class)]
+#[ORM\Entity(repositoryClass: Demande_emploiRepository::class)]
 class Demande_emploi
 {
     #[ORM\Id]
