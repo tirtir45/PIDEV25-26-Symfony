@@ -77,9 +77,10 @@ class Demande_emploiController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function edit(Request $request, Demande_emploi $demande, EntityManagerInterface $entityManager): Response
     {
-        // Sécurité métier : on ne permet d'éditer que si le statut est "En attente"
-        if ($demande->getStatutDemande() !== 'En attente') {
-            $this->addFlash('error', 'Cette candidature n\'est plus modifiable (statut : ' . $demande->getStatutDemande() . ').');
+        // Sécurité métier : on ne permet d'éditer que si le statut est "En attente" ou NULL/vide
+        $statut = $demande->getStatutDemande();
+        if ($statut && $statut !== 'En attente') {
+            $this->addFlash('error', 'Cette candidature n\'est plus modifiable (statut : ' . $statut . ').');
             return $this->redirectToRoute('app_publication_show', [
                 'publication_id' => $demande->getPublication()->getPublication_id(),
             ]);
