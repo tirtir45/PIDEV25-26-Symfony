@@ -31,7 +31,7 @@ class EntretienController extends AbstractController
 
         $form = $this->createFormBuilder([
             'topic' => 'Entretien pour la candidature à « ' . ($publication?->getTitre() ?? 'offre') . ' »',
-            'message' => 'Bonjour ' . ($candidat?->getPrenom() ?? 'candidat') . ",\n\nNous vous proposons un entretien pour votre candidature. Voici les détails :\n\n"
+            'message' => 'Bonjour ' . ($candidat?->getNom() ?? 'candidat') . ",\n\nNous vous proposons un entretien pour votre candidature. Voici les détails :\n\n"
                 . 'Offre : ' . ($publication?->getTitre() ?? 'N/D') . "\n"
                 . 'Statut : ' . ($demande->getStatutDemande() ?? 'N/D') . "\n\n"
                 . 'Merci de rejoindre la réunion via le lien que vous recevrez par email.',
