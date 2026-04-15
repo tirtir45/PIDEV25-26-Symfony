@@ -8,6 +8,7 @@ use App\Entity\Taches;
 use App\Entity\Membres_equipe;
 use App\Entity\Utilisateurs;
 use App\Form\ProjetValidationType;
+use App\Service\EvaluationAutomatiqueService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ class AdminController extends AbstractController
         if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
             return $this->redirectToRoute('app_login');
         }
+        
         $search = $request->query->get('search', '');
         $status = $request->query->get('status', '');
         $sort = $request->query->get('sort', 'date_soumission');
@@ -36,7 +38,7 @@ class AdminController extends AbstractController
         
         if ($search) {
             $qb->andWhere('p.titre LIKE :search OR p.description LIKE :search')
-            ->setParameter('search', '%' . $search . '%');
+                ->setParameter('search', '%' . $search . '%');
         }
         
         $qb->orderBy('p.' . $sort, $order);
@@ -62,15 +64,26 @@ class AdminController extends AbstractController
     }
 
     #[Route('/admin/projet/{id}/valider', name: 'admin_valider_projet')]
-    public function validerProjet(Projets $projet, Request $request, EntityManagerInterface $em): Response
-    {
-        // Vérifier que l'utilisateur est admin
+    public function validerProjet(
+        Projets $projet, 
+        Request $request, 
+        EntityManagerInterface $em,
+        EvaluationAutomatiqueService $evaluationService
+    ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
             return $this->redirectToRoute('app_login');
         }
         
-        // Vérifier si c'est une soumission POST
+        // Effectuer l'évaluation automatique
+        $evaluation = $evaluationService->evaluerProjet($projet);
+        
+        // Sauvegarder l'évaluation
+        $projet->setNoteMoyenne($evaluation['pourcentage']);
+        $projet->setDateEvaluation(new \DateTime());
+        $projet->setEvaluationAutomatique(true);
+        $em->flush();
+        
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
             $commentaire = $request->request->get('commentaire_admin');
@@ -78,7 +91,7 @@ class AdminController extends AbstractController
             if ($action === 'accepter') {
                 $projet->setEtat(Projets::ETAT_ACCEPTE);
                 if ($commentaire) {
-                    $projet->setCommentaire_admin($commentaire);
+                    $projet->setCommentaireAdmin($commentaire);
                 }
                 $this->addFlash('success', 'Projet accepté avec succès !');
                 $em->flush();
@@ -87,7 +100,7 @@ class AdminController extends AbstractController
             } elseif ($action === 'refuser') {
                 $projet->setEtat(Projets::ETAT_REFUSE);
                 if ($commentaire) {
-                    $projet->setCommentaire_admin($commentaire);
+                    $projet->setCommentaireAdmin($commentaire);
                 }
                 $this->addFlash('warning', 'Projet refusé.');
                 $em->flush();
@@ -96,8 +109,40 @@ class AdminController extends AbstractController
         }
         
         return $this->render('admin/valider_projet.html.twig', [
-            'projet' => $projet
+            'projet' => $projet,
+            'evaluation' => $evaluation
         ]);
+    }
+
+    #[Route('/admin/evaluation-automatique', name: 'admin_evaluation_auto')]
+    public function evaluationAutomatique(EntityManagerInterface $em, EvaluationAutomatiqueService $evaluationService): Response
+    {
+        // Get the request from the global variable or inject it
+        $request = Request::createFromGlobals();
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId || $request->getSession()->get('user_role') !== 'Administrateur') {
+            return $this->redirectToRoute('app_login');
+        }
+        
+        $projetsEnAttente = $em->getRepository(Projets::class)->findBy(['etat' => Projets::ETAT_EN_ATTENTE]);
+        
+        foreach ($projetsEnAttente as $projet) {
+            $evaluation = $evaluationService->evaluerProjet($projet);
+            $projet->setNoteMoyenne($evaluation['pourcentage']);
+            $projet->setDateEvaluation(new \DateTime());
+            $projet->setEvaluationAutomatique(true);
+            
+            // Acceptation automatique si score >= 70%
+            if ($evaluation['accepte']) {
+                $projet->setEtat(Projets::ETAT_ACCEPTE);
+                $projet->setCommentaireAdmin('Accepté automatiquement (score: ' . $evaluation['pourcentage'] . '%)');
+            }
+        }
+        
+        $em->flush();
+        $this->addFlash('success', count($projetsEnAttente) . ' projet(s) évalués automatiquement');
+        
+        return $this->redirectToRoute('admin_dashboard');
     }
 
     // Route pour voir les détails du projet par l'admin (lecture seule)

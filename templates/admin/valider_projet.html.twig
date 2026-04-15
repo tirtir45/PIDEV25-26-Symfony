@@ -5,115 +5,171 @@
 <div class="container fade-in">
     <div class="validation-card">
         <div class="validation-header">
-            <h2><i class="bi bi-clipboard-check"></i> Validation du projet</h2>
-            <span class="status-badge status-pending">En attente de validation</span>
+            <div class="header-title">
+                <h2><i class="bi bi-clipboard-check"></i> Validation du projet</h2>
+                <p class="text-muted mb-0">Révision détaillée et décision finale</p>
+            </div>
+            <div class="status-group">
+                {% if evaluation.accepte %}
+                    <span class="status-badge status-success">
+                        <i class="bi bi-check-circle-fill"></i> Pré-accepté ({{ evaluation.pourcentage }}%)
+                    </span>
+                {% else %}
+                    <span class="status-badge status-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> À risque ({{ evaluation.pourcentage }}%)
+                    </span>
+                {% endif %}
+                <span class="status-badge status-pending">
+                    <i class="bi bi-clock-history"></i> En attente de validation
+                </span>
+            </div>
         </div>
         
+        {# SECTION ÉVALUATION AUTOMATIQUE #}
+        <div class="evaluation-section">
+            <div class="section-header">
+                <h3><i class="bi bi-graph-up"></i> Évaluation automatique</h3>
+                <span class="badge bg-light text-dark">Analyse IA</span>
+            </div>
+            
+            <div class="score-global">
+                <div class="score-circle">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring-bg" stroke="#e5e7eb" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                        <circle class="progress-ring-circle" stroke="#10b981" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"
+                                stroke-dasharray="326.73" stroke-dashoffset="{{ 326.73 * (1 - evaluation.pourcentage / 100) }}"
+                                stroke-linecap="round"/>
+                    </svg>
+                    <div class="score-value">
+                        {{ evaluation.pourcentage }}%
+                        <div class="score-label">Score global</div>
+                    </div>
+                </div>
+                <div class="score-seuil">
+                    <div class="seuil-info">
+                        <span class="fw-bold">Seuil d'acceptation: 70%</span>
+                        {% if evaluation.accepte %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Projet éligible</span>
+                        {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Projet non éligible</span>
+                        {% endif %}
+                    </div>
+                    <div class="seuil-bar">
+                        <div class="seuil-fill" style="width: {{ evaluation.pourcentage }}%">
+                            <span class="seuil-percent">{{ evaluation.pourcentage }}%</span>
+                        </div>
+                    </div>
+                    <div class="seuil-marks">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>70%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="criteres-list">
+                <h4><i class="bi bi-list-check"></i> Détail des critères</h4>
+                <div class="criteres-grid">
+                    {% for critere, detail in evaluation.details %}
+                        <div class="critere-item">
+                            <div class="critere-header">
+                                <div class="critere-info">
+                                    <i class="bi bi-{{ critere == 'viabilite_financiere' ? 'cash-stack' : 
+                                                     critere == 'impact_social' ? 'people' : 
+                                                     critere == 'innovation' ? 'lightbulb' : 
+                                                     critere == 'faisabilite' ? 'check-circle' : 'graph-up' }}"></i>
+                                    <span class="critere-nom">{{ critere|replace({'_': ' '})|title }}</span>
+                                </div>
+                                <span class="critere-score">{{ detail.score }}/{{ detail.max_score }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {% if detail.niveau == 'excellent' %}bg-success{% elseif detail.niveau == 'bon' %}bg-info{% elseif detail.niveau == 'correct' %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ (detail.score / detail.max_score * 100)|round }}%"></div>
+                            </div>
+                            <div class="critere-commentaire">
+                                <i class="bi bi-chat-quote"></i> {{ detail.commentaire }}
+                            </div>
+                            {% if detail.niveau == 'insuffisant' %}
+                                <div class="critere-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Point d'attention
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if evaluation.recommandations|length > 0 %}
+                <div class="recommandations">
+                    <div class="recommandations-header">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        <h4 class="mb-0">Recommandations pour amélioration</h4>
+                    </div>
+                    <ul>
+                        {% for reco in evaluation.recommandations %}
+                            <li><i class="bi bi-arrow-right-circle-fill"></i> {{ reco }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+        
+        {# SECTION PROJET DÉTAILS #}
         <div class="project-details">
-            <h3>{{ projet.titre }}</h3>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Entrepreneur</label>
-                        <p>{{ projet.id_entrepreneur.nom ?? 'N/A' }}</p>
-                    </div>
-                    <div class="detail-item">
-                        <label>Secteur</label>
-                        <p>{{ projet.secteur }}</p>
-                    </div>
-                    <div class="detail-item">
-                        <label>Date de soumission</label>
-                        <p>{{ projet.dateSoumission|date('d/m/Y H:i') }}</p>
-                    </div>
+            <div class="section-header">
+                <h3><i class="bi bi-info-circle"></i> Détails du projet</h3>
+                <span class="badge bg-light text-dark">ID: #{{ projet.id_projet }}</span>
+            </div>
+            <div class="project-content">
+                <h4 class="project-title">{{ projet.titre }}</h4>
+                <div class="project-meta">
+                    <span><i class="bi bi-person"></i> {{ projet.id_entrepreneur.nom }}</span>
+                    <span><i class="bi bi-calendar"></i> Soumis le {{ projet.dateSoumission|date('d/m/Y') }}</span>
+                    <span><i class="bi bi-tag"></i> {{ projet.secteur }}</span>
                 </div>
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Budget estimé</label>
-                        <p class="fw-bold text-success">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</p>
-                    </div>
-                    <div class="detail-item">
-                        <label>Durée estimée</label>
-                        <p>{{ projet.dureeEstimee }} mois</p>
-                    </div>
-                    <div class="detail-item">
-                        <label>Nombre de membres</label>
-                        <p>{{ projet.nbMembresEquipe }} personnes</p>
-                    </div>
+                <div class="project-description">
+                    <strong>Description :</strong>
+                    <p>{{ projet.description }}</p>
+                </div>
+                <div class="project-budget">
+                    <strong>Budget estimé :</strong>
+                    <span class="budget-amount">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</span>
                 </div>
             </div>
-            
-            <div class="detail-item full-width">
-                <label>Description</label>
-                <p>{{ projet.description|nl2br }}</p>
-            </div>
-            
-            <div class="detail-item full-width">
-                <label>Objectifs</label>
-                <p>{{ projet.objectifs|nl2br }}</p>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Statut juridique</label>
-                        <p>{{ projet.statutJuridique }}</p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Financement actuel</label>
-                        <p>{{ projet.financementActuel }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Email contact</label>
-                        <p><a href="mailto:{{ projet.emailContact }}">{{ projet.emailContact }}</a></p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-item">
-                        <label>Téléphone</label>
-                        <p>{{ projet.telephoneContact }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            {% if projet.partenairesPotentiels %}
-            <div class="detail-item full-width">
-                <label>Partenaires potentiels</label>
-                <p>{{ projet.partenairesPotentiels|nl2br }}</p>
-            </div>
-            {% endif %}
-            
-            {% if projet.experiencesAnterieures %}
-            <div class="detail-item full-width">
-                <label>Expériences antérieures</label>
-                <p>{{ projet.experiencesAnterieures|nl2br }}</p>
-            </div>
-            {% endif %}
         </div>
         
         <form method="post" id="validationForm" class="validation-form">
             <div class="form-group">
-                <label class="form-label fw-bold">Commentaire (optionnel pour acceptation, recommandé pour refus)</label>
-                <textarea name="commentaire_admin" class="form-control" rows="4" placeholder="Ajoutez un commentaire pour l'entrepreneur...">{{ projet.commentaire_admin }}</textarea>
+                <label class="form-label fw-bold">
+                    <i class="bi bi-chat-text"></i> Commentaire pour l'entrepreneur
+                    <span class="text-muted">(optionnel pour acceptation, recommandé pour refus)</span>
+                </label>
+                <textarea name="commentaire_admin" class="form-control" rows="4" 
+                          placeholder="Ajoutez un commentaire constructif pour l'entrepreneur...">{{ projet.commentaire_admin }}</textarea>
+                <small class="text-muted">Ce commentaire sera visible par l'entrepreneur</small>
             </div>
             
             <div class="decision-group">
-                <label class="fw-bold mb-3">Décision finale</label>
+                <label class="fw-bold mb-3"><i class="bi bi-check2-circle"></i> Décision finale</label>
                 <div class="decision-buttons">
-                    <button type="submit" name="action" value="accepter" class="decision-btn accept-btn">
-                        <i class="bi bi-check-circle"></i>
-                        <span>Accepter le projet</span>
+                    <button type="submit" name="action" value="accepter" 
+                            class="decision-btn accept-btn {% if not evaluation.accepte %}btn-warning{% endif %}">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div class="btn-content">
+                            <span>Accepter le projet</span>
+                            {% if not evaluation.accepte %}
+                                <small>(Dérogation requise - score {{ evaluation.pourcentage }}%)</small>
+                            {% endif %}
+                        </div>
                     </button>
                     <button type="submit" name="action" value="refuser" class="decision-btn refuse-btn">
-                        <i class="bi bi-x-circle"></i>
-                        <span>Refuser le projet</span>
+                        <i class="bi bi-x-circle-fill"></i>
+                        <div class="btn-content">
+                            <span>Refuser le projet</span>
+                            <small>Motif obligatoire</small>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -122,19 +178,49 @@
 </div>
 
 <style>
+/* Variables pour les couleurs */
+:root {
+    --success: #10b981;
+    --success-dark: #059669;
+    --danger: #ef4444;
+    --danger-dark: #dc2626;
+    --warning: #f59e0b;
+    --warning-dark: #d97706;
+    --info: #3b82f6;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-600: #6b7280;
+    --gray-800: #1f2937;
+}
+
+/* Animations améliorées */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .validation-card {
     background: white;
-    border-radius: 24px;
-    box-shadow: var(--shadow-lg);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     overflow: hidden;
-    max-width: 1000px;
-    margin: 0 auto;
+    margin: 2rem 0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.validation-card:hover {
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
 }
 
 .validation-header {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 1.5rem 2rem;
+    padding: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -142,57 +228,353 @@
     gap: 1rem;
 }
 
-.validation-header h2 {
+.header-title h2 {
     margin: 0;
+    font-weight: 600;
+}
+
+.header-title p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.status-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #d1fae5;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fed7aa;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Section commune */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--gray-800);
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.project-details {
+/* Section évaluation */
+.evaluation-section {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
     padding: 2rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--gray-200);
 }
 
-.project-details h3 {
-    margin-bottom: 1.5rem;
-    color: var(--color-dark);
+.score-global {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
 }
 
-.detail-item {
+.score-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.8s ease-in-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--gray-800);
+}
+
+.score-label {
+    font-size: 0.7rem;
+    font-weight: normal;
+    color: var(--gray-600);
+}
+
+.score-seuil {
+    flex: 1;
+    min-width: 250px;
+}
+
+.seuil-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.seuil-bar {
+    background: var(--gray-200);
+    border-radius: 10px;
+    height: 30px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.seuil-fill {
+    background: linear-gradient(90deg, var(--success), var(--success-dark));
+    height: 100%;
+    transition: width 0.8s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.seuil-percent {
+    background: rgba(0,0,0,0.2);
+    padding: 0 0.25rem;
+    border-radius: 4px;
+}
+
+.seuil-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--gray-600);
+    padding: 0 0.25rem;
+}
+
+.criteres-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.critere-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--gray-200);
+}
+
+.critere-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.critere-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.critere-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.critere-info i {
+    font-size: 1.2rem;
+}
+
+.critere-score {
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--gray-200);
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+.critere-commentaire {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: start;
+    gap: 0.5rem;
+}
+
+.critere-warning {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--warning);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.recommandations {
+    background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+    border-left: 4px solid var(--warning);
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.recommandations-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 1rem;
 }
 
-.detail-item label {
-    font-weight: 600;
-    color: var(--color-gray);
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.recommandations-header i {
+    color: var(--warning);
+    font-size: 1.5rem;
 }
 
-.detail-item p {
+.recommandations ul {
     margin: 0;
-    color: var(--color-dark);
-    line-height: 1.5;
+    padding-left: 0;
+    list-style: none;
 }
 
-.full-width {
+.recommandations li {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommandations li i {
+    color: var(--warning);
+}
+
+/* Détails projet */
+.project-details {
+    padding: 2rem;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.project-content {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.project-title {
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.project-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.project-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-600);
+}
+
+.project-description {
+    margin-bottom: 1rem;
+}
+
+.project-description p {
     margin-top: 0.5rem;
+    color: var(--gray-600);
+    line-height: 1.6;
 }
 
+.budget-amount {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    color: white;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    font-weight: 600;
+}
+
+/* Formulaire de validation */
 .validation-form {
     padding: 2rem;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--info);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .decision-group {
-    margin: 1.5rem 0;
+    text-align: center;
 }
 
 .decision-buttons {
@@ -203,70 +585,88 @@
 }
 
 .decision-btn {
-    flex: 1;
-    min-width: 200px;
     padding: 1rem 2rem;
     border: none;
     border-radius: 12px;
-    font-size: 1.1rem;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 0.75rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 .decision-btn i {
     font-size: 1.5rem;
 }
 
+.btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+.btn-content small {
+    font-size: 0.7rem;
+    font-weight: normal;
+    opacity: 0.9;
+}
+
 .accept-btn {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
     color: white;
 }
 
 .accept-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .refuse-btn {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
     color: white;
 }
 
 .refuse-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-.status-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning), var(--warning-dark));
 }
 
-.status-pending {
-    background: #fef3c7;
-    color: #d97706;
+.btn-warning:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
-    .decision-buttons {
+    .validation-header {
         flex-direction: column;
+        text-align: center;
+    }
+    
+    .score-global {
+        flex-direction: column;
+        text-align: center;
     }
     
     .decision-btn {
         width: 100%;
+        justify-content: center;
     }
     
-    .validation-header {
+    .project-meta {
         flex-direction: column;
-        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .evaluation-section,
+    .project-details,
+    .validation-form {
+        padding: 1.5rem;
     }
 }
 </style>
@@ -278,9 +678,34 @@ document.getElementById('validationForm').addEventListener('submit', function(e)
     
     if (action === 'refuser' && !commentaire.trim()) {
         e.preventDefault();
-        alert('Veuillez ajouter un commentaire expliquant pourquoi vous refusez ce projet.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Commentaire requis',
+            text: 'Veuillez ajouter un commentaire expliquant pourquoi vous refusez ce projet.',
+            confirmButtonColor: '#ef4444'
+        });
         document.querySelector('textarea[name="commentaire_admin"]').focus();
     }
+    
+    {% if not evaluation.accepte %}
+        if (action === 'accepter') {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Dérogation nécessaire',
+                text: `Ce projet a un score inférieur à 70% (${ {{ evaluation.pourcentage }} }%). Êtes-vous sûr de vouloir l'accepter quand même ?`,
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Oui, accepter quand même',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    e.target.submit();
+                }
+            });
+        }
+    {% endif %}
 });
 </script>
 {% endblock %}

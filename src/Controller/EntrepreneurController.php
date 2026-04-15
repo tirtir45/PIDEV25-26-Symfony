@@ -120,7 +120,14 @@ class EntrepreneurController extends AbstractController
             $em->persist($projet);
             $em->flush();
             $this->addFlash('success', 'Votre projet a été soumis avec succès !');
-            return $this->redirectToRoute('entrepreneur_projet_detail', ['id' => $projet->getIdProjet()]);
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        // Debug: log form errors if submitted but invalid
+        if ($form->isSubmitted() && !$form->isValid()) {
+            foreach ($form->getErrors(true) as $error) {
+                $this->addFlash('error', $error->getMessage());
+            }
         }
 
         return $this->render('entrepreneur/nouveau_projet.html.twig', [

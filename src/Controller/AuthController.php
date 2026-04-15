@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AuthController extends AbstractController
 {
-    #[Route('/', name: 'app_login', methods: ['GET', 'POST'])]
+    #[Route('/connexion', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em): Response
     {
         if ($request->getSession()->get('user_id')) {
