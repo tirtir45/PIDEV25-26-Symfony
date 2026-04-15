@@ -1,71 +1,167 @@
+{# templates/project/resources.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Ressources — {{ projet.titre }}{% endblock %}
 
-{% block stylesheets %}{{ parent() }}<link rel="stylesheet" href="{{ asset('styles/project.css') }}">{% endblock %}
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="{{ asset('styles/project.css') }}">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+    }
+
+    .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2rem 0 1.5rem;
+    }
+
+    .section-divider-line {
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(99,102,241,.1) 0%, rgba(99,102,241,.02) 100%);
+    }
+
+    .section-divider-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6366f1;
+        white-space: nowrap;
+    }
+
+    .files-table-container {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(99,102,241,.1);
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    }
+
+    .files-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .files-table thead th {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6366f1;
+        padding: 1rem 1rem;
+        border-bottom: 2px solid rgba(99,102,241,.1);
+        background: #fafcff;
+    }
+
+    .files-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .files-table tbody tr:hover td {
+        background: rgba(99,102,241,.03);
+    }
+
+    .files-table tbody td {
+        padding: 0.9rem 1rem;
+        font-size: 0.8rem;
+        border-bottom: 1px solid rgba(99,102,241,.05);
+        vertical-align: middle;
+    }
+
+    .file-ext-badge {
+        font-size: 0.6rem;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        color: #6366f1;
+        letter-spacing: 0.05em;
+        display: inline-block;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #94a3b8;
+    }
+
+    .empty-state svg {
+        opacity: 0.3;
+        margin-bottom: 1rem;
+        stroke: #6366f1;
+    }
+
+    .upload-zone {
+        border: 2px dashed rgba(99,102,241,.25);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .upload-zone:hover {
+        border-color: #6366f1;
+        background: rgba(99,102,241,.05);
+    }
+
+    @media (max-width: 768px) {
+        .files-table thead th,
+        .files-table tbody td {
+            padding: 0.75rem;
+        }
+        
+        .files-table {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block body %}
-<div class="page-header d-flex align-items-center justify-content-between mb-4">
+<div class="page-header d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
     <div>
-        <h1 class="h3 mb-1">📁 Ressources — {{ projet.titre }}</h1>
+        <h1 class="h4 mb-1 fw-bold" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Ressources <span class="text-muted fw-normal" style="-webkit-text-fill-color: #94a3b8;">— {{ projet.titre }}</span></h1>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
+            <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
                 <li class="breadcrumb-item active">Ressources</li>
             </ol>
         </nav>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-3">
         {% include 'project/_project_nav.html.twig' %}
-        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalRessource">
-            <i class="bi bi-plus-lg me-1"></i>Ressource
-        </button>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFichier">
-            <i class="bi bi-upload me-1"></i>Fichier
+        <button class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalFichier" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; box-shadow: 0 2px 8px rgba(99,102,241,.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Importer un fichier
         </button>
     </div>
 </div>
 
-{# Ressources matérielles #}
-<h5 class="mb-3">Ressources matérielles / logicielles</h5>
-<div class="row g-3 mb-5">
-    {% for ressource in ressources %}
-    <div class="col-md-4 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="fs-4">{{ ressource.icon }}</span>
-                    <strong>{{ ressource.nom }}</strong>
-                </div>
-                {% if ressource.description %}
-                    <p class="text-muted small mb-2">{{ ressource.description }}</p>
-                {% endif %}
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="badge {{ ressource.statut == 'disponible' ? 'bg-success' : (ressource.statut == 'maintenance' ? 'bg-warning text-dark' : 'bg-secondary') }}">
-                        {{ ressource.statut|capitalize }}
-                    </span>
-                    {% if ressource.emplacement %}
-                        <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ ressource.emplacement }}</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="col-12 text-center text-muted py-4">
-        <i class="bi bi-box-seam display-4 d-block mb-2"></i>
-        Aucune ressource ajoutée.
-    </div>
-    {% endfor %}
+<div class="section-divider">
+    <span class="section-divider-title">📄 Fichiers du projet</span>
+    <div class="section-divider-line"></div>
+    <span class="badge bg-light text-dark border small">{{ fichiers|length }}</span>
 </div>
 
-{# Fichiers #}
-<h5 class="mb-3">Fichiers du projet</h5>
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
+<div class="files-table-container">
+    <table class="files-table">
+        <thead>
             <tr>
-                <th>Nom</th>
+                <th>Nom du fichier</th>
                 <th>Type</th>
                 <th>Taille</th>
                 <th>Uploadé par</th>
@@ -76,68 +172,72 @@
             {% for fichier in fichiers %}
             <tr>
                 <td>
-                    <i class="bi bi-file-earmark me-2 text-muted"></i>
-                    {{ fichier.nomOriginal }}
+                    <div class="d-flex align-items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                        <span style="font-weight: 500;">{{ fichier.nomOriginal }}</span>
+                    </div>
                 </td>
-                <td><span class="badge bg-light text-dark">{{ fichier.extension|upper }}</span></td>
-                <td>{{ fichier.tailleFormatee }}</td>
+                <td><span class="file-ext-badge">{{ fichier.extension|upper }}</span></td>
+                <td style="color: #64748b;">{{ fichier.tailleFormatee }}</td>
                 <td>{{ fichier.uploadedBy.nom }}</td>
-                <td>{{ fichier.uploadedAt|date('d/m/Y H:i') }}</td>
+                <td style="color: #64748b;">{{ fichier.uploadedAt|date('d/m/Y H:i') }}</td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="5" class="text-center text-muted py-4">Aucun fichier uploadé.</td>
+                <td colspan="5">
+                    <div class="empty-state" style="padding: 2rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                        <p>Aucun fichier importé.</p>
+                        <p class="mt-2 small text-muted">Cliquez sur "Importer un fichier" pour commencer</p>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-{# Modal ressource #}
-<div class="modal fade" id="modalRessource" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ajouter une ressource</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            {{ form_start(ressourceForm) }}
-            <div class="modal-body">
-                <div class="mb-3">{{ form_row(ressourceForm.nom) }}</div>
-                <div class="row g-3">
-                    <div class="col-6">{{ form_row(ressourceForm.type) }}</div>
-                    <div class="col-6">{{ form_row(ressourceForm.statut) }}</div>
-                </div>
-                <div class="mb-3 mt-3">{{ form_row(ressourceForm.emplacement) }}</div>
-                <div class="mb-3">{{ form_row(ressourceForm.description) }}</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="submit" class="btn btn-primary">Ajouter</button>
-            </div>
-            {{ form_end(ressourceForm) }}
-        </div>
-    </div>
-</div>
-
 {# Modal fichier #}
 <div class="modal fade" id="modalFichier" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Uploader un fichier</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-xl" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-0" style="padding: 1.5rem 1.75rem; background: linear-gradient(135deg, #f8fafc, #fff);">
+                <h5 class="modal-title fw-bold" style="color: #6366f1;">📤 Importer un fichier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             {{ form_start(fichierForm, {attr: {enctype: 'multipart/form-data'}}) }}
-            <div class="modal-body">
-                {{ form_row(fichierForm.fichier) }}
+            <div class="modal-body px-4 pt-2 pb-3">
+                <div class="upload-zone" onclick="document.getElementById('{{ fichierForm.fichier.vars.id }}').click()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" style="display: block; margin: 0 auto 0.75rem;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <div style="font-size: 0.8rem; color: #64748b;">Glissez un fichier ici ou cliquez pour sélectionner</div>
+                    <div class="mt-2 text-muted small">PDF, DOC, XLS, JPG, PNG - Max 10MB</div>
+                    <div class="mt-3">{{ form_row(fichierForm.fichier, {attr: {style: 'display: none;'}}) }}</div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="submit" class="btn btn-primary">Uploader</button>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">Importer</button>
             </div>
             {{ form_end(fichierForm) }}
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('{{ fichierForm.fichier.vars.id }}');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const form = this.closest('form');
+                if (form) form.submit();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

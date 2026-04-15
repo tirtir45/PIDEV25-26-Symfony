@@ -1,3 +1,4 @@
+{# templates/project/kanban.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Kanban — {{ projet.titre }}{% endblock %}
@@ -5,24 +6,237 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('styles/project.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-bg: #eef2ff;
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 1.25rem;
+            overflow-x: auto;
+            padding-bottom: 1.5rem;
+            align-items: flex-start;
+            min-height: calc(100vh - 180px);
+            scrollbar-width: thin;
+        }
+
+        .kanban-board::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .kanban-board::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .kanban-board::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .kanban-board::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        .kanban-column {
+            flex: 0 0 300px;
+            background: #f8fafc;
+            border-radius: 20px;
+            border: 1px solid rgba(99,102,241,.1);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 180px);
+            transition: all 0.2s ease;
+        }
+
+        .kanban-column:hover {
+            box-shadow: 0 8px 24px rgba(99,102,241,.08);
+            border-color: rgba(99,102,241,.2);
+        }
+
+        .kanban-column-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 20px 20px 0 0;
+            border-bottom: 1px solid rgba(99,102,241,.1);
+            background: #fff;
+        }
+
+        .kanban-column-title {
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4b5563;
+        }
+
+        .kanban-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: #fff;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 2px 6px rgba(99,102,241,.2);
+        }
+
+        .kanban-cards {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            scrollbar-width: thin;
+        }
+
+        .kanban-cards.drag-over {
+            background: rgba(99,102,241,.08);
+            border-radius: 0 0 20px 20px;
+            outline: 2px dashed #6366f1;
+            outline-offset: -2px;
+        }
+
+        .kanban-card {
+            background: #fff;
+            border: 1px solid rgba(99,102,241,.12);
+            border-radius: 14px;
+            padding: 0.875rem 1rem;
+            cursor: grab;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+
+        .kanban-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--card-accent, linear-gradient(135deg, #6366f1, #8b5cf6));
+            border-radius: 4px 0 0 4px;
+        }
+
+        .kanban-card:hover {
+            box-shadow: 0 8px 24px rgba(99,102,241,.12);
+            transform: translateY(-3px);
+            border-color: rgba(99,102,241,.2);
+        }
+
+        .kanban-card:active { 
+            cursor: grabbing; 
+            transform: scale(0.98);
+        }
+
+        .kanban-card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e1b4b;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .kanban-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .kanban-card-date {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kanban-card-date.overdue {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .kanban-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            color: #6366f1;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        }
+
+        .kanban-empty {
+            border: 2px dashed rgba(99,102,241,.2);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .kanban-column {
+                flex: 0 0 280px;
+            }
+            
+            .kanban-card {
+                padding: 0.75rem;
+            }
+            
+            .kanban-card-title {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="page-header d-flex align-items-center justify-content-between mb-4">
+<div class="page-header d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
     <div>
-        <h1 class="h3 mb-1">📋 Kanban — {{ projet.titre }}</h1>
+        <h1 class="h4 mb-1 fw-bold" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Kanban <span class="text-muted fw-normal" style="-webkit-text-fill-color: #94a3b8;">— {{ projet.titre }}</span></h1>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
+            <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
                 <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projet_detail', {id: projet.idProjet}) }}">{{ projet.titre }}</a></li>
                 <li class="breadcrumb-item active">Kanban</li>
             </ol>
         </nav>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-3 align-items-center">
         {% include 'project/_project_nav.html.twig' %}
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouveauTache">
-            <i class="bi bi-plus-lg me-1"></i>Nouvelle tâche
+        <button class="btn btn-primary btn-sm px-4" data-bs-toggle="modal" data-bs-target="#modalNouveauTache" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; box-shadow: 0 2px 8px rgba(99,102,241,.3);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvelle tâche
         </button>
     </div>
 </div>
@@ -30,15 +244,15 @@
 <div class="kanban-board" id="kanbanBoard">
     {% for statut, column in columns %}
     <div class="kanban-column" data-statut="{{ statut }}">
-        <div class="kanban-column-header" style="border-top: 3px solid {{ column.color }}">
+        <div class="kanban-column-header" style="border-top: 3px solid {{ column.color }};">
             <span class="kanban-column-title">{{ column.label }}</span>
-            <span class="badge bg-secondary">{{ column.taches|length }}</span>
+            <span class="kanban-badge" style="background: {{ column.color }}">{{ column.taches|length }}</span>
         </div>
         <div class="kanban-cards" id="col-{{ statut|replace({' ': '-', 'À': 'A'}) }}">
             {% for tache in column.taches %}
-                {% include 'components/_kanban_card.html.twig' with {tache: tache} %}
+                {% include 'components/_kanban_card.html.twig' with {tache: tache, accent: column.color} %}
             {% else %}
-                <div class="kanban-empty text-muted text-center py-4 small">Aucune tâche</div>
+                <div class="kanban-empty">✨ Glissez une tâche ici</div>
             {% endfor %}
         </div>
     </div>
@@ -47,14 +261,14 @@
 
 {# Modal nouvelle tâche #}
 <div class="modal fade" id="modalNouveauTache" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nouvelle tâche</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-xl" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-0" style="background: linear-gradient(135deg, #f8fafc 0%, #fff 100%); padding: 1.5rem 1.75rem;">
+                <h5 class="modal-title fw-bold" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✨ Nouvelle tâche</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             {{ form_start(tacheForm, {attr: {class: 'needs-validation'}}) }}
-            <div class="modal-body">
+            <div class="modal-body px-4 pt-2 pb-3">
                 <div class="mb-3">{{ form_row(tacheForm.titre) }}</div>
                 <div class="mb-3">{{ form_row(tacheForm.description) }}</div>
                 <div class="row g-3">
@@ -63,9 +277,9 @@
                 </div>
                 <div class="mb-3 mt-3">{{ form_row(tacheForm.id_responsable) }}</div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="submit" class="btn btn-primary">Créer la tâche</button>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">Créer la tâche</button>
             </div>
             {{ form_end(tacheForm) }}
         </div>
@@ -76,18 +290,31 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-    // Drag & drop simple entre colonnes
     document.addEventListener('DOMContentLoaded', () => {
         const cards = document.querySelectorAll('.kanban-card');
         const cols  = document.querySelectorAll('.kanban-cards');
+        let dragged = null;
 
         cards.forEach(card => {
             card.setAttribute('draggable', true);
-            card.addEventListener('dragstart', e => e.dataTransfer.setData('tacheId', card.dataset.id));
+            card.addEventListener('dragstart', e => {
+                dragged = card;
+                e.dataTransfer.setData('tacheId', card.dataset.id);
+                card.style.opacity = '0.5';
+                card.style.transform = 'scale(0.95)';
+            });
+            card.addEventListener('dragend', () => {
+                card.style.opacity = '';
+                card.style.transform = '';
+                dragged = null;
+            });
         });
 
         cols.forEach(col => {
-            col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+            col.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                col.classList.add('drag-over'); 
+            });
             col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
             col.addEventListener('drop', async e => {
                 e.preventDefault();
