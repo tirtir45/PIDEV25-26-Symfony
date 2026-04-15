@@ -129,6 +129,7 @@
                                         {% endif %}
                                         {# Lien pour éditer la candidature #}
                                         <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" style="margin-left: 10px; color: #4338ca; font-weight: 600; text-decoration: none;">Modifier</a>
+                                        <a href="{{ path('app_entretien_planifier', {'id': demande.getDemande_id()}) }}" style="margin-left: 10px; color: #047857; font-weight: 600; text-decoration: none;">Planifier entretien</a>
                                     </td>
                                 </tr>
                             {% endfor %}

@@ -24,3 +24,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+     # Notre service Zoom
+    App\Service\ZoomService:
+        # On lie explicitement les arguments du constructeur aux variables d'environnement
+        arguments:
+            $zoomAccountId: '%env(ZOOM_ACCOUNT_ID)%'
+            $zoomClientId: '%env(ZOOM_CLIENT_ID)%'
+            $zoomClientSecret: '%env(ZOOM_CLIENT_SECRET)%'
+    App\Service\EmailService:
+        arguments:
+            $senderEmail: '%env(MAILER_SENDER_EMAIL)%'
+            $senderName: '%env(MAILER_SENDER_NAME)%'
