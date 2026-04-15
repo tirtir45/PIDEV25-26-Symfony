@@ -25,6 +25,10 @@
         .score-med { background: #fef3c7; color: #d97706; }
         .score-low { background: #f0fdf4; color: #22c55e; }
 
+        .ai-flag { background: #f1f5f9; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; border: 1px solid #e2e8f0; display: inline-block; margin-top: 4px; margin-right: 4px; }
+        .ai-flag-image { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+        .resource-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
+
         .btn-group { display: flex; gap: 8px; }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; cursor: pointer; border: none; font-weight: 600; }
         .btn-ban { background: #fee2e2; color: #ef4444; transition: 0.2s; }
@@ -68,6 +72,7 @@
                             <th>Score IA</th>
                             <th>Raison / Flags</th>
                             <th>Statut</th>
+                            <th>Suppression</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -75,8 +80,19 @@
                         {% for resource in resources %}
                         <tr>
                             <td>
-                                <strong>{{ resource.nom }}</strong><br>
-                                <small class="text-muted">{{ resource.type_r }}</small>
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if resource.imageR %}
+                                        <img src="{{ asset('uploads/ressources/' ~ resource.imageR) }}" class="resource-thumb" alt="">
+                                    {% else %}
+                                        <div class="resource-thumb bg-light d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ resource.nom }}</strong><br>
+                                        <small class="text-muted">{{ resource.type_r }}</small>
+                                    </div>
+                                </div>
                             </td>
                             <td>{{ resource.id_fournisseur ? resource.id_fournisseur.nom : 'Inconnu' }}</td>
                             <td>
@@ -85,12 +101,33 @@
                                     {{ score }}/100
                                 </span>
                             </td>
-                            <td><small>{{ resource.moderationReason ?: 'Aucun flag spécifique' }}</small></td>
+                            <td>
+                                {% if resource.moderationReason %}
+                                    {% set reasons = resource.moderationReason|split(' | ') %}
+                                    {% for reason in reasons %}
+                                        <div class="ai-flag {% if 'IA IMAGE' in reason %}ai-flag-image{% endif %}">
+                                            {% if 'IA IMAGE' in reason %}<i class="bi bi-eye me-1"></i>{% endif %}
+                                            {{ reason|replace({'IA IMAGE: ': ''}) }}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <small class="text-muted">Aucun flag</small>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if resource.isBanned %}
-                                    <span class="badge bg-danger">Banni (Auto)</span>
+                                    <span class="badge bg-danger">Banni (Admin)</span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">En révision</span>
+                                    <span class="badge bg-warning text-dark">À Réviser</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if resource.isBanned and resource.bannedAt %}
+                                    <div class="countdown text-danger fw-bold" data-expire="{{ resource.bannedAt|date_modify('+24 hours')|date('Y-m-d H:i:s') }}">
+                                        Calcul...
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">N/A</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -146,4 +183,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateCountdowns() {
+        const now = new Date().getTime();
+        document.querySelectorAll('.countdown').forEach(el => {
+            const expireDate = new Date(el.dataset.expire).getTime();
+            const distance = expireDate - now;
+
+            if (distance < 0) {
+                el.innerHTML = "EXPIRÉ";
+                el.classList.replace('text-danger', 'text-muted');
+                return;
+            }
+
+            const h = Math.floor(distance / (1000 * 60 * 60));
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+            el.innerHTML = `${h}h ${m}m ${s}s`;
+        });
+    }
+
+    setInterval(updateCountdowns, 1000);
+    updateCountdowns();
+</script>
 {% endblock %}

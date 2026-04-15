@@ -3,9 +3,16 @@
 namespace App\Service;
 
 use App\Entity\Ressources;
+use App\Service\SmsService;
+use Doctrine\ORM\EntityManagerInterface;
 
 class SmartModerationService
 {
+    public function __construct(
+        private readonly SmsService $smsService
+    ) {
+    }
+
     /**
      * Categories with forbidden patterns and their associated weight (0-100).
      */
@@ -15,7 +22,8 @@ class SmartModerationService
             'patterns' => [
                 'argent facile', 'gagner vite', 'richissime', 'investissement miracle', 
                 'telegram @', 'whatsapp @', 'crypto-monnaie illégal', 'arnaque', 
-                'get rich fast', 'easy money', 'no risk', 'guaranteed profit'
+                'get rich fast', 'easy money', 'no risk', 'guaranteed profit', 'ponzi',
+                'make money online', 'passive income scam'
             ]
         ],
         'illegal' => [
@@ -23,19 +31,22 @@ class SmartModerationService
             'patterns' => [
                 'drogue', 'cannabis', 'arme', 'pistolet', 'munitions', 'faux papiers', 
                 'carte d\'identité volée', 'piratage', 'hacked account', 'stolen', 
-                'fake identity', 'illegal weapon', 'cocaine', 'crack'
+                'fake identity', 'illegal weapon', 'cocaine', 'crack', 'drugs', 'weed',
+                'heroin', 'meth', 'substances', 'pistol', 'rifle', 'explosive', 'bomb'
             ]
         ],
         'adult' => [
             'weight' => 50,
             'patterns' => [
-                'porno', 'sexuel', 'escorte', 'nude', 'adult content', 'sexy service'
+                'porno', 'sexuel', 'escorte', 'nude', 'adult content', 'sexy service',
+                'porn', 'sexual', 'escort', 'dating service unsafe'
             ]
         ],
         'spam' => [
             'weight' => 20,
             'patterns' => [
-                'cliquez ici', 'offre exclusive 99%', 'promo incroyable', 'spam', 'adware'
+                'cliquez ici', 'offre exclusive 99%', 'promo incroyable', 'spam', 'adware',
+                'click here', 'limited offer 99%', 'free gift card scam'
             ]
         ]
     ];
@@ -81,9 +92,35 @@ class SmartModerationService
             $ressource->setModerationReason(implode(', ', $result['flags']));
         }
 
-        // Auto-ban if dangerous
+        // AI Assistant only: Do NOT auto-ban, just flag for admin review
         if ($result['is_dangerous']) {
-            $ressource->setIsBanned(true);
+            $this->logger->info(sprintf('Resource "%s" flagged as DANGEROUS by AI.', $ressource->getNom()));
         }
+    }
+
+    /**
+     * Finds and deletes banned resources older than 24 hours.
+     */
+    public function cleanupExpiredBannedResources(EntityManagerInterface $em): int
+    {
+        $limitDate = new \DateTime('-24 hours');
+        
+        $expiredResources = $em->getRepository(Ressources::class)->createQueryBuilder('r')
+            ->where('r.is_banned = true')
+            ->andWhere('r.banned_at < :limitDate')
+            ->setParameter('limitDate', $limitDate)
+            ->getQuery()
+            ->getResult();
+
+        $count = count($expiredResources);
+        foreach ($expiredResources as $res) {
+            $em->remove($res);
+        }
+        
+        if ($count > 0) {
+            $em->flush();
+        }
+
+        return $count;
     }
 }

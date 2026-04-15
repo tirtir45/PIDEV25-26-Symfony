@@ -7,6 +7,8 @@ use App\Form\RessourceType;
 use App\Repository\RessourcesRepository;
 use App\Service\RecommendationService;
 use App\Service\SmartModerationService;
+use App\Service\SmsService;
+use App\Service\VisionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/ressources')]
 final class RessourcesController extends AbstractController
 {
+
     #[Route('/fournisseur/mes-ressources', name: 'app_fournisseur_ressources', methods: ['GET'])]
     public function fournisseurDashboard(Request $request, RessourcesRepository $ressourcesRepository): Response
     {
@@ -96,6 +99,13 @@ final class RessourcesController extends AbstractController
         ]);
     }
 
+    public function __construct(
+        private readonly SmsService $smsService,
+        private readonly VisionService $visionService,
+        private readonly int $lowStockThreshold
+    ) {
+    }
+
     #[Route(name: 'app_ressources_index', methods: ['GET'])]
     public function index(Request $request, RessourcesRepository $ressourcesRepository, RecommendationService $recommendationService, SmartModerationService $moderationService): Response
     {
@@ -121,18 +131,24 @@ final class RessourcesController extends AbstractController
         }
 
         $allRessources  = $ressourcesRepository->findAll();
-        $baseRessources = $isFournisseurCatalog
-            ? $allRessources
-            : array_values(array_filter($allRessources, static function (Ressources $ressource): bool {
-                if ($ressource->isBanned()) {
-                    return false;
-                }
-                $quantity = max(0, (int) $ressource->getQuantite());
-                if ($quantity === 0) {
-                    return true;
-                }
-                return (bool) $ressource->getDisponibilite();
-            }));
+        $baseRessources = array_values(array_filter($allRessources, static function (Ressources $ressource) use ($isFournisseurCatalog): bool {
+            // NEVER show banned resources in the main shop or provider list
+            if ($ressource->isBanned()) {
+                return false;
+            }
+            
+            // If it's a provider viewing their OWN catalog, show everything else
+            if ($isFournisseurCatalog) {
+                return true;
+            }
+
+            // Normal user (Entrepreneur) filtering
+            $quantity = max(0, (int) $ressource->getQuantite());
+            if ($quantity === 0) {
+                return true;
+            }
+            return (bool) $ressource->getDisponibilite();
+        }));
 
         $categoryOptions = [];
         foreach ($baseRessources as $ressource) {
@@ -284,14 +300,26 @@ final class RessourcesController extends AbstractController
 
             $this->normalizeOfferDependentFields($ressource);
             
-            // Run Smart Moderation
+            // Run Analytics (Text + Image)
             $moderationService->moderate($ressource);
+
+            // Run Vision Analysis
+            if ($ressource->getImageR()) {
+                $imagePath = $uploadDir . DIRECTORY_SEPARATOR . $ressource->getImageR();
+                $visionResult = $this->visionService->analyzeImage($imagePath, $ressource->getTypeR());
+                
+                if ($visionResult['is_dangerous']) {
+                    $ressource->setModerationReason($ressource->getModerationReason() . ' | IA IMAGE: Contenu dangereux détecté (' . implode(', ', $visionResult['detected_labels']) . ')');
+                } elseif ($visionResult['is_mismatch']) {
+                    $ressource->setModerationReason($ressource->getModerationReason() . ' | IA IMAGE: Mismatch catégorie (Vu: ' . implode(', ', $visionResult['detected_labels']) . ')');
+                }
+            }
             
             $entityManager->persist($ressource);
             $entityManager->flush();
 
-            if ($ressource->isBanned()) {
-                $this->addFlash('warning', 'Votre ressource a été signalée par notre système de sécurité et sera modérée par un administrateur.');
+            if ($ressource->getModerationScore() > 0 || str_contains($ressource->getModerationReason() ?? '', 'IA IMAGE')) {
+                $this->addFlash('info', 'Votre ressource est en ligne mais a été soumise à une vérification IA automatique.');
             }
 
             return $this->redirectToRoute('app_fournisseur_ressources', [], Response::HTTP_SEE_OTHER);
@@ -325,8 +353,19 @@ final class RessourcesController extends AbstractController
 
             $this->normalizeOfferDependentFields($ressource);
             
-            // Re-run moderation on edit
+            // Re-run moderation (Text)
             $moderationService->moderate($ressource);
+            
+            // Re-run Vision Analysis if a new image was uploaded
+            if ($newFilename !== null) {
+                $imagePath = $uploadDir . DIRECTORY_SEPARATOR . $newFilename;
+                $visionResult = $this->visionService->analyzeImage($imagePath, $ressource->getTypeR());
+                
+                if ($visionResult['is_dangerous'] || $visionResult['is_mismatch']) {
+                    $reason = $visionResult['is_dangerous'] ? 'Contenu dangereux' : 'Mismatch catégorie';
+                    $ressource->setModerationReason($ressource->getModerationReason() . " | IA IMAGE: $reason (Vu: " . implode(', ', $visionResult['detected_labels']) . ")");
+                }
+            }
             
             $entityManager->flush();
 
@@ -409,6 +448,19 @@ final class RessourcesController extends AbstractController
     {
         $quantity = max(0, (int) $ressource->getQuantite());
         $ressource->setQuantite($quantity);
+
+        // Low Stock Alert Logic
+        if ($quantity <= $this->lowStockThreshold) {
+            if (!$ressource->isLowStockAlertSent()) {
+                if ($this->smsService->sendLowStockAlert($ressource)) {
+                    $ressource->setLowStockAlertSent(true);
+                }
+            }
+        } else {
+            // Reset alert flag if stock is above threshold
+            $ressource->setLowStockAlertSent(false);
+        }
+
         if ($quantity === 0) {
             $ressource->setDisponibilite(false);
             $ressource->setEtat('Rupture de stock');

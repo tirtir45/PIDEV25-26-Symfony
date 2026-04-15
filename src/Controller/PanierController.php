@@ -22,7 +22,9 @@ final class PanierController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly PdfService $pdfService,
-        private readonly EmailService $emailService
+        private readonly EmailService $emailService,
+        private readonly \App\Service\SmsService $smsService,
+        private readonly int $lowStockThreshold
     ) {
     }
 
@@ -592,7 +594,16 @@ final class PanierController extends AbstractController
             return false;
         }
 
-        $ressource->setQuantite($available - $quantity);
+        $newQuantity = $available - $quantity;
+        $ressource->setQuantite($newQuantity);
+        
+        // Low Stock Alert Logic
+        if ($newQuantity <= $this->lowStockThreshold && !$ressource->isLowStockAlertSent()) {
+            if ($this->smsService->sendLowStockAlert($ressource)) {
+                $ressource->setLowStockAlertSent(true);
+            }
+        }
+
         $this->syncRessourceAvailabilityFromStock($ressource);
 
         return true;
@@ -606,7 +617,14 @@ final class PanierController extends AbstractController
         }
 
         $current = max(0, (int) $ressource->getQuantite());
-        $ressource->setQuantite($current + $quantity);
+        $newQuantity = $current + $quantity;
+        $ressource->setQuantite($newQuantity);
+
+        // Reset alert flag if stock is restored above threshold
+        if ($newQuantity > $this->lowStockThreshold) {
+            $ressource->setLowStockAlertSent(false);
+        }
+
         $this->syncRessourceAvailabilityFromStock($ressource);
     }
 

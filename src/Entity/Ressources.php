@@ -73,6 +73,12 @@ class Ressources
     #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $moderation_reason = null;
 
+    #[ORM\Column(type: "boolean", options: ["default" => false])]
+    private bool $lowStockAlertSent = false;
+
+    #[ORM\Column(type: "datetime", nullable: true)]
+    private ?\DateTimeInterface $banned_at = null;
+
     public function getId_ressource()
     {
         return $this->id_ressource;
@@ -333,4 +339,10 @@ class Ressources
 
     public function getModerationReason(): ?string { return $this->moderation_reason; }
     public function setModerationReason(?string $r): self { $this->moderation_reason = $r; return $this; }
+
+    public function isLowStockAlertSent(): bool { return $this->lowStockAlertSent; }
+    public function setLowStockAlertSent(bool $lowStockAlertSent): self { $this->lowStockAlertSent = $lowStockAlertSent; return $this; }
+
+    public function getBannedAt(): ?\DateTimeInterface { return $this->banned_at; }
+    public function setBannedAt(?\DateTimeInterface $bannedAt): self { $this->banned_at = $bannedAt; return $this; }
 }
