@@ -17,33 +17,33 @@ class Sprints
     #[ORM\Column(name: "id_sprint", type: "integer")]
     private ?int $id_sprint = null;
 
-        #[ORM\ManyToOne(targetEntity: Projets::class, inversedBy: "sprintss")]
+    #[ORM\ManyToOne(targetEntity: Projets::class, inversedBy: "sprintss")]
     #[ORM\JoinColumn(name: 'id_projet', referencedColumnName: 'id_projet', onDelete: 'CASCADE')]
-    private Projets $id_projet;
+    private ?Projets $id_projet = null;
 
     #[ORM\Column(type: "string", length: 100)]
-    private string $nom;
+    private ?string $nom = null;
 
-    #[ORM\Column(type: "text")]
-    private string $objectif;
+    #[ORM\Column(type: "text", nullable: true)]
+    private ?string $objectif = null;
 
-    #[ORM\Column(type: "date")]
-    private \DateTimeInterface $date_debut;
+    #[ORM\Column(type: "date", nullable: true)]
+    private ?\DateTimeInterface $date_debut = null;
 
-    #[ORM\Column(type: "date")]
-    private \DateTimeInterface $date_fin;
+    #[ORM\Column(type: "date", nullable: true)]
+    private ?\DateTimeInterface $date_fin = null;
 
-    #[ORM\Column(type: "string")]
-    private string $statut;
+    #[ORM\Column(type: "string", options: ['default' => 'planifie'])]
+    private ?string $statut = 'planifie';
 
-    #[ORM\Column(type: "integer")]
-    private int $capacite_equipe;
+    #[ORM\Column(type: "integer", options: ['default' => 0])]
+    private int $capacite_equipe = 0;
 
-    #[ORM\Column(type: "integer")]
-    private int $velocite_prevue;
+    #[ORM\Column(type: "integer", options: ['default' => 0])]
+    private int $velocite_prevue = 0;
 
-    #[ORM\Column(type: "integer")]
-    private int $velocite_reelle;
+    #[ORM\Column(type: "integer", options: ['default' => 0])]
+    private int $velocite_reelle = 0;
 
     public function getId_sprint()
     {
@@ -95,6 +95,9 @@ class Sprints
         $this->date_debut = $value;
     }
 
+    public function getDateDebut(): ?\DateTimeInterface { return $this->date_debut; }
+    public function setDateDebut(?\DateTimeInterface $v): static { $this->date_debut = $v; return $this; }
+
     public function getDate_fin()
     {
         return $this->date_fin;
@@ -104,6 +107,9 @@ class Sprints
     {
         $this->date_fin = $value;
     }
+
+    public function getDateFin(): ?\DateTimeInterface { return $this->date_fin; }
+    public function setDateFin(?\DateTimeInterface $v): static { $this->date_fin = $v; return $this; }
 
     public function getStatut()
     {
@@ -125,6 +131,9 @@ class Sprints
         $this->capacite_equipe = $value;
     }
 
+    public function getCapaciteEquipe(): int { return $this->capacite_equipe; }
+    public function setCapaciteEquipe(int $v): static { $this->capacite_equipe = $v; return $this; }
+
     public function getVelocite_prevue()
     {
         return $this->velocite_prevue;
@@ -134,6 +143,9 @@ class Sprints
     {
         $this->velocite_prevue = $value;
     }
+
+    public function getVelocitePrevue(): int { return $this->velocite_prevue; }
+    public function setVelocitePrevue(int $v): static { $this->velocite_prevue = $v; return $this; }
 
     public function getVelocite_reelle()
     {

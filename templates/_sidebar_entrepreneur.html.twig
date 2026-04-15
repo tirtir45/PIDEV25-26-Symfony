@@ -1,4 +1,7 @@
 {% set currentRoute = app.request.attributes.get('_route')|default('') %}
+{% set currentId = app.request.attributes.get('id')|default(null) %}
+{% set projetId = currentId ?: app.session.get('projet_actif_id') %}
+{% set isProjetRoute = currentRoute in ['entrepreneur_kanban','entrepreneur_sprints','entrepreneur_calendrier','entrepreneur_matrice','entrepreneur_ressources_projet','entrepreneur_projet_detail','entrepreneur_gestion_projet','entrepreneur_projet_modifier'] %}
 
 <aside class="sidebar sidebar-entrepreneur">
 
@@ -27,7 +30,7 @@
             <span>Ressources</span>
         </a>
 
-        <a href="{{ path('entrepreneur_dashboard') }}" class="nav-item {{ currentRoute starts with 'entrepreneur_' ? 'is-active' : '' }}">
+        <a href="{{ path('entrepreneur_projets_liste') }}" class="nav-item {{ currentRoute in ['entrepreneur_projets_liste','entrepreneur_nouveau_projet','entrepreneur_projet_detail','entrepreneur_gestion_projet','entrepreneur_projet_modifier'] ? 'is-active' : '' }}">
             <svg fill="currentColor" viewBox="0 0 24 24">
                 <path d="M10 4H4v6h6V4zm10 0h-6v6h6V4zM10 14H4v6h6v-6zm10 0h-6v6h6v-6z"/>
             </svg>
@@ -40,6 +43,46 @@
             </svg>
             <span>Nouveau Projet</span>
         </a>
+
+        {# Outils de gestion de projet — visibles si on est sur un projet #}
+        {% if projetId %}
+        <span class="sidebar-nav-section">Gestion de projet</span>
+
+        <a href="{{ path('entrepreneur_kanban', {id: projetId}) }}" class="nav-item {{ currentRoute == 'entrepreneur_kanban' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M4 4h4v16H4zm6 0h4v10h-4zm6 0h4v7h-4z"/>
+            </svg>
+            <span>Kanban</span>
+        </a>
+
+        <a href="{{ path('entrepreneur_sprints', {id: projetId}) }}" class="nav-item {{ currentRoute == 'entrepreneur_sprints' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+            </svg>
+            <span>Sprints</span>
+        </a>
+
+        <a href="{{ path('entrepreneur_calendrier', {id: projetId}) }}" class="nav-item {{ currentRoute == 'entrepreneur_calendrier' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+            </svg>
+            <span>Calendrier</span>
+        </a>
+
+        <a href="{{ path('entrepreneur_matrice', {id: projetId}) }}" class="nav-item {{ currentRoute == 'entrepreneur_matrice' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/>
+            </svg>
+            <span>Matrice Eisenhower</span>
+        </a>
+
+        <a href="{{ path('entrepreneur_ressources_projet', {id: projetId}) }}" class="nav-item {{ currentRoute == 'entrepreneur_ressources_projet' ? 'is-active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.53 15.47 0 12.36 0c-1.73 0-3.24.87-4.19 2.19L12 6H20zm-7.45 0l-3.69-4.5C8.53 1.19 8.05 1 7.55 1 5.58 1 4 2.58 4 4.55c0 .37.06.72.14 1.06L2 6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-9.45z"/>
+            </svg>
+            <span>Ressources projet</span>
+        </a>
+        {% endif %}
 
         {% if app.session.get('is_member') %}
         <a href="{{ path('member_mes_taches') }}" class="nav-item {{ currentRoute starts with 'member_' ? 'is-active' : '' }}">

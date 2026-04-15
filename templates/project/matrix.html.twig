@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Matrice Eisenhower — {{ projet.titre }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}<link rel="stylesheet" href="{{ asset('styles/project.css') }}">{% endblock %}
+
+{% block body %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">🎯 Matrice Eisenhower — {{ projet.titre }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
+                <li class="breadcrumb-item active">Matrice</li>
+            </ol>
+        </nav>
+    </div>
+    {% include 'project/_project_nav.html.twig' %}
+</div>
+
+<div class="row g-0 matrix-grid">
+    {# Q1 - Urgent & Important #}
+    <div class="col-6">
+        <div class="matrix-quadrant matrix-q1">
+            <div class="matrix-quadrant-header">
+                <span class="matrix-quadrant-label">Q1 — Urgent & Important</span>
+                <span class="badge bg-danger">{{ matrice.urgent_important|length }}</span>
+            </div>
+            <div class="matrix-quadrant-hint text-muted small mb-2">À faire immédiatement</div>
+            {% for tache in matrice.urgent_important %}
+                <div class="matrix-task-card border-danger">
+                    <div class="fw-semibold">{{ tache.titre }}</div>
+                    {% if tache.dateLimite %}<div class="small text-danger">⏰ {{ tache.dateLimite|date('d/m/Y') }}</div>{% endif %}
+                </div>
+            {% else %}
+                <div class="text-muted small">Aucune tâche</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Q2 - Non urgent & Important #}
+    <div class="col-6">
+        <div class="matrix-quadrant matrix-q2">
+            <div class="matrix-quadrant-header">
+                <span class="matrix-quadrant-label">Q2 — Non urgent & Important</span>
+                <span class="badge bg-primary">{{ matrice.non_urgent_important|length }}</span>
+            </div>
+            <div class="matrix-quadrant-hint text-muted small mb-2">Planifier</div>
+            {% for tache in matrice.non_urgent_important %}
+                <div class="matrix-task-card border-primary">
+                    <div class="fw-semibold">{{ tache.titre }}</div>
+                    {% if tache.dateLimite %}<div class="small text-muted">📅 {{ tache.dateLimite|date('d/m/Y') }}</div>{% endif %}
+                </div>
+            {% else %}
+                <div class="text-muted small">Aucune tâche</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Q3 - Urgent & Non important #}
+    <div class="col-6">
+        <div class="matrix-quadrant matrix-q3">
+            <div class="matrix-quadrant-header">
+                <span class="matrix-quadrant-label">Q3 — Urgent & Non important</span>
+                <span class="badge bg-warning text-dark">{{ matrice.urgent_non_important|length }}</span>
+            </div>
+            <div class="matrix-quadrant-hint text-muted small mb-2">Déléguer</div>
+            {% for tache in matrice.urgent_non_important %}
+                <div class="matrix-task-card border-warning">
+                    <div class="fw-semibold">{{ tache.titre }}</div>
+                    {% if tache.dateLimite %}<div class="small text-warning">⏰ {{ tache.dateLimite|date('d/m/Y') }}</div>{% endif %}
+                </div>
+            {% else %}
+                <div class="text-muted small">Aucune tâche</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Q4 - Non urgent & Non important #}
+    <div class="col-6">
+        <div class="matrix-quadrant matrix-q4">
+            <div class="matrix-quadrant-header">
+                <span class="matrix-quadrant-label">Q4 — Non urgent & Non important</span>
+                <span class="badge bg-secondary">{{ matrice.non_urgent_non_important|length }}</span>
+            </div>
+            <div class="matrix-quadrant-hint text-muted small mb-2">Éliminer</div>
+            {% for tache in matrice.non_urgent_non_important %}
+                <div class="matrix-task-card">
+                    <div class="fw-semibold">{{ tache.titre }}</div>
+                    {% if tache.dateLimite %}<div class="small text-muted">📅 {{ tache.dateLimite|date('d/m/Y') }}</div>{% endif %}
+                </div>
+            {% else %}
+                <div class="text-muted small">Aucune tâche</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

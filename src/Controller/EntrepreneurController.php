@@ -3,15 +3,26 @@
 
 namespace App\Controller;
 
-use App\Entity\Projets;
-use App\Entity\Taches;
+use App\Entity\FichierProjet;
 use App\Entity\Membres_equipe;
+use App\Entity\Notifications;
+use App\Entity\Projets;
+use App\Entity\RessourceProjet;
+use App\Entity\Sprints;
+use App\Entity\Taches;
 use App\Entity\Utilisateurs;
-use App\Form\ProjetType;
-use App\Form\TacheType;
+use App\Form\FichierProjetType;
 use App\Form\MembreEquipeType;
+use App\Form\ProjetType;
+use App\Form\RessourceProjetType;
+use App\Form\SprintType;
+use App\Form\TacheType;
+use App\Service\CalendarService;
+use App\Service\FileUploader;
+use App\Service\KanbanService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -37,7 +48,10 @@ class EntrepreneurController extends AbstractController
 
     private function assertProjectOwnership(Projets $projet, ?Utilisateurs $entrepreneur): bool
     {
-        return $entrepreneur && $projet->getId_entrepreneur() === $entrepreneur;
+        if (!$entrepreneur) return false;
+        $owner = $projet->getId_entrepreneur();
+        if (!$owner) return false;
+        return $owner->getId() === $entrepreneur->getId();
     }
 
     // ==================== CRUD PROJETS ====================
@@ -123,6 +137,8 @@ class EntrepreneurController extends AbstractController
             return $this->redirectToRoute('entrepreneur_projets_liste');
         }
 
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
         $taches  = $em->getRepository(Taches::class)->findBy(['id_projet' => $projet]);
         $membres = $em->getRepository(Membres_equipe::class)->findBy(['id_projet' => $projet]);
 
@@ -205,6 +221,8 @@ class EntrepreneurController extends AbstractController
             $this->addFlash('error', 'Le projet doit être accepté avant de gérer l\'équipe et les tâches.');
             return $this->redirectToRoute('entrepreneur_projet_detail', ['id' => $projet->getIdProjet()]);
         }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
 
         // --- Membre form ---
         $membreForm = $this->createForm(MembreEquipeType::class, null, [
@@ -456,5 +474,242 @@ class EntrepreneurController extends AbstractController
     public function dashboard(): Response
     {
         return $this->redirectToRoute('entrepreneur_projets_liste');
+    }
+
+    // ==================== KANBAN ====================
+
+    #[Route('/entrepreneur/projet/{id}/kanban', name: 'entrepreneur_kanban')]
+    #[Route('/project/{id}/kanban', name: 'project_kanban')]
+    public function kanban(Projets $projet, Request $request, EntityManagerInterface $em, KanbanService $kanban): Response
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
+        $membres   = $em->getRepository(Membres_equipe::class)->findBy(['id_projet' => $projet]);
+        $tache     = new Taches();
+        $tacheForm = $this->createForm(TacheType::class, $tache, ['membres' => $membres]);
+        $tacheForm->handleRequest($request);
+
+        if ($tacheForm->isSubmitted() && $tacheForm->isValid()) {
+            $tache->setId_projet($projet);
+            $responsableId = $tacheForm->get('id_responsable')->getData();
+            if ($responsableId) {
+                $responsable = $em->getRepository(Utilisateurs::class)->find($responsableId);
+                $tache->setId_responsable($responsable);
+            }
+            $em->persist($tache);
+            $em->flush();
+            $this->addFlash('success', 'Tâche créée avec succès !');
+            return $this->redirectToRoute('entrepreneur_kanban', ['id' => $projet->getIdProjet()]);
+        }
+
+        return $this->render('project/kanban.html.twig', [
+            'projet'    => $projet,
+            'columns'   => $kanban->getColumns($projet),
+            'tacheForm' => $tacheForm->createView(),
+            'membres'   => $membres,
+        ]);
+    }
+
+    #[Route('/entrepreneur/tache/{id}/statut', name: 'entrepreneur_tache_statut', methods: ['POST'])]
+    public function changerStatutTache(Taches $tache, Request $request, EntityManagerInterface $em, KanbanService $kanban): JsonResponse
+    {
+        $projet       = $tache->getId_projet();
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        try {
+            $kanban->deplacerTache($tache, $data['statut'] ?? '');
+            return new JsonResponse(['success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    // ==================== SPRINTS ====================
+
+    #[Route('/entrepreneur/projet/{id}/sprints', name: 'entrepreneur_sprints')]
+    #[Route('/project/{id}/sprint', name: 'project_sprint')]
+    public function sprints(Projets $projet, Request $request, EntityManagerInterface $em): Response
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
+        $sprint     = new Sprints();
+        $sprintForm = $this->createForm(SprintType::class, $sprint);
+        $sprintForm->handleRequest($request);
+
+        if ($sprintForm->isSubmitted() && $sprintForm->isValid()) {
+            $sprint->setId_projet($projet);
+            $em->persist($sprint);
+            $em->flush();
+            $this->addFlash('success', 'Sprint créé avec succès !');
+            return $this->redirectToRoute('entrepreneur_sprints', ['id' => $projet->getIdProjet()]);
+        }
+
+        $sprints     = $em->getRepository(Sprints::class)->findBy(['id_projet' => $projet], ['date_debut' => 'DESC']);
+        $sprintActif = null;
+        foreach ($sprints as $s) {
+            if ($s->getStatut() === 'actif') { $sprintActif = $s; break; }
+        }
+
+        return $this->render('project/sprint.html.twig', [
+            'projet'      => $projet,
+            'sprints'     => $sprints,
+            'sprintActif' => $sprintActif,
+            'sprintForm'  => $sprintForm->createView(),
+        ]);
+    }
+
+    // ==================== CALENDRIER ====================
+
+    #[Route('/entrepreneur/projet/{id}/calendrier', name: 'entrepreneur_calendrier')]
+    #[Route('/project/{id}/calendar', name: 'project_calendar')]
+    public function calendrier(Projets $projet, Request $request, EntityManagerInterface $em, CalendarService $calendar): Response
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
+        return $this->render('project/calendar.html.twig', [
+            'projet'        => $projet,
+            'eventsJson'    => json_encode($calendar->getEvents($projet)),
+        ]);
+    }
+
+    // ==================== MATRICE EISENHOWER ====================
+
+    #[Route('/entrepreneur/projet/{id}/matrice', name: 'entrepreneur_matrice')]
+    #[Route('/project/{id}/matrix', name: 'project_matrix')]
+    public function matrice(Projets $projet, Request $request, EntityManagerInterface $em): Response
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
+        $taches  = $em->getRepository(Taches::class)->findBy(['id_projet' => $projet]);
+        $matrice = [
+            'urgent_important'         => [],
+            'non_urgent_important'     => [],
+            'urgent_non_important'     => [],
+            'non_urgent_non_important' => [],
+        ];
+
+        foreach ($taches as $tache) {
+            $daysLeft   = $tache->getDateLimite() ? (new \DateTime())->diff($tache->getDateLimite())->days : 999;
+            $estUrgent  = $daysLeft <= 3;
+            $estImportant = $tache->getStatut() === Taches::STATUT_EN_COURS;
+
+            if ($estUrgent && $estImportant)          $matrice['urgent_important'][] = $tache;
+            elseif (!$estUrgent && $estImportant)     $matrice['non_urgent_important'][] = $tache;
+            elseif ($estUrgent && !$estImportant)     $matrice['urgent_non_important'][] = $tache;
+            else                                      $matrice['non_urgent_non_important'][] = $tache;
+        }
+
+        return $this->render('project/matrix.html.twig', [
+            'projet'  => $projet,
+            'matrice' => $matrice,
+        ]);
+    }
+
+    // ==================== RESSOURCES PROJET ====================
+
+    #[Route('/entrepreneur/projet/{id}/ressources-projet', name: 'entrepreneur_ressources_projet')]
+    #[Route('/project/{id}/resources', name: 'project_resources')]
+    public function ressourcesProjet(Projets $projet, Request $request, EntityManagerInterface $em, FileUploader $fileUploader): Response
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('entrepreneur_projets_liste');
+        }
+
+        $request->getSession()->set('projet_actif_id', $projet->getIdProjet());
+
+        // Formulaire ressource
+        $ressource     = new RessourceProjet();
+        $ressourceForm = $this->createForm(RessourceProjetType::class, $ressource);
+        $ressourceForm->handleRequest($request);
+
+        if ($ressourceForm->isSubmitted() && $ressourceForm->isValid()) {
+            $ressource->setProjet($projet);
+            $em->persist($ressource);
+            $em->flush();
+            $this->addFlash('success', 'Ressource ajoutée.');
+            return $this->redirectToRoute('entrepreneur_ressources_projet', ['id' => $projet->getIdProjet()]);
+        }
+
+        // Formulaire fichier
+        $fichierForm = $this->createForm(FichierProjetType::class);
+        $fichierForm->handleRequest($request);
+
+        if ($fichierForm->isSubmitted() && $fichierForm->isValid()) {
+            $uploadedFile = $fichierForm->get('fichier')->getData();
+            if ($uploadedFile) {
+                $fileUploader->upload($uploadedFile, $projet, $entrepreneur);
+                $this->addFlash('success', 'Fichier uploadé avec succès.');
+            }
+            return $this->redirectToRoute('entrepreneur_ressources_projet', ['id' => $projet->getIdProjet()]);
+        }
+
+        $ressources = $em->getRepository(RessourceProjet::class)->findByProjet($projet);
+        $fichiers   = $em->getRepository(FichierProjet::class)->findByProjet($projet);
+
+        return $this->render('project/resources.html.twig', [
+            'projet'        => $projet,
+            'ressources'    => $ressources,
+            'fichiers'      => $fichiers,
+            'ressourceForm' => $ressourceForm->createView(),
+            'fichierForm'   => $fichierForm->createView(),
+        ]);
+    }
+
+    // ==================== NOTIFICATIONS API ====================
+
+    #[Route('/api/notifications/unread/count', name: 'api_notifications_count')]
+    public function notificationsCount(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) return new JsonResponse(['count' => 0]);
+
+        $user  = $em->getRepository(Utilisateurs::class)->find($userId);
+        $count = $user ? $em->getRepository(Notifications::class)->countNonLues($user) : 0;
+
+        return new JsonResponse(['count' => $count]);
+    }
+
+    #[Route('/api/notifications/mark-read', name: 'api_notifications_mark_read', methods: ['POST'])]
+    public function markNotificationsRead(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) return new JsonResponse(['success' => false]);
+
+        $user = $em->getRepository(Utilisateurs::class)->find($userId);
+        if ($user) {
+            $em->getRepository(Notifications::class)->marquerToutesLues($user);
+        }
+
+        return new JsonResponse(['success' => true]);
     }
 }

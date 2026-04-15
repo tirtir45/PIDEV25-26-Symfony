@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calendrier — {{ projet.titre }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('styles/project.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+{% endblock %}
+
+{% block body %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">📅 Calendrier — {{ projet.titre }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
+                <li class="breadcrumb-item active">Calendrier</li>
+            </ol>
+        </nav>
+    </div>
+    {% include 'project/_project_nav.html.twig' %}
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: {{ eventsJson|raw }},
+            eventClick: info => {
+                if (info.event.extendedProps.url) {
+                    window.location.href = info.event.extendedProps.url;
+                }
+            }
+        });
+        calendar.render();
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sprints — {{ projet.titre }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}<link rel="stylesheet" href="{{ asset('styles/project.css') }}">{% endblock %}
+
+{% block body %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">⚡ Sprints — {{ projet.titre }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
+                <li class="breadcrumb-item active">Sprints</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        {% include 'project/_project_nav.html.twig' %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNouveauSprint">
+            <i class="bi bi-plus-lg me-1"></i>Nouveau sprint
+        </button>
+    </div>
+</div>
+
+{% if sprintActif %}
+<div class="alert alert-success d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-lightning-fill"></i>
+    <strong>Sprint actif :</strong> {{ sprintActif.nom }}
+    — du {{ sprintActif.date_debut ? sprintActif.date_debut|date('d/m/Y') : '?' }} au {{ sprintActif.date_fin ? sprintActif.date_fin|date('d/m/Y') : '?' }}
+</div>
+{% endif %}
+
+<div class="row g-4">
+    {% for sprint in sprints %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>{{ sprint.nom }}</strong>
+                <span class="badge {{ sprint.statut == 'actif' ? 'bg-success' : (sprint.statut == 'termine' ? 'bg-secondary' : 'bg-warning text-dark') }}">
+                    {{ sprint.statut|capitalize }}
+                </span>
+            </div>
+            <div class="card-body">
+                {% if sprint.objectif %}
+                    <p class="text-muted small mb-3">{{ sprint.objectif }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span><i class="bi bi-calendar3 me-1"></i>{{ sprint.date_debut ? sprint.date_debut|date('d/m/Y') : 'N/A' }}</span>
+                    <span>→ {{ sprint.date_fin ? sprint.date_fin|date('d/m/Y') : 'N/A' }}</span>
+                </div>
+                <div class="row g-2 text-center mt-2">
+                    <div class="col-6">
+                        <div class="bg-light rounded p-2">
+                            <div class="fw-bold">{{ sprint.capacite_equipe ?? 0 }}h</div>
+                            <div class="small text-muted">Capacité</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-light rounded p-2">
+                            <div class="fw-bold">{{ sprint.velocite_prevue ?? 0 }} pts</div>
+                            <div class="small text-muted">Vélocité prévue</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-lightning display-4 d-block mb-3"></i>
+            Aucun sprint créé. Commencez par créer votre premier sprint !
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{# Modal nouveau sprint #}
+<div class="modal fade" id="modalNouveauSprint" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouveau sprint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{ form_start(sprintForm) }}
+            <div class="modal-body">
+                <div class="mb-3">{{ form_row(sprintForm.nom) }}</div>
+                <div class="mb-3">{{ form_row(sprintForm.objectif) }}</div>
+                <div class="row g-3">
+                    <div class="col-6">{{ form_row(sprintForm.date_debut) }}</div>
+                    <div class="col-6">{{ form_row(sprintForm.date_fin) }}</div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-4">{{ form_row(sprintForm.statut) }}</div>
+                    <div class="col-4">{{ form_row(sprintForm.capacite_equipe) }}</div>
+                    <div class="col-4">{{ form_row(sprintForm.velocite_prevue) }}</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary">Créer</button>
+            </div>
+            {{ form_end(sprintForm) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ressources — {{ projet.titre }}{% endblock %}
+
+{% block stylesheets %}{{ parent() }}<link rel="stylesheet" href="{{ asset('styles/project.css') }}">{% endblock %}
+
+{% block body %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1">📁 Ressources — {{ projet.titre }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
+                <li class="breadcrumb-item active">Ressources</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        {% include 'project/_project_nav.html.twig' %}
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalRessource">
+            <i class="bi bi-plus-lg me-1"></i>Ressource
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFichier">
+            <i class="bi bi-upload me-1"></i>Fichier
+        </button>
+    </div>
+</div>
+
+{# Ressources matérielles #}
+<h5 class="mb-3">Ressources matérielles / logicielles</h5>
+<div class="row g-3 mb-5">
+    {% for ressource in ressources %}
+    <div class="col-md-4 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fs-4">{{ ressource.icon }}</span>
+                    <strong>{{ ressource.nom }}</strong>
+                </div>
+                {% if ressource.description %}
+                    <p class="text-muted small mb-2">{{ ressource.description }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge {{ ressource.statut == 'disponible' ? 'bg-success' : (ressource.statut == 'maintenance' ? 'bg-warning text-dark' : 'bg-secondary') }}">
+                        {{ ressource.statut|capitalize }}
+                    </span>
+                    {% if ressource.emplacement %}
+                        <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ ressource.emplacement }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center text-muted py-4">
+        <i class="bi bi-box-seam display-4 d-block mb-2"></i>
+        Aucune ressource ajoutée.
+    </div>
+    {% endfor %}
+</div>
+
+{# Fichiers #}
+<h5 class="mb-3">Fichiers du projet</h5>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Taille</th>
+                <th>Uploadé par</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fichier in fichiers %}
+            <tr>
+                <td>
+                    <i class="bi bi-file-earmark me-2 text-muted"></i>
+                    {{ fichier.nomOriginal }}
+                </td>
+                <td><span class="badge bg-light text-dark">{{ fichier.extension|upper }}</span></td>
+                <td>{{ fichier.tailleFormatee }}</td>
+                <td>{{ fichier.uploadedBy.nom }}</td>
+                <td>{{ fichier.uploadedAt|date('d/m/Y H:i') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">Aucun fichier uploadé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# Modal ressource #}
+<div class="modal fade" id="modalRessource" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter une ressource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{ form_start(ressourceForm) }}
+            <div class="modal-body">
+                <div class="mb-3">{{ form_row(ressourceForm.nom) }}</div>
+                <div class="row g-3">
+                    <div class="col-6">{{ form_row(ressourceForm.type) }}</div>
+                    <div class="col-6">{{ form_row(ressourceForm.statut) }}</div>
+                </div>
+                <div class="mb-3 mt-3">{{ form_row(ressourceForm.emplacement) }}</div>
+                <div class="mb-3">{{ form_row(ressourceForm.description) }}</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </div>
+            {{ form_end(ressourceForm) }}
+        </div>
+    </div>
+</div>
+
+{# Modal fichier #}
+<div class="modal fade" id="modalFichier" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Uploader un fichier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{ form_start(fichierForm, {attr: {enctype: 'multipart/form-data'}}) }}
+            <div class="modal-body">
+                {{ form_row(fichierForm.fichier) }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary">Uploader</button>
+            </div>
+            {{ form_end(fichierForm) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

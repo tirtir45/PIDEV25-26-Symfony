@@ -1,0 +1,20 @@
+<div class="kanban-card" data-id="{{ tache.idTache }}" draggable="true">
+    <div class="kanban-card-title">{{ tache.titre }}</div>
+    {% if tache.description %}
+        <div class="kanban-card-desc text-muted small">{{ tache.description|slice(0, 80) }}{% if tache.description|length > 80 %}…{% endif %}</div>
+    {% endif %}
+    <div class="kanban-card-meta d-flex align-items-center justify-content-between mt-2">
+        {% if tache.dateLimite %}
+            <span class="badge {{ tache.dateLimite < date() ? 'bg-danger' : 'bg-light text-dark' }} small">
+                <i class="bi bi-calendar3 me-1"></i>{{ tache.dateLimite|date('d/m') }}
+            </span>
+        {% else %}
+            <span></span>
+        {% endif %}
+        {% if tache.idResponsable %}
+            <span class="kanban-avatar" title="{{ tache.idResponsable.nom }}">
+                {{ tache.idResponsable.nom|slice(0,1)|upper }}
+            </span>
+        {% endif %}
+    </div>
+</div>
