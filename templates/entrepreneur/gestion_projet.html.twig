@@ -102,15 +102,25 @@
       <div class="gp-panel-head">
         <div class="gp-panel-head-left">
           <div class="gp-panel-icon gp-panel-icon--task">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
           </div>
           <h2>Tâches</h2>
           <span class="gp-count">{{ taches|length }}</span>
         </div>
-        <button class="gp-btn-add" onclick="openPanel('taskPanel')" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Ajouter
-        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="gp-btn-add" onclick="openAIPanel()" type="button" style="background: linear-gradient(135deg, #7c3aed, #a78bfa);">
+              🤖 IA Générer
+          </button>
+          <button class="gp-btn-add" onclick="openPanel('taskPanel')" type="button">
+              <svg width="14" height="14" viewBox="0 0 14 14">
+                  <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Ajouter
+          </button>
+        </div>
       </div>
       <div class="gp-panel-body">
         {% if taches|length > 0 %}
@@ -162,6 +172,44 @@
       </div>
     </section>
   </div>{# /gp-grid #}
+  
+  {# Modal IA pour générer des tâches #}
+  <div id="aiPanel" class="gp-drawer" aria-hidden="true">
+      <div class="gp-drawer-inner">
+          <div class="gp-drawer-head">
+              <h3>🤖 Génération de tâches par IA</h3>
+              <button class="gp-drawer-close" onclick="closeAIPanel()" type="button">
+                  <svg width="18" height="18" viewBox="0 0 18 18">
+                      <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+              </button>
+          </div>
+          <div class="gp-drawer-body">
+              <div class="gp-field">
+                  <label>Nombre de tâches à générer</label>
+                  <input type="number" id="taskCount" value="5" min="1" max="10">
+                  <p class="gp-field-hint">Entre 1 et 10 tâches</p>
+              </div>
+              
+              <div id="loadingIndicator" style="display: none; text-align: center; padding: 2rem;">
+                  <div>⏳ Génération en cours...</div>
+                  <p style="font-size: 0.8rem; margin-top: 0.5rem;">Cela peut prendre quelques secondes</p>
+              </div>
+              
+              <div id="tasksPreview" style="display: none;">
+                  <h4>Tâches générées :</h4>
+                  <div id="tasksListContainer" style="max-height: 400px; overflow-y: auto;"></div>
+                  <div class="gp-drawer-actions" style="margin-top: 1rem;">
+                      <button type="button" class="gp-btn-primary" onclick="saveTasks(event)">✅ Sauvegarder toutes les tâches</button>
+                  </div>
+              </div>
+          </div>
+          <div class="gp-drawer-actions">
+              <button type="button" class="gp-btn-ghost" onclick="closeAIPanel()">Annuler</button>
+              <button type="button" class="gp-btn-primary" onclick="generateTasks(event)">🚀 Générer</button>
+          </div>
+      </div>
+  </div>
 </div>{# /gp-root #}
 
 {# ══════════════ SLIDE-IN PANELS ══════════════ #}
@@ -593,5 +641,150 @@ document.querySelectorAll('.gp-drawer form').forEach(form => {
     }
   });
 });
+
+// Fonctions pour le panel IA
+function openAIPanel() {
+    document.getElementById('aiPanel').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    // Reset
+    document.getElementById('loadingIndicator').style.display = 'none';
+    document.getElementById('tasksPreview').style.display = 'none';
+}
+
+function closeAIPanel() {
+    document.getElementById('aiPanel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// NOUVELLE VERSION DE generateTasks (avec appel à la route Groq)
+async function generateTasks(event) {
+    const count = document.getElementById('taskCount').value;
+    const generateBtn = event.target;
+    const loadingDiv = document.getElementById('loadingIndicator');
+    const previewDiv = document.getElementById('tasksPreview');
+    
+    generateBtn.disabled = true;
+    loadingDiv.style.display = 'block';
+    previewDiv.style.display = 'none';
+    
+    try {
+        // Appel à la nouvelle route Groq
+        const response = await fetch(`/entrepreneur/projet/{{ projet.idProjet }}/suggest-tasks-groq`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ count: parseInt(count) })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const container = document.getElementById('tasksListContainer');
+            container.innerHTML = '';
+
+            // Membres disponibles pour l'assignation (injectés depuis Twig)
+            const membres = [
+                {% for m in membres %}
+                {
+                    "id": {{ m.idMembre }},
+                    "nom": {{ (m.idUtilisateur.nom ?? 'Membre')|json_encode|raw }},
+                    "role": {{ (m.roleEquipe ?? '')|json_encode|raw }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            data.tasks.forEach((task, index) => {
+                const priorityEmoji = task.priorite === 'haute' ? '🔴' : (task.priorite === 'moyenne' ? '🟠' : '🟢');
+
+                // Assignation automatique : cherche un membre dont le rôle correspond à la catégorie
+                let assignedMembre = null;
+                const cat = (task.categorie || '').toLowerCase();
+                for (const m of membres) {
+                    const role = (m.role || '').toLowerCase();
+                    if (role && (role.includes(cat) || cat.includes(role))) {
+                        assignedMembre = m;
+                        break;
+                    }
+                }
+                // Fallback : premier membre
+                if (!assignedMembre && membres.length > 0) {
+                    assignedMembre = membres[index % membres.length];
+                }
+
+                const assignLabel = assignedMembre
+                    ? `<span style="color:#7c3aed;font-weight:600;">👤 ${escapeHtml(assignedMembre.nom)}</span>`
+                    : '<span style="color:#94a3b8;">Non assigné</span>';
+
+                container.innerHTML += `
+                    <div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px;margin-bottom:10px;background:#fafafa;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                            <strong>${escapeHtml(task.titre)}</strong>
+                            <span>${priorityEmoji} ${task.priorite}</span>
+                        </div>
+                        <p style="margin:5px 0;font-size:0.85em;color:#555;">${escapeHtml(task.description)}</p>
+                        <div style="display:flex;gap:12px;font-size:0.75em;margin-top:4px;flex-wrap:wrap;">
+                            <span>📁 ${escapeHtml(task.categorie)}</span>
+                            <span>⏱️ ${escapeHtml(task.duree_estimee)}</span>
+                            <span>${assignLabel}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            window.generatedTasksList = data.tasks;
+            previewDiv.style.display = 'block';
+        } else {
+            alert('Erreur IA : ' + data.error);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur réseau ou serveur. Vérifiez la console.');
+    } finally {
+        generateBtn.disabled = false;
+        loadingDiv.style.display = 'none';
+    }
+}
+
+// NOUVELLE VERSION DE saveTasks (avec gestion améliorée)
+async function saveTasks(event) {
+    if (!window.generatedTasksList || window.generatedTasksList.length === 0) {
+        alert('Aucune tâche à sauvegarder');
+        return;
+    }
+    
+    const saveBtn = event.target;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Sauvegarde...';
+    
+    try {
+        const response = await fetch(`/entrepreneur/projet/{{ projet.idProjet }}/save-ai-tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tasks: window.generatedTasksList })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ ${data.message}`);
+            window.location.reload();
+        } else {
+            alert('Erreur : ' + (data.error || 'Inconnue'));
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur réseau lors de la sauvegarde.');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '✅ Sauvegarder toutes les tâches';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 {% endblock %}

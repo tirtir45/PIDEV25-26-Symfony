@@ -19,6 +19,8 @@ use App\Form\SprintType;
 use App\Form\TacheType;
 use App\Service\CalendarService;
 use App\Service\FileUploader;
+use App\Service\GeminiService;
+use App\Service\GroqTaskGenerator; // Nouvel import
 use App\Service\KanbanService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -690,6 +692,125 @@ class EntrepreneurController extends AbstractController
             'ressourceForm' => $ressourceForm->createView(),
             'fichierForm'   => $fichierForm->createView(),
         ]);
+    }
+
+    // ==================== SAUVEGARDE TÂCHES IA ====================
+
+    #[Route('/entrepreneur/projet/{id}/save-ai-tasks', name: 'entrepreneur_save_ai_tasks', methods: ['POST'])]
+    public function saveAiTasks(Projets $projet, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+
+        $data  = json_decode($request->getContent(), true);
+        $tasks = $data['tasks'] ?? [];
+
+        if (empty($tasks)) {
+            return new JsonResponse(['error' => 'Aucune tâche reçue'], 400);
+        }
+
+        // Récupérer les membres du projet pour l'assignation automatique
+        $membres = $em->getRepository(Membres_equipe::class)->findBy(['id_projet' => $projet]);
+
+        // Map rôle/catégorie → membre
+        $roleMap = [];
+        foreach ($membres as $m) {
+            $role = strtolower($m->getRoleEquipe() ?? '');
+            $roleMap[$role] = $m->getIdUtilisateur();
+        }
+
+        $saved = 0;
+        foreach ($tasks as $taskData) {
+            if (empty($taskData['titre'])) continue;
+
+            $tache = new Taches();
+            $tache->setId_projet($projet);
+            $tache->setTitre($taskData['titre']);
+            $tache->setDescription($taskData['description'] ?? '');
+            $tache->setStatut(Taches::STATUT_A_FAIRE);
+
+            // Assignation automatique selon la catégorie de la tâche
+            $categorie   = strtolower($taskData['categorie'] ?? '');
+            $responsable = null;
+
+            // Cherche un membre dont le rôle correspond à la catégorie
+            foreach ($roleMap as $role => $user) {
+                if ($role && (str_contains($role, $categorie) || str_contains($categorie, $role))) {
+                    $responsable = $user;
+                    break;
+                }
+            }
+
+            // Si pas de correspondance, assigner en round-robin sur les membres
+            if (!$responsable && !empty($membres)) {
+                $responsable = $membres[$saved % count($membres)]->getIdUtilisateur();
+            }
+
+            if ($responsable) {
+                $tache->setId_responsable($responsable);
+            }
+
+            $em->persist($tache);
+            $saved++;
+        }
+
+        $em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'saved'   => $saved,
+            'message' => "$saved tâche(s) créée(s) avec succès",
+        ]);
+    }
+
+    // ==================== SUGGESTION DE TÂCHES ====================
+
+    #[Route('/entrepreneur/projet/{id}/suggest-tasks', name: 'entrepreneur_suggest_tasks', methods: ['POST'])]
+    public function suggestTasks(Projets $projet, Request $request, EntityManagerInterface $em, GeminiService $gemini): JsonResponse
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+        
+        $data = json_decode($request->getContent(), true);
+        $count = $data['count'] ?? 8;
+        
+        try {
+            $tasks = $gemini->suggestTasks($projet->getDescription(), $count);
+            return new JsonResponse([
+                'success' => true,
+                'tasks' => $tasks
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ==================== SUGGESTION DE TÂCHES AVEC GROQ ====================
+
+    #[Route('/entrepreneur/projet/{id}/suggest-tasks-groq', name: 'entrepreneur_suggest_tasks_groq', methods: ['POST'])]
+    public function suggestTasksGroq(Projets $projet, Request $request, EntityManagerInterface $em, GroqTaskGenerator $groq): JsonResponse
+    {
+        $entrepreneur = $this->getAuthenticatedEntrepreneur($request, $em);
+        if (!$this->assertProjectOwnership($projet, $entrepreneur)) {
+            return new JsonResponse(['error' => 'Accès refusé'], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $count = min(max((int)($data['count'] ?? 8), 1), 15); // entre 1 et 15
+
+        try {
+            $tasks = $groq->suggestTasks($projet->getDescription(), $count);
+            return new JsonResponse(['success' => true, 'tasks' => $tasks]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 
     // ==================== NOTIFICATIONS API ====================
