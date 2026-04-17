@@ -1,0 +1,13 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/.env/
+/vendor/
+/.env
+/.env/git rm --cached .env
+###< symfony/framework-bundle ###

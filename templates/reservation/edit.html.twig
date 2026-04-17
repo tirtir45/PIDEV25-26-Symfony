@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Réservation #{{ reservation.idReservation }}{% endblock %}
+
+{% set active = 'admin_res' %}
+
+{% block body %}
+<div class="page-header">
+    <div style="flex:1">
+        <p class="page-header-title">✏️ Modifier la Réservation</p>
+        <p class="page-header-sub">#{{ reservation.idReservation }}
+            {% if reservation.evenement %} — {{ reservation.evenement.titre }}{% endif %}
+        </p>
+    </div>
+    <a href="{{ path('admin_reservation_index') }}" class="btn-outline-purple"
+       style="color:white; border-color:rgba(255,255,255,.4); text-decoration:none;">
+        ← Retour
+    </a>
+</div>
+
+<div class="form-card">
+    <h5 style="color:#4a3068; font-weight:700; margin-bottom:22px;">📝 Modifier la réservation</h5>
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    <div class="mb-3">
+        {{ form_label(form.evenement, null, {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.evenement) }}
+        {{ form_errors(form.evenement) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.utilisateur, null, {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.utilisateur) }}
+        {{ form_errors(form.utilisateur) }}
+    </div>
+
+    <div class="mb-4">
+        {{ form_label(form.dateReservation, null, {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.dateReservation) }}
+        {{ form_errors(form.dateReservation) }}
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <a href="{{ path('admin_reservation_index') }}"
+           style="padding:10px 20px; border:1.5px solid #ead5f0; border-radius:10px;
+                  color:#9b77b5; text-decoration:none; font-size:13px; font-weight:600;">
+            Annuler
+        </a>
+        <button type="submit" class="btn-purple" style="font-size:13px; padding:10px 24px;">
+            💾 Enregistrer
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}

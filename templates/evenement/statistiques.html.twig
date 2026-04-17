@@ -1,0 +1,218 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques — StartHub Admin{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        border: 1px solid #ead5f0;
+        box-shadow: 0 2px 10px rgba(161,85,185,.07);
+        margin-bottom: 22px;
+    }
+    .chart-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #4a3068;
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .charts-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        margin-bottom: 22px;
+    }
+    @media (max-width: 900px) {
+        .charts-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- HEADER -->
+<div class="page-header">
+    <div style="flex:1">
+        <p class="page-header-title">📊 Statistiques</p>
+        <p class="page-header-sub">Tableau de bord analytique — événements &amp; réservations</p>
+    </div>
+    <a href="{{ path('admin_evenement_index') }}"
+       class="btn-outline-purple" style="color:white; border-color:rgba(255,255,255,.4); text-decoration:none;">
+        📅 Gestion événements
+    </a>
+</div>
+
+<!-- KPI CARDS -->
+<div class="stat-row">
+    <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" style="color:#A155B9;">{{ totalEvenements }}</div>
+        <div class="stat-label">Événements total</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🟢</div>
+        <div class="stat-value" style="color:#059669;">{{ countFuturs }}</div>
+        <div class="stat-label">À venir</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🏁</div>
+        <div class="stat-value" style="color:#64748b;">{{ countPasses }}</div>
+        <div class="stat-label">Passés</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-value" style="color:#F765A3;">{{ totalReservations }}</div>
+        <div class="stat-label">Réservations</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" style="color:#A155B9;">{{ totalRevenu|number_format(2) }}</div>
+        <div class="stat-label">Revenu total (DT)</div>
+    </div>
+</div>
+
+<!-- CHARTS ROW 1: Bar monthly + Donut futur/passé -->
+<div class="charts-row">
+    <div class="chart-card">
+        <p class="chart-title">📈 Réservations par mois (12 derniers mois)</p>
+        <div id="chart_monthly" style="width:100%; height:280px;"></div>
+    </div>
+    <div class="chart-card">
+        <p class="chart-title">🍩 Événements : futurs vs passés</p>
+        <div id="chart_donut" style="width:100%; height:280px;"></div>
+    </div>
+</div>
+
+<!-- CHARTS ROW 2: Column top events + Pie revenue per event -->
+<div class="charts-row">
+    <div class="chart-card">
+        <p class="chart-title">🏆 Top 5 événements les plus réservés</p>
+        <div id="chart_top" style="width:100%; height:280px;"></div>
+    </div>
+    <div class="chart-card">
+        <p class="chart-title">💸 Revenu par événement payant</p>
+        <div id="chart_revenu" style="width:100%; height:280px;"></div>
+    </div>
+</div>
+
+<div class="footer-pill">
+    <span>📊 Données en temps réel depuis la base de données</span>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+google.charts.load('current', { packages: ['corechart', 'bar'] });
+google.charts.setOnLoadCallback(drawAllCharts);
+
+// ── Data injected from PHP ──────────────────────────────────────────────────
+var dataMonthly = {{ countByMonth|json_encode|raw }};
+var dataTop     = {{ topEvenements|json_encode|raw }};
+var dataRevenu  = {{ revenuParEvement|json_encode|raw }};
+var countFuturs = {{ countFuturs }};
+var countPasses = {{ countPasses }};
+
+function drawAllCharts() {
+    drawMonthly();
+    drawDonut();
+    drawTop();
+    drawRevenu();
+}
+
+// ── 1. Bar chart: reservations per month ────────────────────────────────────
+function drawMonthly() {
+    var rows = [['Mois', 'Réservations']];
+    dataMonthly.forEach(function(row) {
+        rows.push([row.month, parseInt(row.total)]);
+    });
+    if (rows.length === 1) {
+        rows.push(['Aucune donnée', 0]);
+    }
+    var data = google.visualization.arrayToDataTable(rows);
+    var options = {
+        legend: { position: 'none' },
+        bar: { groupWidth: '60%' },
+        colors: ['#A155B9'],
+        chartArea: { width: '85%', height: '72%' },
+        hAxis: { textStyle: { fontSize: 10, color: '#64748b' } },
+        vAxis: { minValue: 0, format: '0', textStyle: { fontSize: 10, color: '#64748b' } },
+        backgroundColor: 'transparent',
+    };
+    var chart = new google.visualization.ColumnChart(document.getElementById('chart_monthly'));
+    chart.draw(data, options);
+}
+
+// ── 2. Donut: futurs vs passés ───────────────────────────────────────────────
+function drawDonut() {
+    var data = google.visualization.arrayToDataTable([
+        ['Statut', 'Nombre'],
+        ['À venir', countFuturs],
+        ['Passés',  countPasses]
+    ]);
+    var options = {
+        pieHole: 0.45,
+        colors: ['#A155B9', '#94a3b8'],
+        legend: { position: 'right', textStyle: { fontSize: 12 } },
+        chartArea: { width: '85%', height: '80%' },
+        backgroundColor: 'transparent',
+        pieSliceTextStyle: { fontSize: 12 },
+    };
+    var chart = new google.visualization.PieChart(document.getElementById('chart_donut'));
+    chart.draw(data, options);
+}
+
+// ── 3. Column: top 5 events ──────────────────────────────────────────────────
+function drawTop() {
+    var rows = [['Événement', 'Réservations', { role: 'style' }]];
+    var colors = ['#A155B9','#F765A3','#c472d4','#8a4ca0','#e04ab0'];
+    dataTop.forEach(function(row, i) {
+        rows.push([
+            row.titre.length > 20 ? row.titre.substr(0, 18) + '…' : row.titre,
+            parseInt(row.total),
+            'color: ' + (colors[i] || '#A155B9')
+        ]);
+    });
+    if (rows.length === 1) rows.push(['Aucune donnée', 0, 'color:#e2e8f0']);
+    var data = google.visualization.arrayToDataTable(rows);
+    var options = {
+        legend: { position: 'none' },
+        chartArea: { width: '80%', height: '70%' },
+        hAxis: { textStyle: { fontSize: 10, color: '#64748b' } },
+        vAxis: { minValue: 0, format: '0', textStyle: { fontSize: 10 } },
+        backgroundColor: 'transparent',
+    };
+    var chart = new google.visualization.ColumnChart(document.getElementById('chart_top'));
+    chart.draw(data, options);
+}
+
+// ── 4. Pie: revenue per paid event ───────────────────────────────────────────
+function drawRevenu() {
+    var rows = [['Événement', 'Revenu (DT)']];
+    dataRevenu.forEach(function(row) {
+        rows.push([
+            row.titre.length > 22 ? row.titre.substr(0, 20) + '…' : row.titre,
+            parseFloat(row.revenu)
+        ]);
+    });
+    if (rows.length === 1) rows.push(['Aucune donnée', 0]);
+    var data = google.visualization.arrayToDataTable(rows);
+    var options = {
+        colors: ['#A155B9','#F765A3','#c472d4','#8a4ca0','#e04ab0','#6b21a8','#d946ef'],
+        legend: { position: 'right', textStyle: { fontSize: 11 } },
+        chartArea: { width: '80%', height: '80%' },
+        backgroundColor: 'transparent',
+        pieSliceTextStyle: { fontSize: 11 },
+        tooltip: { text: 'value' },
+    };
+    var chart = new google.visualization.PieChart(document.getElementById('chart_revenu'));
+    chart.draw(data, options);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin — Gestion des Réservations{% endblock %}
+
+{% set active = 'admin_res' %}
+
+{% block body %}
+<div class="page-header">
+    <div style="flex:1">
+        <p class="page-header-title">🎫 Gestion des Réservations</p>
+        <p class="page-header-sub">Consultez et gérez toutes les réservations</p>
+    </div>
+    <a href="{{ path('admin_evenement_index') }}" class="btn-outline-purple"
+       style="color:white; border-color:rgba(255,255,255,.4); text-decoration:none;">
+        📅 Événements
+    </a>
+    <a href="{{ path('admin_reservation_new') }}" class="btn-pink"
+       style="text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+        ＋ Ajouter
+    </a>
+</div>
+
+<!-- STATS -->
+<div class="stat-row" style="margin-bottom:18px;">
+    <div class="stat-card" style="border-color:#dbeafe;">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-value" style="color:#2563eb;">{{ reservations|length }}</div>
+        <div class="stat-label">Total Réservations</div>
+    </div>
+    <div class="stat-card" style="border-color:#fef9c3;">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" style="color:#d97706; font-size:20px;">{{ total_revenu|number_format(2) }}</div>
+        <div class="stat-label">Revenu Total (DT)</div>
+    </div>
+</div>
+
+{% if reservations is empty %}
+<div style="text-align:center; padding:60px 0; color:#a78bca; background:white;
+            border-radius:14px; border:1px solid #ead5f0;">
+    <div style="font-size:48px;">📭</div>
+    <p style="font-size:15px; font-weight:600; margin-top:12px;">Aucune réservation</p>
+    <a href="{{ path('admin_reservation_new') }}" class="btn-pink"
+       style="text-decoration:none; display:inline-block; margin-top:12px;">
+        ＋ Créer une réservation
+    </a>
+</div>
+{% else %}
+<div class="table-card">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Événement</th>
+                <th>Utilisateur</th>
+                <th>Date de réservation</th>
+                <th>Prix</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td style="color:#94a3b8; font-weight:600;">{{ r.idReservation }}</td>
+                <td>
+                    {% if r.evenement %}
+                    <strong>{{ r.evenement.titre }}</strong>
+                    <div style="font-size:11px; color:#94a3b8;">📍 {{ r.evenement.lieu }}</div>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if r.utilisateur %}
+                    <strong>{{ r.utilisateur.nom ?? '(sans nom)' }}</strong>
+                    <div style="font-size:11px; color:#94a3b8;">{{ r.utilisateur.email }}</div>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ r.dateReservation|date('d/m/Y H:i') }}</td>
+                <td>
+                    {% if r.evenement %}
+                        <span class="event-prix-badge {% if r.evenement.prix == 0 %}event-price-free{% endif %}"
+                              style="font-size:11px;">
+                            {% if r.evenement.prix == 0 %}Gratuit{% else %}{{ r.evenement.prix|number_format(2) }} DT{% endif %}
+                        </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    <div style="display:flex; gap:5px;">
+                        <a href="{{ path('admin_reservation_edit', {id: r.idReservation}) }}"
+                           class="btn-purple" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:7px;">
+                            ✏️
+                        </a>
+                        <form method="post" action="{{ path('admin_reservation_delete', {id: r.idReservation}) }}"
+                              onsubmit="return confirm('Supprimer cette réservation ?')" style="margin:0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ r.idReservation) }}">
+                            <button type="submit" style="background:#fee2e2; color:#dc2626; border:none;
+                                    border-radius:7px; padding:5px 10px; font-size:11px; cursor:pointer;">
+                                🗑
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="footer-pill">
+    <span>🎫 {{ reservations|length }} réservation(s)</span>
+</div>
+{% endblock %}

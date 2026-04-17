@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StartHub — Événements{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --purple-main:  #A155B9;
+            --purple-light: #c472d4;
+            --purple-dark:  #8a4ca0;
+            --purple-bg:    #fdf4fb;
+            --purple-border:#ead5f0;
+            --pink-accent:  #F765A3;
+            --sidebar-w:    220px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--purple-bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-w);
+            background: linear-gradient(to bottom, var(--purple-main), var(--purple-dark));
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 4px 0 12px rgba(0,0,0,.18);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 28px 20px 18px;
+        }
+
+        .sidebar-logo-icon {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,.2);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .sidebar-logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 14px 10px;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 15px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background .15s;
+            cursor: pointer;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-item:hover { background: rgba(255,255,255,.12); color: white; }
+
+        .sidebar-item.active {
+            background: rgba(255,255,255,.18);
+            border-left: 3px solid var(--pink-accent);
+            border-radius: 8px 0 0 8px;
+            font-weight: 600;
+        }
+
+        .sidebar-item .icon { font-size: 16px; width: 24px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255,255,255,.15);
+        }
+
+        .sidebar-user {
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .sidebar-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            margin-left: var(--sidebar-w);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER BANNER ── */
+        .page-header {
+            background: linear-gradient(to right, var(--purple-main), var(--purple-light));
+            border-radius: 16px;
+            padding: 20px 26px;
+            box-shadow: 0 6px 18px rgba(161,85,185,.35);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .page-header-title { font-size: 22px; font-weight: 800; color: white; margin: 0; }
+        .page-header-sub   { font-size: 11px; color: rgba(255,255,255,.75); margin: 0; }
+
+        /* ── STAT CARDS ── */
+        .stat-row { display: flex; gap: 12px; margin-bottom: 18px; }
+
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid var(--purple-border);
+        }
+
+        .stat-card .stat-icon  { font-size: 20px; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 900; margin: 4px 0 2px; }
+        .stat-card .stat-label { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--purple-border);
+            box-shadow: 0 2px 6px rgba(161,85,185,.06);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .filter-bar label { font-size: 11px; font-weight: 700; color: #6b4d8a; margin: 0; }
+
+        .filter-bar .form-control,
+        .filter-bar .form-select {
+            font-size: 11px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 5px 10px;
+        }
+
+        /* ── EVENT CARDS ── */
+        .events-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 16px;
+            width: 280px;
+            overflow: hidden;
+            border: 1px solid var(--purple-border);
+            box-shadow: 0 2px 10px rgba(161,85,185,.08);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(161,85,185,.2);
+        }
+
+        .event-card-header {
+            background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+            padding: 18px 16px 12px;
+            color: white;
+        }
+
+        .event-card-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+        .event-card-lieu  { font-size: 11px; opacity: .85; margin: 0; }
+
+        .event-card-body  { padding: 14px 16px; }
+
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .event-prix-badge {
+            display: inline-block;
+            background: #f3e8ff;
+            color: var(--purple-main);
+            font-weight: 700;
+            font-size: 13px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .event-price-free {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge-complet {
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-futur {
+            background: #d1fae5;
+            color: #059669;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-purple {
+            background-color: var(--purple-main);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 700;
+            font-size: 12px;
+            transition: background .15s;
+        }
+
+        .btn-purple:hover { background-color: var(--purple-dark); color: white; }
+
+        .btn-pink {
+            background-color: var(--pink-accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 700;
+            font-size: 12px;
+            box-shadow: 0 3px 10px rgba(247,101,163,.45);
+        }
+
+        .btn-pink:hover { background-color: #e040a0; color: white; }
+
+        .btn-outline-purple {
+            border: 1.5px solid var(--purple-border);
+            color: var(--purple-main);
+            background: rgba(255,255,255,.18);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .btn-outline-purple:hover {
+            background: var(--purple-main);
+            color: white;
+        }
+
+        /* ── FORM CARD ── */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid var(--purple-border);
+            box-shadow: 0 2px 10px rgba(161,85,185,.08);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-label { font-weight: 600; font-size: 13px; color: #4a3068; }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--purple-main);
+            box-shadow: 0 0 0 3px rgba(161,85,185,.15);
+        }
+
+        /* ── TABLE ── */
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--purple-border);
+            box-shadow: 0 2px 10px rgba(161,85,185,.06);
+        }
+
+        .table th {
+            background: #faf5ff;
+            color: #4a3068;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            border-bottom: 1.5px solid var(--purple-border);
+        }
+
+        .table td { font-size: 13px; vertical-align: middle; }
+
+        /* ── FLASH MESSAGES ── */
+        .flash-success {
+            background: #d1fae5; color: #065f46;
+            border-radius: 10px; padding: 12px 16px;
+            border: 1px solid #a7f3d0; margin-bottom: 16px;
+            font-size: 13px; font-weight: 600;
+        }
+
+        .flash-error {
+            background: #fee2e2; color: #991b1b;
+            border-radius: 10px; padding: 12px 16px;
+            border: 1px solid #fca5a5; margin-bottom: 16px;
+            font-size: 13px; font-weight: 600;
+        }
+
+        .flash-warning {
+            background: #fef9c3; color: #854d0e;
+            border-radius: 10px; padding: 12px 16px;
+            border: 1px solid #fde047; margin-bottom: 16px;
+            font-size: 13px; font-weight: 600;
+        }
+
+        /* ── FOOTER PILL ── */
+        .footer-pill {
+            display: flex; justify-content: center; margin-top: 20px;
+        }
+
+        .footer-pill span {
+            background: #f3e8f9;
+            border-radius: 20px;
+            padding: 6px 20px;
+            font-size: 11px;
+            color: var(--purple-main);
+            font-weight: 600;
+        }
+    </style>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🚀</div>
+        <div class="sidebar-logo-text">StartHub</div>
+    </div>
+
+    <nav class="sidebar-nav">
+        {% if is_granted('ROLE_ADMIN') %}
+            {# Admin sees only management items #}
+            <a href="{{ path('admin_evenement_index') }}"
+               class="sidebar-item {% if active is defined and active == 'admin_events' %}active{% endif %}">
+                <span class="icon">📅</span> Événements
+            </a>
+            {# Stats sub-item indented under Événements #}
+            <a href="{{ path('admin_evenement_stats') }}"
+               class="sidebar-item {% if active is defined and active == 'admin_stats' %}active{% endif %}"
+               style="padding-left:38px; font-size:12px; opacity:.88;">
+                <span class="icon">📊</span> Statistiques
+            </a>
+            <a href="{{ path('admin_reservation_index') }}"
+               class="sidebar-item {% if active is defined and active == 'admin_res' %}active{% endif %}">
+                <span class="icon">🎫</span> Réservations
+            </a>
+        {% else %}
+            {# Entrepreneur/user sees browsing items — same as Java AfficherEvenementUser.fxml #}
+            <a href="{{ path('user_evenements') }}"
+               class="sidebar-item {% if active is defined and active == 'events' %}active{% endif %}">
+                <span class="icon">📅</span> Événements
+            </a>
+            <a href="{{ path('user_mes_reservations') }}"
+               class="sidebar-item {% if active is defined and active == 'reservations' %}active{% endif %}">
+                <span class="icon">🎫</span> Mes Réservations
+            </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        {% if app.user %}
+        <div class="sidebar-user" style="margin-bottom:10px;">
+            <div class="sidebar-avatar">
+                {% if is_granted('ROLE_ADMIN') %}👑{% else %}👤{% endif %}
+            </div>
+            <div>
+                <div style="font-size:13px; font-weight:700; color:white;">
+                    {{ app.user.nom ?? app.user.email }}
+                </div>
+                <div style="font-size:11px; color:rgba(255,255,255,.75);">
+                    {% if is_granted('ROLE_ADMIN') %}Administrateur{% else %}Entrepreneur{% endif %}
+                </div>
+            </div>
+        </div>
+        <a href="{{ path('app_logout') }}"
+           style="display:flex; align-items:center; gap:8px; padding:9px 14px;
+                  background:rgba(255,255,255,.12); border-radius:8px; color:white;
+                  text-decoration:none; font-size:12px; font-weight:600;
+                  border:1px solid rgba(255,255,255,.2);">
+            🚪 Déconnexion
+        </a>
+        {% endif %}
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+    <!-- Flash messages -->
+    {% for message in app.flashes('success') %}
+        <div class="flash-success">✅ {{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash-error">❌ {{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+        <div class="flash-warning">⚠️ {{ message }}</div>
+    {% endfor %}
+
+    {% block body %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block javascripts %}{% endblock %}
+</body>
+</html>
