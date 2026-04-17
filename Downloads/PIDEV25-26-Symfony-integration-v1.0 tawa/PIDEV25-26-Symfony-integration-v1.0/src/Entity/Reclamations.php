@@ -48,7 +48,8 @@ class Reclamations
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\OneToMany(mappedBy: 'id_reclamation', targetEntity: Reclamation_commentaires::class)]
+    #[ORM\OneToMany(mappedBy: 'id_reclamation', targetEntity: Reclamation_commentaires::class, cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['date_commentaire' => 'ASC'])]
     private Collection $reclamation_commentairess;
 
     public function __construct()

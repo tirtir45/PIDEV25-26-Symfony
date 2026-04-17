@@ -76,6 +76,15 @@ PROMPT;
             }
         }
 
+        // Si pas de JSON valide, analyser le texte brut de la réponse
+        $raw = mb_strtolower($raw);
+        $sentiment = 'neutre';
+        if (str_contains($raw, 'négatif') || str_contains($raw, 'negatif') || str_contains($raw, 'negative')) {
+            $sentiment = 'négatif';
+        } elseif (str_contains($raw, 'positif') || str_contains($raw, 'positive')) {
+            $sentiment = 'positif';
+        }
+
         return $this->fallbackAnalysis($raw);
     }
 
@@ -99,8 +108,8 @@ PROMPT;
         }
 
         // Sentiment
-        $negativeWords = ['problème', 'mauvais', 'lent', 'horrible', 'nul', 'insatisfait', 'déçu', 'urgent'];
-        $positiveWords = ['bien', 'excellent', 'parfait', 'satisfait', 'merci', 'super'];
+        $negativeWords = ['problème', 'mauvais', 'lent', 'horrible', 'nul', 'insatisfait', 'déçu', 'décevant', 'urgent', 'terrible', 'inacceptable', 'inadmissible', 'catastrophique', 'pire', 'médiocre', 'insuffisant', 'frustrant', 'énervant', 'incompétent', 'retard', 'bug', 'erreur', 'panne', 'bloqué', 'impossible'];
+        $positiveWords = ['bien', 'excellent', 'parfait', 'satisfait', 'merci', 'super', 'rapide', 'efficace', 'bravo', 'génial', 'top'];
         $sentiment = 'neutre';
         foreach ($negativeWords as $w) {
             if (str_contains($text, $w)) { $sentiment = 'négatif'; break; }
@@ -113,7 +122,9 @@ PROMPT;
 
         // Priorité
         $priorite = 'MEDIUM';
-        if ($sentiment === 'négatif' && ($categorie === 'paiement' || str_contains($text, 'urgent'))) {
+        if ($sentiment === 'négatif' && in_array($categorie, ['paiement', 'technique'])) {
+            $priorite = 'HIGH';
+        } elseif ($sentiment === 'négatif') {
             $priorite = 'HIGH';
         } elseif ($sentiment === 'positif') {
             $priorite = 'LOW';

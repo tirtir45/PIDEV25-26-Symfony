@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Reclamations;
+use App\Entity\Reclamation_commentaires;
 use App\Repository\ReclamationsRepository;
+use App\Repository\UtilisateursRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -60,7 +62,63 @@ class AdminReclamationController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/reclamations/{id}/statut', name: 'admin_reclamation_statut', methods: ['POST'])]
+    #[Route('/admin/reclamations/{id}', name: 'admin_reclamation_show', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    public function show(
+        int $id,
+        Request $request,
+        ReclamationsRepository $repo,
+        UtilisateursRepository $userRepo,
+        EntityManagerInterface $em
+    ): Response {
+        if (!$this->checkAdmin($request)) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        $reclamation = $repo->find($id);
+        if (!$reclamation) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($request->isMethod('POST')) {
+            $contenu = trim((string) $request->request->get('message', ''));
+            $statut  = $request->request->get('statut');
+
+            // Changement de statut
+            if ($statut) {
+                $reclamation->setStatut($statut);
+                $em->flush();
+                $this->addFlash('success', 'Statut mis à jour.');
+            }
+
+            // Envoi message admin
+            if (!empty($contenu)) {
+                if ($reclamation->getStatut() === 'RESOLU') {
+                    $this->addFlash('warning', 'Réclamation résolue, communication fermée.');
+                    return $this->redirectToRoute('admin_reclamation_show', ['id' => $id]);
+                }
+
+                $adminId = $request->getSession()->get('user_id');
+                $admin   = $userRepo->find($adminId);
+                $msg = new Reclamation_commentaires();
+                $msg->setId_reclamation($reclamation);
+                $msg->setId_auteur($admin);
+                $msg->setCommentaire($contenu);
+                $msg->setDate_commentaire(new \DateTime());
+                $em->persist($msg);
+                $em->flush();
+            }
+
+            return $this->redirectToRoute('admin_reclamation_show', ['id' => $id]);
+        }
+
+        return $this->render('admin/reclamation_show.html.twig', [
+            'reclamation' => $reclamation,
+            'messages'    => $reclamation->getReclamationCommentairess(),
+            'adminId'     => $request->getSession()->get('user_id'),
+        ]);
+    }
+
+    #[Route('/admin/reclamations/{id}/supprimer', name: 'admin_reclamation_delete', methods: ['POST'])]
     public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em): Response
     {
         if (!$this->checkAdmin($request)) {

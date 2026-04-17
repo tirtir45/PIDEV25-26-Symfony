@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Reclamations;
+use App\Entity\Reclamation_commentaires;
 use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
 use App\Service\ReclamationAnalyzerService;
@@ -35,7 +36,6 @@ class ReclamationController extends AbstractController
         if ($request->isMethod('POST')) {
             $sujet       = trim((string) $request->request->get('sujet', ''));
             $description = trim((string) $request->request->get('description', ''));
-            $targetLang  = 'fr';
 
             if (empty($sujet) || empty($description)) {
                 $error    = 'Veuillez remplir tous les champs.';
@@ -44,17 +44,19 @@ class ReclamationController extends AbstractController
                 $user = $userRepo->find($userId);
                 $r = new Reclamations();
                 $r->setUtilisateur($user);
-                $r->setSujet($sujet);
 
-                // Traduction automatique
-                $result = $translator->translate($description, $targetLang);
-                if ($result['sourceLang'] !== $targetLang && $result['translated'] !== $description) {
+                // Traduction automatique du sujet et de la description en français
+                $sujetResult = $translator->translate($sujet, 'fr');
+                $descResult  = $translator->translate($description, 'fr');
+
+                $r->setSujet($sujetResult['translated']);
+
+                // Stocker l'original si la langue source n'est pas le français
+                if ($descResult['sourceLang'] !== 'fr' && $descResult['translated'] !== $description) {
                     $r->setDescriptionOriginale($description);
-                    $r->setLangueOriginale($result['sourceLang']);
-                    $r->setDescription($result['translated']);
-                } else {
-                    $r->setDescription($description);
+                    $r->setLangueOriginale($descResult['sourceLang']);
                 }
+                $r->setDescription($descResult['translated']);
 
                 // Analyse IA automatique (sur le texte traduit)
                 $analysis = $analyzer->analyze($sujet . ' ' . $r->getDescription());
@@ -79,6 +81,53 @@ class ReclamationController extends AbstractController
             'reclamations' => $reclamations,
             'showForm'     => $showForm,
             'error'        => $error,
+        ]);
+    }
+
+    #[Route('/reclamations/{id}', name: 'reclamation_show', methods: ['GET', 'POST'])]
+    public function show(
+        int $id,
+        Request $request,
+        ReclamationsRepository $repo,
+        UtilisateursRepository $userRepo,
+        EntityManagerInterface $em
+    ): Response {
+        $userId = $request->getSession()->get('user_id');
+        if (!$userId) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $reclamation = $repo->find($id);
+        if (!$reclamation || $reclamation->getUtilisateur()->getId() !== $userId) {
+            throw $this->createNotFoundException();
+        }
+
+        if ($request->isMethod('POST')) {
+            $contenu = trim((string) $request->request->get('message', ''));
+
+            if ($reclamation->getStatut() === 'RESOLU') {
+                $this->addFlash('warning', 'Cette réclamation est résolue, la communication est fermée.');
+                return $this->redirectToRoute('reclamation_show', ['id' => $id]);
+            }
+
+            if (!empty($contenu)) {
+                $user = $userRepo->find($userId);
+                $msg = new Reclamation_commentaires();
+                $msg->setId_reclamation($reclamation);
+                $msg->setId_auteur($user);
+                $msg->setCommentaire($contenu);
+                $msg->setDate_commentaire(new \DateTime());
+                $em->persist($msg);
+                $em->flush();
+            }
+
+            return $this->redirectToRoute('reclamation_show', ['id' => $id]);
+        }
+
+        return $this->render('reclamation/show.html.twig', [
+            'reclamation' => $reclamation,
+            'messages'    => $reclamation->getReclamationCommentairess(),
+            'userId'      => $userId,
         ]);
     }
 }

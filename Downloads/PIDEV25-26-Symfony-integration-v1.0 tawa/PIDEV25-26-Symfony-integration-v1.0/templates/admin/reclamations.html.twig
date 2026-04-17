@@ -131,17 +131,9 @@
 
                             <div class="mt-auto pt-3 border-top">
                                 <div class="d-flex gap-2">
-                                    <form method="POST" action="{{ path('admin_reclamation_statut', {id: r.id}) }}" class="flex-grow-1 d-flex gap-1">
-                                        <select name="statut" class="form-select form-select-sm">
-                                            <option value="EN_ATTENTE" {{ r.statut == 'EN_ATTENTE' ? 'selected' : '' }}>⏳ Attente</option>
-                                            <option value="RESOLU" {{ r.statut == 'RESOLU' ? 'selected' : '' }}>✅ Résolu</option>
-                                            <option value="REJETE" {{ r.statut == 'REJETE' ? 'selected' : '' }}>❌ Rejeté</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-primary" title="Mettre à jour">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                    </form>
-
+                                    <a href="{{ path('admin_reclamation_show', {id: r.id}) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-chat-dots me-1"></i> Discussion
+                                    </a>
                                     <form method="POST" action="{{ path('admin_reclamation_delete', {id: r.id}) }}"
                                           onsubmit="return confirm('Supprimer cette réclamation ?')" style="display:inline;">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
