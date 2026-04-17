@@ -1,0 +1,387 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}StartHub - Innovez, Gérez, Réussissez{% endblock %}
+
+{% block layout %}
+    <div class="landing-page">
+        <!-- Navigation -->
+        <nav class="landing-nav sticky-top">
+            <div class="container d-flex justify-content-between align-items-center py-3">
+                <div class="landing-logo">
+                    <span class="logo-icon"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                    <span class="logo-text">StartHub</span>
+                </div>
+                <div class="landing-nav-links d-none d-md-flex gap-4">
+                    <a href="#features">Fonctionnalités</a>
+                    <a href="#about">À propos</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="landing-auth-btns d-flex gap-3">
+                    {% if app.user %}
+                        <a href="{{ path('app_home') }}" class="btn-landing-primary">Aller au Dashboard</a>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="btn-landing-outline">Connexion</a>
+                        <a href="{{ path('app_register') }}" class="btn-landing-primary shadow-sm">S'inscrire</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <header class="hero-section text-center">
+            <div class="hero-bg-accent"></div>
+            <div class="container position-relative">
+                <div class="badge-new mb-4 animate-up">Plateforme 2.0 est arrivée</div>
+                <h1 class="hero-title animate-up">
+                    Propulsez votre Startup <br>
+                    <span class="gradient-text">Vers le Succès</span>
+                </h1>
+                <p class="hero-subtitle mx-auto animate-up delay-1">
+                    La plateforme tout-en-un pour gérer vos projets, collaborer avec vos équipes et optimiser vos ressources. Conçue par des entrepreneurs, pour des entrepreneurs.
+                </p>
+                <div class="hero-cta d-flex justify-content-center gap-4 animate-up delay-2">
+                    <a href="{{ path('app_register') }}" class="btn-hero-main">Commencer Gratuitement</a>
+                    <a href="#features" class="btn-hero-secondary">Voir la démo <i class="bi bi-play-circle ml-2"></i></a>
+                </div>
+
+                <!-- Floating Platform Preview -->
+                <div class="platform-preview mt-5 animate-up delay-3">
+                    <div class="preview-card glass-panel">
+                        <div class="preview-header">
+                            <div class="dots"><span></span><span></span><span></span></div>
+                            <div class="search-bar">startuphub.io/dashboard</div>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200" alt="Dashboard Preview" class="img-fluid rounded-bottom">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section py-5">
+            <div class="container">
+                <div class="section-header text-center mb-5">
+                    <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+                    <p class="section-subtitle">Des outils puissants pour chaque étape de votre croissance</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card glass-morphism">
+                            <div class="feature-icon bg-purple"><i class="bi bi-shield-check"></i></div>
+                            <h3>Validation Projets</h3>
+                            <p>Un processus de validation rigoureux et transparent pour garantir la qualité de chaque initiative.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card glass-morphism active">
+                            <div class="feature-icon bg-pink"><i class="bi bi-people"></i></div>
+                            <h3>Gestion d'Équipe</h3>
+                            <p>Collaborez facilement avec vos membres, assignez des tâches et suivez les performances individuelles.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card glass-morphism">
+                            <div class="feature-icon bg-blue"><i class="bi bi-graph-up-arrow"></i></div>
+                            <h3>Suivi Ressources</h3>
+                            <p>Optimisez l'utilisation de vos ressources matérielles et humaines en temps réel.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-banner py-5">
+            <div class="container">
+                <div class="row text-center text-white g-4">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Startups Active</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">10k+</div>
+                            <div class="stat-label">Projets Réussis</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">2M€</div>
+                            <div class="stat-label">Levées de fonds</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item">
+                            <div class="stat-number">99%</div>
+                            <div class="stat-label">Satisfaction Client</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="final-cta py-5">
+            <div class="container text-center">
+                <div class="cta-box glass-panel p-5">
+                    <h2>Prêt à révolutionner votre startup ?</h2>
+                    <p class="mb-4">Rejoignez des milliers d'entrepreneurs qui ont déjà choisi StartHub.</p>
+                    <a href="{{ path('app_register') }}" class="btn-hero-main px-5">Ouvrir mon compte gratuit</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="landing-footer py-4">
+            <div class="container text-center text-muted">
+                <p>&copy; 2026 StartHub. Tous droits réservés.</p>
+            </div>
+        </footer>
+    </div>
+
+    <style>
+        :root {
+            --landing-primary: #a855f7;
+            --landing-secondary: #ec4899;
+            --landing-dark: #1f2937;
+            --landing-bg: #f8fafc;
+        }
+
+        .landing-page {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--landing-bg);
+            color: var(--landing-dark);
+            overflow-x: hidden;
+        }
+
+        /* Nav */
+        .landing-nav {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .logo-icon {
+            font-size: 1.5rem;
+            color: var(--landing-primary);
+            margin-right: 8px;
+        }
+
+        .logo-text {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+        }
+
+        .landing-nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .landing-nav-links a:hover {
+            color: var(--landing-primary);
+        }
+
+        .btn-landing-outline {
+            padding: 8px 20px;
+            border: 2px solid var(--landing-primary);
+            border-radius: 12px;
+            color: var(--landing-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-landing-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--landing-primary), #8b5cf6);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        /* Hero */
+        .hero-section {
+            padding: 80px 0 0; /* Reduced padding-bottom as preview overlaps */
+            position: relative;
+        }
+
+        .hero-bg-accent {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 400px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .badge-new {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--landing-primary);
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .hero-title {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--landing-primary), var(--landing-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            max-width: 600px;
+            color: #64748b;
+            font-size: 1.15rem;
+            margin-bottom: 40px;
+        }
+
+        .btn-hero-main {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--landing-primary), #8b5cf6);
+            color: #fff;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-hero-secondary {
+            padding: 16px 32px;
+            background: #fff;
+            color: var(--landing-dark);
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        /* Platform Preview */
+        .platform-preview {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .preview-card {
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .preview-header {
+            background: #f8fafc;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .dots { display: flex; gap: 6px; }
+        .dots span { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+        .search-bar { flex: 1; background: #fff; border-radius: 100px; padding: 4px 15px; font-size: 0.75rem; color: #94a3b8; text-align: left; border: 1px solid #e2e8f0; }
+
+        /* Features */
+        .features-section { background: white; padding-top: 100px !important; margin-top: -100px; z-index: 1; position: relative; }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 40px;
+            border-radius: 24px;
+            height: 100%;
+            transition: all 0.4s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .feature-card.active { border-color: var(--landing-primary); }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .bg-purple { background: var(--landing-primary); }
+        .bg-pink { background: var(--landing-secondary); }
+        .bg-blue { background: #3b82f6; }
+
+        /* Stats Banner */
+        .stats-banner {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            margin: 60px 0;
+        }
+
+        .stat-number { font-size: 2.5rem; font-weight: 800; font-family: 'Sora', sans-serif; }
+        .stat-label { font-size: 1rem; opacity: 0.8; }
+
+        /* CTA box */
+        .cta-box {
+            border-radius: 32px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        }
+
+        /* Animations */
+        .animate-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-cta { flex-direction: column; }
+            .platform-preview { padding: 0 20px; }
+        }
+    </style>
+{% endblock %}

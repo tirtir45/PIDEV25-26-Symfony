@@ -1,0 +1,422 @@
+{# templates/admin/gestion_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <div class="header">
+        <div>
+            <h1><i class="bi bi-folder2"></i> {{ projet.titre }}</h1>
+            <div class="page-subtitle">Gestion du projet - {{ projet.entrepreneur.nom ?? 'N/A' }}</div>
+        </div>
+        <div class="header-actions">
+            <span class="status-badge 
+                {% if projet.etat == 'En attente' %}status-pending
+                {% elseif projet.etat == 'Accepté' %}status-accepted
+                {% elseif projet.etat == 'Refusé' %}status-refused
+                {% elseif projet.etat == 'En cours' %}status-in-progress
+                {% else %}status-completed{% endif %}">
+                {{ projet.etat }}
+            </span>
+            {% if projet.etat == 'Accepté' %}
+            <form method="post" action="{{ path('admin_changer_statut_projet', {'id': projet.idProjet}) }}" class="d-inline">
+                <select name="statut" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                    <option value="En cours">📊 Passer En cours</option>
+                    <option value="Terminé">✅ Marquer Terminé</option>
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progression -->
+    <div class="progress-section mb-4">
+        <div class="d-flex justify-content-between mb-2">
+            <strong>Progression globale</strong>
+            <strong class="text-primary">{{ projet.progression }}%</strong>
+        </div>
+        <div class="progress" style="height: 10px;">
+            <div class="progress-bar" style="width: {{ projet.progression }}%"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne gauche : Membres -->
+        <div class="col-lg-5 mb-4">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-people"></i> Membres de l'équipe</h3>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                        <i class="bi bi-plus-circle"></i> Ajouter
+                    </button>
+                </div>
+                <div class="card-body-modern">
+                    {% if membres|length > 0 %}
+                        <div class="team-grid">
+                            {% for membre in membres %}
+                            <div class="team-member-card">
+                                <div class="team-member-info">
+                                    <div class="team-member-avatar-sm">
+                                        <i class="bi bi-person-circle fs-1"></i>
+                                    </div>
+                                    <div class="team-member-details">
+                                        <div class="team-member-name">{{ membre.membre.nom }}</div>
+                                        <div class="team-member-role">{{ membre.roleEquipe }}</div>
+                                    </div>
+                                </div>
+                                <div class="team-member-actions">
+                                    <a href="{{ path('admin_supprimer_membre', {'id': membre.idMembre}) }}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Supprimer ce membre ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Aucun membre dans l'équipe</p>
+                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                                <i class="bi bi-plus-circle"></i> Ajouter un membre
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : Tâches -->
+        <div class="col-lg-7 mb-4">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-check2-square"></i> Tâches du projet</h3>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                        <i class="bi bi-plus-circle"></i> Ajouter
+                    </button>
+                </div>
+                <div class="card-body-modern">
+                    {% if taches|length > 0 %}
+                        <div class="tasks-list">
+                            {% for tache in taches %}
+                            <div class="task-card" data-status="{{ tache.statut }}">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <h4>{{ tache.titre }}</h4>
+                                        <span class="status-badge 
+                                            {% if tache.statut == 'À faire' %}status-pending
+                                            {% elseif tache.statut == 'En cours' %}status-in-progress
+                                            {% else %}status-completed{% endif %}">
+                                            {{ tache.statut }}
+                                        </span>
+                                    </div>
+                                    <div class="task-actions">
+                                        <a href="{{ path('admin_supprimer_tache', {'id': tache.idTache}) }}" 
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Supprimer cette tâche ?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% if tache.description %}
+                                <div class="task-description">
+                                    {{ tache.description }}
+                                </div>
+                                {% endif %}
+                                <div class="task-footer">
+                                    <div class="task-assignee">
+                                        <i class="bi bi-person"></i>
+                                        {{ tache.responsable.nom ?? 'Non assigné' }}
+                                    </div>
+                                    {% if tache.dateLimite %}
+                                    <div class="task-deadline">
+                                        <i class="bi bi-calendar"></i>
+                                        {{ tache.dateLimite|date('d/m/Y') }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check2-square fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Aucune tâche créée</p>
+                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                                <i class="bi bi-plus-circle"></i> Créer une tâche
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Membre -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white;">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Ajouter un membre</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{ form_start(membreForm, {'attr': {'id': 'memberForm'}})}}
+                    <div class="mb-3">
+                        {{ form_label(membreForm.membre, 'Membre', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(membreForm.membre, {'attr': {'class': 'form-control', 'required': true}})}}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_label(membreForm.role_equipe, 'Rôle dans l\'équipe', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(membreForm.role_equipe, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Développeur Frontend', 'required': true}})}}
+                    </div>
+                {{ form_end(membreForm) }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="submitMemberForm()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Tâche -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white;">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Ajouter une tâche</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{ form_start(tacheForm, {'attr': {'id': 'taskForm'}})}}
+                    <div class="mb-3">
+                        {{ form_label(tacheForm.titre, 'Titre de la tâche', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(tacheForm.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Développer la page d\'accueil', 'required': true}})}}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_label(tacheForm.description, 'Description', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(tacheForm.description, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Description détaillée...'}})}}
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form_label(tacheForm.date_limite, 'Date limite', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                            {{ form_widget(tacheForm.date_limite, {'attr': {'class': 'form-control'}})}}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(tacheForm.responsable, 'Responsable', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                            {{ form_widget(tacheForm.responsable, {'attr': {'class': 'form-control'}})}}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form_label(tacheForm.statut, 'Statut initial', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(tacheForm.statut, {'attr': {'class': 'form-control'}})}}
+                    </div>
+                {{ form_end(tacheForm) }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="submitTaskForm()">Ajouter la tâche</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-modern {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.card-header-modern {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header-modern h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-body-modern {
+    padding: 1.5rem;
+}
+
+.progress-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.team-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.team-member-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.team-member-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.team-member-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.team-member-avatar-sm {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 50%;
+    color: white;
+}
+
+.team-member-details {
+    flex: 1;
+}
+
+.team-member-name {
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.team-member-role {
+    font-size: 0.85rem;
+    color: var(--color-gray);
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.task-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+    border-left: 4px solid;
+    transition: var(--transition);
+}
+
+.task-card[data-status="À faire"] { border-left-color: var(--color-warning); }
+.task-card[data-status="En cours"] { border-left-color: var(--color-primary); }
+.task-card[data-status="Terminée"] { border-left-color: var(--color-success); }
+
+.task-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.task-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.task-title h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.task-description {
+    color: var(--color-gray);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--color-gray);
+}
+
+.task-assignee i, .task-deadline i {
+    margin-right: 0.25rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+</style>
+
+<script>
+function submitMemberForm() {
+    const membre = document.querySelector('#memberForm select[name="membre_equipe[membre]"]');
+    const role = document.querySelector('#memberForm input[name="membre_equipe[role_equipe]"]');
+    
+    if (!membre.value) {
+        showToast('Veuillez sélectionner un membre', 'error');
+        membre.classList.add('is-invalid');
+        return;
+    }
+    
+    if (!role.value.trim()) {
+        showToast('Veuillez entrer un rôle', 'error');
+        role.classList.add('is-invalid');
+        return;
+    }
+    
+    document.getElementById('memberForm').submit();
+}
+
+function submitTaskForm() {
+    const titre = document.querySelector('#taskForm input[name="tache[titre]"]');
+    
+    if (!titre.value.trim()) {
+        showToast('Le titre de la tâche est obligatoire', 'error');
+        titre.classList.add('is-invalid');
+        return;
+    }
+    
+    document.getElementById('taskForm').submit();
+}
+
+// Remove invalid class on input
+document.querySelectorAll('#memberForm select, #memberForm input, #taskForm input').forEach(field => {
+    field.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+</script>
+{% endblock %}

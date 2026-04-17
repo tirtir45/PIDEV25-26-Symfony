@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 40px; }
+        .header { text-align: center; border-bottom: 2px solid #0a2e4c; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { color: #0a2e4c; font-size: 32px; font-weight: bold; text-transform: uppercase; }
+        .receipt-title { font-size: 24px; color: #666; margin-top: 10px; }
+        .info-grid { display: block; margin-bottom: 40px; }
+        .info-block { margin-bottom: 20px; }
+        .info-label { font-weight: bold; color: #0a2e4c; width: 150px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        th { background: #0a2e4c; color: #fff; text-align: left; padding: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .total-row td { font-weight: bold; font-size: 18px; border-top: 2px solid #0a2e4c; color: #0a2e4c; }
+        .footer { text-align: center; font-size: 12px; color: #999; margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">StartupHub</div>
+        <div class="receipt-title">Reçu de Commande</div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-block">
+            <span class="info-label">Référence :</span> #{{ order.idCommande }}
+        </div>
+        <div class="info-block">
+            <span class="info-label">Date :</span> {{ order.dateCreation|date('d/m/Y H:i') }}
+        </div>
+        <div class="info-block">
+            <span class="info-label">Client :</span> {{ order.idEntrepreneur.nom }}
+        </div>
+        <div class="info-block">
+            <span class="info-label">Email :</span> {{ order.idEntrepreneur.email }}
+        </div>
+        <div class="info-block">
+            <span class="info-label">Adresse :</span> {{ order.adresseLivraison }}, {{ order.codePostal }} {{ order.villeLivraison }}
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Ressource</th>
+                <th>Quantité</th>
+                <th>Prix Unitaire</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+                <tr>
+                    <td>{{ resource_names[line.id_ressource.id_ressource] }}</td>
+                    <td>{{ line.quantite }}</td>
+                    <td>{{ (line.prix_ligne / line.quantite)|number_format(2, '.', '') }} DT</td>
+                    <td>{{ line.prix_ligne }} DT</td>
+                </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">Total Global (TTC) :</td>
+                <td>{{ order.totalGlobal }} DT</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Merci pour votre confiance !</p>
+        <p>StartupHub TN - 123 Rue de l'Innovation, Tunis, Tunisie</p>
+    </div>
+</body>
+</html>

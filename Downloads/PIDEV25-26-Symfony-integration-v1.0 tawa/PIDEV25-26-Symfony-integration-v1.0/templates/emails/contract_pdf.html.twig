@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.5; padding: 50px; text-align: justify; }
+        .header { text-align: center; margin-bottom: 50px; }
+        .title { font-size: 22px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; }
+        .clause-title { font-weight: bold; margin-top: 25px; display: block; }
+        .party-info { margin-bottom: 20px; }
+        .signature-section { margin-top: 80px; width: 100%; }
+        .signature-box { width: 45%; display: inline-block; vertical-align: top; }
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 10px; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">CONTRAT DE MISE À DISPOSITION D'ESPACE</div>
+        <p>Référence Contrat : #CTR-{{ order.idCommande }}-{{ resource.id_ressource }}</p>
+    </div>
+
+    <p>Le présent contrat est conclu entre :</p>
+    
+    <div class="party-info">
+        <strong>LE PRESTATAIRE :</strong> {{ resource.id_fournisseur.nom }}<br>
+        Désigné ci-après "Le Fournisseur".
+    </div>
+
+    <div class="party-info">
+        <strong>L'UTILISATEUR :</strong> {{ order.idEntrepreneur.nom }}<br>
+        Désigné ci-après "L'Entrepreneur".
+    </div>
+
+    <span class="clause-title">ARTICLE 1 : OBJET DU CONTRAT</span>
+    <p>Le Fournisseur met à la disposition de l'Entrepreneur l'espace suivant : <strong>{{ resource.nom }}</strong>, situé à l'adresse du Fournisseur.</p>
+
+    <span class="clause-title">ARTICLE 2 : DURÉE ET PÉRIODE</span>
+    <p>La mise à disposition est prévue pour la période allant du <strong>{{ line.date_deb|date('d/m/Y') }}</strong> au <strong>{{ line.date_fin|date('d/m/Y') }}</strong>.</p>
+
+    <span class="clause-title">ARTICLE 3 : CONDITIONS FINANCIÈRES</span>
+    <p>Le montant total de la prestation est fixé à <strong>{{ line.prix_ligne }} DT</strong> Toutes Taxes Comprises. Le règlement s'effectue selon les modalités prévues sur la plateforme StartupHub.</p>
+
+    <span class="clause-title">ARTICLE 4 : ENGAGEMENTS</span>
+    <p>L'Entrepreneur s'engage à utiliser l'espace en "bon père de famille" et à respecter le règlement intérieur du site. Toute dégradation sera à la charge exclusive de l'Entrepreneur.</p>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <strong>Pour le Fournisseur :</strong>
+            <br><br><br><br>
+            (Signature précédée de la mention "Lu et approuvé")
+        </div>
+        <div class="signature-box" style="float: right;">
+            <strong>Pour l'Entrepreneur :</strong>
+            <br><br><br><br>
+            (Signature précédée de la mention "Lu et approuvé")
+        </div>
+    </div>
+
+    <div class="footer">
+        Généré automatiquement par StartupHub le {{ "now"|date('d/m/Y à H:i') }}
+    </div>
+</body>
+</html>

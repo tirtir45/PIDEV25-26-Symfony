@@ -1,0 +1,123 @@
+{# templates/profil/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - StartHub{% endblock %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <!-- Header with Profile Summary -->
+    <div class="header mb-4">
+        <div>
+            <h1>Mon Profil</h1>
+            <div class="page-subtitle">Gérez vos informations personnelles et professionnelles</div>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Sidebar Profile Card -->
+        <div class="col-lg-4">
+            <div class="card-modern text-center p-4 h-100">
+                <div class="position-relative d-inline-block mb-3">
+                    <div class="avatar-large" style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: var(--primary);">
+                        {% if user.photo %}
+                            <img src="{{ asset(user.photo) }}" alt="{{ user.nom }}" style="width:100%; height:100%; object-fit:cover;">
+                        {% else %}
+                            <div style="font-size: 40px; color: white; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                {{ user.nom|slice(0, 2)|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <h3 class="fw-bold text-main mb-1">{{ user.nom }}</h3>
+                <div class="badge bg-primary-subtle text-primary rounded-pill px-3 mb-3">
+                    {{ user.role ? user.role.nomRole : 'Utilisateur' }}
+                </div>
+                
+                <p class="text-muted small mb-4">
+                    {{ user.bio ?? 'Aucune bio renseignée.' }}
+                </p>
+
+                <div class="p-3 rounded-4 bg-light text-start mb-4">
+                    <div class="mb-2">
+                        <label class="small text-muted d-block">Email</label>
+                        <span class="text-main">{{ user.email }}</span>
+                    </div>
+                    <div class="mb-0">
+                        <label class="small text-muted d-block">Téléphone</label>
+                        <span class="text-main">{{ user.telephone ?? '—' }}</span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button onclick="document.getElementById('edit-section').scrollIntoView({behavior:'smooth'})" class="btn btn-primary">
+                        <i class="bi bi-pencil-square me-2"></i> Modifier mon profil
+                    </button>
+                    
+                    <form method="POST" action="{{ path('app_profile') }}" onsubmit="return confirm('Supprimer définitivement votre compte ? Cette action est irréversible.')">
+                        <input type="hidden" name="action" value="delete">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-person-dash me-2"></i> Supprimer le compte
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <!-- Edit Section -->
+            <div class="card-modern" id="edit-section">
+                <div class="card-header-modern border-bottom p-4">
+                    <h4 class="mb-0">Détails du Compte</h4>
+                </div>
+                <div class="card-body-modern p-4">
+                    <form method="POST" action="{{ path('app_profile') }}" class="row g-3" enctype="multipart/form-data">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Nom Complet</label>
+                            <input type="text" name="nom" class="form-control {{ errors.nom is defined ? 'is-invalid' : '' }}" value="{{ user.nom }}" placeholder="Jean Dupont" required>
+                            {% if errors.nom is defined %}<div class="invalid-feedback">{{ errors.nom }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Adresse Email</label>
+                            <input type="email" name="email" class="form-control {{ errors.email is defined ? 'is-invalid' : '' }}" value="{{ user.email }}" placeholder="jean@example.com" required>
+                            {% if errors.email is defined %}<div class="invalid-feedback">{{ errors.email }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">N° Téléphone</label>
+                            <input type="tel" name="telephone" class="form-control {{ errors.telephone is defined ? 'is-invalid' : '' }}" value="{{ user.telephone ?? '' }}" placeholder="+216 ...">
+                            {% if errors.telephone is defined %}<div class="invalid-feedback">{{ errors.telephone }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Photo de Profil</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*">
+                            <div class="form-text mt-1 small">Laissez vide pour conserver la photo actuelle.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-muted small fw-bold">Biographie</label>
+                            <textarea name="bio" class="form-control {{ errors.bio is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Parlez-nous de vous...">{{ user.bio ?? '' }}</textarea>
+                            {% if errors.bio is defined %}<div class="invalid-feedback">{{ errors.bio }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label text-muted small fw-bold">Compétences</label>
+                            <textarea name="competences" class="form-control {{ errors.competences is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Séparées par des virgules...">{{ user.competences ?? '' }}</textarea>
+                            {% if errors.competences is defined %}<div class="invalid-feedback">{{ errors.competences }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12 text-end mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save2 me-2"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
