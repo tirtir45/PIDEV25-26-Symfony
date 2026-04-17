@@ -5,7 +5,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# Assurez-vous que votre CSS est bien inclus #}
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 {% endblock %}
 
@@ -47,8 +46,6 @@
             </h6>
             
             <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
-                {# ... Les détails de la publication ici ... #}
-                {# Pas de changement dans cette partie car on n'utilise que l'objet 'publication' #}
                 <div style="display: flex; justify-content: space-between;">
                     <span style="color: #64748b; font-weight: 600;">Département</span>
                     <span style="font-weight: 700;">{{ publication.departement }}</span>
@@ -80,19 +77,14 @@
         <div style="flex: 2; min-width: 400px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                 <h6 style="color: #4a3068; font-weight: 700; margin: 0; font-size: 16px;">
-                    {# CORRECTION ICI : publication.demande_emplois #}
                     👥 Candidatures reçues ({{ publication.demande_emplois|length }})
                 </h6>
-                
-                {# Le bouton "Ajouter une candidature" pour l'admin (pointe vers le contrôleur Demande_emploi) #}
-                {# On passe l'ID de la publication pour pré-remplir le formulaire #}
                 <a href="{{ path('app_demande_emploi_new', {'publication_id': publication.getPublication_id()}) }}" class="btn-pink"
                    style="text-decoration:none; font-size:11px; padding:6px 14px; border-radius:8px;">
                     ＋ Ajouter une candidature
                 </a>
             </div>
 
-            {# CORRECTION ICI : publication.demande_emplois #}
             {% if publication.demande_emplois is empty %}
                 <div style="text-align: center; padding: 50px; background: white; border-radius: 16px;
                             border: 1px solid #ead5f0; color: #a78bca;">
@@ -111,7 +103,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {# CORRECTION ICI : la boucle et les accès aux propriétés #}
                             {% for demande in publication.demande_emplois %}
                                 <tr>
                                     <td>
@@ -123,13 +114,20 @@
                                         <span class="badge badge-{{ demande.getStatutDemande()|lower|replace({' ': '-'}) }}">{{ demande.getStatutDemande() }}</span>
                                     </td>
                                     <td>
-                                        {# Lien pour voir le CV (si cv_url est juste le nom du fichier) #}
-                                        {% if demande.getCvUrl() %}
-                                            <a href="{{ asset('uploads/cv/' ~ demande.getCvUrl()) }}" target="_blank" style="color: #A155B9; font-weight: 600; text-decoration: none;">Voir CV</a>
-                                        {% endif %}
-                                        {# Lien pour éditer la candidature #}
-                                        <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" style="margin-left: 10px; color: #4338ca; font-weight: 600; text-decoration: none;">Modifier</a>
-                                        <a href="{{ path('app_entretien_planifier', {'id': demande.getDemande_id()}) }}" style="margin-left: 10px; color: #047857; font-weight: 600; text-decoration: none;">Planifier entretien</a>
+                                        {# === BLOC D'ACTIONS AVEC LES CORRECTIONS === #}
+                                        <div style="display:flex; align-items:center; gap:12px; font-size: 13px;">
+                                            {# Correction 1 : Utiliser vich_uploader_asset pour le CV #}
+                                            {% if demande.getCvUrl() %}
+                                                <a href="{{ vich_uploader_asset(demande, 'cvFile') }}" target="_blank" style="color: #A155B9; font-weight: 600; text-decoration: none;">Voir CV</a>
+                                            {% else %}
+                                                <span style="color:#9ca3af; cursor:not-allowed;">Pas de CV</span>
+                                            {% endif %}
+                                            
+                                            <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" style="color: #4338ca; font-weight: 600; text-decoration: none;">Modifier</a>
+                                            
+                                            {# Correction 2 : Le nom de cette route doit exister dans un contrôleur #}
+                                            <a href="{{ path('app_entretien_planifier', {'id': demande.getDemande_id()}) }}" style="color: #047857; font-weight: 600; text-decoration: none;">Planifier entretien</a>
+                                        </div>
                                     </td>
                                 </tr>
                             {% endfor %}

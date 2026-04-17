@@ -9,7 +9,6 @@
     <header class="form-header">
         <div>
             <h1>Modifier la Candidature</h1>
-            {# CORRECTION : Utilisation des propriétés snake_case #}
             <p>Pour l'offre : {{ demande.getPublication().titre }}</p>
         </div>
         <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="btn-outline">
@@ -18,7 +17,6 @@
     </header>
 
     <main class="form-card" style="max-width: 700px;">
-        {# CORRECTION : Logique de verrouillage basée sur statut_demande #}
         {% set isLocked = demande.getStatutDemande() != 'En attente' %}
 
         {% if isLocked %}
@@ -27,7 +25,7 @@
             </div>
         {% endif %}
 
-        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+        {{ form_start(form) }}
 
         <div class="form-grid">
             <label class="form-label">Candidat</label>
@@ -35,15 +33,11 @@
                 <input type="text" value="{{ demande.getCandidat().nom ?? 'N/A' }}" disabled class="form-control-disabled">
             </div>
 
-            <label class="form-label">CV (nom du fichier PDF) *</label>
-            <div>
-                {{ form_widget(form.cvUrl, {'attr': {'disabled': isLocked}}) }}
-                {{ form_errors(form.cvUrl) }}
-                {% if demande.getCvUrl() %}
-                    <div style="margin-top:6px; font-size:12px; color:#64748b;">Fichier actuel : {{ demande.getCvUrl() }}</div>
-                {% endif %}
-            </div>
-
+            {# --- BLOC CORRIGÉ POUR LE CV --- #}
+            {# On remplace tout l'ancien bloc par cette seule ligne, beaucoup plus simple et plus puissante. #}
+            {{ form_row(form.cvFile) }}
+            {# ------------------------------- #}
+            
             <label class="form-label">Lettre de motivation *</label>
             <div>
                 {{ form_widget(form.lettreMotivation, {'attr': {'rows': 5, 'disabled': isLocked}}) }}
@@ -52,8 +46,6 @@
             
             <label class="form-label">Statut *</label>
             <div>
-                {# Si le statut est autre que 'En attente', le champ est désactivé (l'admin ne peut plus le changer) #}
-                {# Si vous voulez que l'admin puisse changer le statut, enlevez l'attribut 'disabled' ici #}
                 {{ form_widget(form.statutDemande, {'attr': {'disabled': isLocked }}) }}
                 {{ form_errors(form.statutDemande) }}
             </div>

@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Reclamation_commentaires;
 
@@ -16,9 +16,9 @@ class Reclamations
     #[ORM\Column(type: "integer")]
     private int $id_reclamation;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "reclamationss")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "reclamationss")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "string", length: 150)]
     private string $sujet;

@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Demandes_verification
@@ -14,9 +14,9 @@ class Demandes_verification
     #[ORM\Column(type: "integer")]
     private int $id_demande;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "demandes_verifications")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "demandes_verifications")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "string", length: 50)]
     private string $type_role;
@@ -36,9 +36,9 @@ class Demandes_verification
     #[ORM\Column(type: "datetime")]
     private \DateTimeInterface $date_traitement;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "demandes_verifications")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "demandes_verifications")]
     #[ORM\JoinColumn(name: 'id_admin_traitant', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_admin_traitant;
+    private Utilisateur $id_admin_traitant;
 
     #[ORM\Column(type: "text")]
     private string $commentaire_admin;

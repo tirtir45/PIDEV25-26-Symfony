@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Historique_connexions
@@ -14,9 +14,9 @@ class Historique_connexions
     #[ORM\Column(type: "integer")]
     private int $id_historique;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "historique_connexionss")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "historique_connexionss")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "string", length: 45)]
     private string $adresse_ip;

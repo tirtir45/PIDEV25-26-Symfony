@@ -20,9 +20,9 @@ class Membres_equipe
     #[ORM\JoinColumn(name: 'id_projet', referencedColumnName: 'id_projet', onDelete: 'CASCADE')]
     private Projets $id_projet;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "membres_equipes")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "membres_equipes")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "string", length: 100)]
     private string $role_equipe;

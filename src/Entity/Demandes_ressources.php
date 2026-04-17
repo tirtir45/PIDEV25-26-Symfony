@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Demandes_ressources
@@ -18,9 +18,9 @@ class Demandes_ressources
     #[ORM\JoinColumn(name: 'id_ressource', referencedColumnName: 'id_ressource', onDelete: 'CASCADE')]
     private Ressources $id_ressource;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "demandes_ressourcess")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "demandes_ressourcess")]
     #[ORM\JoinColumn(name: 'id_entrepreneur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_entrepreneur;
+    private Utilisateur $id_entrepreneur;
 
     #[ORM\Column(type: "string")]
     private string $statut;

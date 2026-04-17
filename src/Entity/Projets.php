@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\User_stories;
 
@@ -16,9 +16,9 @@ class Projets
     #[ORM\Column(type: "integer")]
     private int $id_projet;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "projetss")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "projetss")]
     #[ORM\JoinColumn(name: 'id_entrepreneur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_entrepreneur;
+    private Utilisateur $id_entrepreneur;
 
     #[ORM\Column(type: "string", length: 150)]
     private string $titre;

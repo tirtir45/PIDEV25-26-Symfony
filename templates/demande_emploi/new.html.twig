@@ -11,14 +11,13 @@
             <h1>Ajouter une Candidature</h1>
             <p>Ajouter manuellement une candidature pour une offre</p>
         </div>
-        {# Redirige vers la liste des publications de l'admin #}
         <a href="{{ path('app_admin_publication_index') }}" class="btn-outline">
             ← Retour
         </a>
     </header>
 
     <main class="form-card" style="max-width: 700px;">
-        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+        {{ form_start(form) }}
         <div class="form-title">
             <span class="form-title-icon">▎</span>
             <span class="form-title-text">Nouvelle Candidature</span>
@@ -32,48 +31,23 @@
         {% endif %}
 
         <div class="form-grid">
-            {# CORRECTION : les noms de champs du formulaire sont en snake_case #}
-            <label class="form-label">Offre concernée *</label>
-            <div>
-                {{ form_widget(form.publication) }}
-                {{ form_errors(form.publication) }}
-            </div>
+            {# Utilisation de form_row pour simplifier et standardiser #}
+            {{ form_row(form.publication) }}
 
-            <label class="form-label">Candidat *</label>
-            <div>
-                {{ form_widget(form.candidat) }}
-                {{ form_errors(form.candidat) }}
-            </div>
+            {{ form_row(form.candidat) }}
 
-            <label class="form-label">CV (nom du fichier PDF) *</label>
-            <div>
-                {{ form_widget(form.cvUrl) }}
-                {{ form_errors(form.cvUrl) }}
-            </div>
+            {# --- BLOC CORRIGÉ POUR LE CV --- #}
+            {# On remplace le champ cvUrl par cvFile #}
+            {{ form_row(form.cvFile) }}
+            {# ------------------------------- #}
 
-            <label class="form-label">Lettre de motivation *</label>
-            <div style="grid-column: span 1;">
-                {{ form_widget(form.lettreMotivation) }}
-                {{ form_errors(form.lettreMotivation) }}
-            </div>
+            {{ form_row(form.lettreMotivation) }}
 
-            <label class="form-label">Motivation ciblée</label>
-            <div style="grid-column: span 1;">
-                {{ form_widget(form.motivationCiblee) }}
-                {{ form_errors(form.motivationCiblee) }}
-            </div>
+            {{ form_row(form.motivationCiblee) }}
 
-            <label class="form-label">Statut *</label>
-            <div>
-                {{ form_widget(form.statutDemande) }}
-                {{ form_errors(form.statutDemande) }}
-            </div>
+            {{ form_row(form.statutDemande) }}
 
-            <label class="form-label">Date de candidature *</label>
-            <div>
-                {{ form_widget(form.dateDemande) }}
-                {{ form_errors(form.dateDemande) }}
-            </div>
+            {{ form_row(form.dateDemande) }}
         </div>
 
         <div class="form-divider"></div>

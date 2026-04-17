@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Lignes_commande;
 
@@ -16,9 +16,9 @@ class Commandes
     #[ORM\Column(type: "integer")]
     private int $id_commande;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "commandess")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "commandess")]
     #[ORM\JoinColumn(name: 'id_entrepreneur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_entrepreneur;
+    private Utilisateur $id_entrepreneur;
 
     #[ORM\Column(type: "string", length: 20)]
     private string $statut;

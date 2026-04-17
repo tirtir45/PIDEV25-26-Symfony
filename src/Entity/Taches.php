@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Taches
@@ -22,9 +22,9 @@ class Taches
     #[ORM\JoinColumn(name: 'id_sprint', referencedColumnName: 'id_sprint', onDelete: 'CASCADE')]
     private Sprints $id_sprint;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "tachess")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "tachess")]
     #[ORM\JoinColumn(name: 'id_responsable', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_responsable;
+    private Utilisateur $id_responsable;
 
     #[ORM\Column(type: "string", length: 150)]
     private string $titre;

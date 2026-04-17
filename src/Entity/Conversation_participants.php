@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Conversation_participants
@@ -18,9 +18,9 @@ class Conversation_participants
     #[ORM\JoinColumn(name: 'id_conversation', referencedColumnName: 'id_conversation', onDelete: 'CASCADE')]
     private Conversations $id_conversation;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "conversation_participantss")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "conversation_participantss")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "datetime")]
     private \DateTimeInterface $date_ajout;

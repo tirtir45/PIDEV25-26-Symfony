@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Reclamation_commentaires
@@ -18,9 +18,9 @@ class Reclamation_commentaires
     #[ORM\JoinColumn(name: 'id_reclamation', referencedColumnName: 'id_reclamation', onDelete: 'CASCADE')]
     private Reclamations $id_reclamation;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "reclamation_commentairess")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "reclamation_commentairess")]
     #[ORM\JoinColumn(name: 'id_auteur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_auteur;
+    private Utilisateur $id_auteur;
 
     #[ORM\Column(type: "text")]
     private string $commentaire;

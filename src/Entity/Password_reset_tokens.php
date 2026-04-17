@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Password_reset_tokens
@@ -14,9 +14,9 @@ class Password_reset_tokens
     #[ORM\Column(type: "integer")]
     private int $id;
 
-        #[ORM\ManyToOne(targetEntity: Utilisateurs::class, inversedBy: "password_reset_tokenss")]
+        #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: "password_reset_tokenss")]
     #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', onDelete: 'CASCADE')]
-    private Utilisateurs $id_utilisateur;
+    private Utilisateur $id_utilisateur;
 
     #[ORM\Column(type: "string", length: 255)]
     private string $token;

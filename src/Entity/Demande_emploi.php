@@ -1,13 +1,22 @@
 <?php
+// src/Entity/Demande_emploi.php
 
 namespace App\Entity;
 
+// Imports nécessaires pour le fonctionnement
 use App\Repository\Demande_emploiRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Entity\Utilisateur;
 
+// Imports ajoutés pour VichUploaderBundle
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+
+/**
+ * Cette annotation active le bundle VichUploader sur cette entité.
+ */
+#[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: Demande_emploiRepository::class)]
 class Demande_emploi
 {
@@ -26,17 +35,39 @@ class Demande_emploi
     #[Assert\NotNull(message: "Le candidat est obligatoire.")]
     private ?Utilisateur $candidat = null;
 
+
+    // --- SECTION MODIFIÉE POUR L'UPLOAD DE CV ---
+
     /**
-     * Nom du fichier CV (ex: 'cv-jean-dupont.pdf').
-     * Stocké tel quel en base (pas de déplacement de fichier par le back-end pour l'instant).
+     * @var File|null
+     * Cette propriété n'est pas mappée en base de données.
+     * Elle sert uniquement à recevoir le fichier uploadé depuis le formulaire.
+     * L'annotation @Assert\File valide le fichier uploadé (taille, type).
+     */
+    #[Vich\UploadableField(mapping: 'cv_files', fileNameProperty: 'cvUrl')]
+    #[Assert\File(
+        maxSize: '2M',
+        mimeTypes: ['application/pdf', 'application/x-pdf'],
+        mimeTypesMessage: 'Veuillez uploader un fichier PDF valide (taille max 2Mo).'
+    )]
+    private ?File $cvFile = null;
+
+    /**
+     * Votre propriété existante.
+     * Le bundle va maintenant l'utiliser pour stocker le nom unique du fichier.
      */
     #[ORM\Column(name: 'cv_url', type: Types::STRING, length: 255, nullable: true)]
-    #[Assert\Length(max: 255, maxMessage: "Le nom du fichier CV ne peut pas dépasser 255 caractères.")]
-    #[Assert\Regex(
-        pattern: '/\.pdf$/i',
-        message: "Le nom du fichier CV doit se terminer par .pdf"
-    )]
     private ?string $cvUrl = null;
+
+    /**
+     * @var \DateTimeImmutable|null
+     * Propriété technique requise par VichUploaderBundle pour détecter les changements de fichier.
+     */
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
+
+    // --- FIN DE LA SECTION MODIFIÉE ---
+
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: "La lettre de motivation est obligatoire.")]
@@ -59,87 +90,57 @@ class Demande_emploi
         $this->statutDemande = 'En attente';
     }
 
-    // --- GETTERS / SETTERS ---
 
-    public function getDemande_id(): ?int
+    // --- GETTERS & SETTERS ---
+
+    // Getters/Setters que vous aviez déjà (inchangés)
+    public function getDemande_id(): ?int { return $this->demande_id; }
+    public function getPublication(): ?Publication { return $this->publication; }
+    public function setPublication(?Publication $publication): self { $this->publication = $publication; return $this; }
+    public function getCandidat(): ?Utilisateur { return $this->candidat; }
+    public function setCandidat(?Utilisateur $candidat): self { $this->candidat = $candidat; return $this; }
+    public function getLettreMotivation(): ?string { return $this->lettreMotivation; }
+    public function setLettreMotivation(string $lettreMotivation): self { $this->lettreMotivation = $lettreMotivation; return $this; }
+    public function getMotivationCiblee(): ?string { return $this->motivationCiblee; }
+    public function setMotivationCiblee(?string $motivationCiblee): self { $this->motivationCiblee = $motivationCiblee; return $this; }
+    public function getStatutDemande(): ?string { return $this->statutDemande; }
+    public function setStatutDemande(string $statutDemande): self { $this->statutDemande = $statutDemande; return $this; }
+    public function getDateDemande(): ?\DateTimeInterface { return $this->dateDemande; }
+    public function setDateDemande(\DateTimeInterface $dateDemande): self { $this->dateDemande = $dateDemande; return $this; }
+    
+    // Getters/Setters pour votre propriété 'cvUrl' (inchangés)
+    public function getCvUrl(): ?string { return $this->cvUrl; }
+    public function setCvUrl(?string $cvUrl): self { $this->cvUrl = $cvUrl; return $this; }
+
+
+    // NOUVEAUX Getters/Setters ajoutés pour le bundle VichUploader
+
+    /**
+     * @param File|\Symfony\Component\HttpFoundation\File\UploadedFile|null $cvFile
+     */
+    public function setCvFile(?File $cvFile = null): void
     {
-        return $this->demande_id;
+        $this->cvFile = $cvFile;
+
+        if (null !== $cvFile) {
+            // Un changement doit être détecté par Doctrine pour que les événements du bundle se déclenchent.
+            // La mise à jour de ce champ force la mise à jour de l'entité.
+            $this->updatedAt = new \DateTimeImmutable();
+        }
     }
 
-    public function getPublication(): ?Publication
+    public function getCvFile(): ?File
     {
-        return $this->publication;
+        return $this->cvFile;
     }
 
-    public function setPublication(?Publication $publication): self
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): void
     {
-        $this->publication = $publication;
-        return $this;
+        $this->updatedAt = $updatedAt;
     }
 
-    public function getCandidat(): ?Utilisateur
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
-        return $this->candidat;
-    }
-
-    public function setCandidat(?Utilisateur $candidat): self
-    {
-        $this->candidat = $candidat;
-        return $this;
-    }
-
-    public function getCvUrl(): ?string
-    {
-        return $this->cvUrl;
-    }
-
-    public function setCvUrl(?string $cvUrl): self
-    {
-        $this->cvUrl = $cvUrl;
-        return $this;
-    }
-
-    public function getLettreMotivation(): ?string
-    {
-        return $this->lettreMotivation;
-    }
-
-    public function setLettreMotivation(string $lettreMotivation): self
-    {
-        $this->lettreMotivation = $lettreMotivation;
-        return $this;
-    }
-
-    public function getMotivationCiblee(): ?string
-    {
-        return $this->motivationCiblee;
-    }
-
-    public function setMotivationCiblee(?string $motivationCiblee): self
-    {
-        $this->motivationCiblee = $motivationCiblee;
-        return $this;
-    }
-
-    public function getStatutDemande(): ?string
-    {
-        return $this->statutDemande;
-    }
-
-    public function setStatutDemande(string $statutDemande): self
-    {
-        $this->statutDemande = $statutDemande;
-        return $this;
-    }
-
-    public function getDateDemande(): ?\DateTimeInterface
-    {
-        return $this->dateDemande;
-    }
-
-    public function setDateDemande(\DateTimeInterface $dateDemande): self
-    {
-        $this->dateDemande = $dateDemande;
-        return $this;
+        return $this->updatedAt;
     }
 }

@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 use Doctrine\Common\Collections\Collection;
-use App\Entity\Utilisateurs;
+use App\Entity\Utilisateur;
 
 #[ORM\Entity]
 class Roles
@@ -38,7 +38,7 @@ class Roles
         $this->nom_role = $value;
     }
 
-    #[ORM\OneToMany(mappedBy: "id_role", targetEntity: Utilisateurs::class)]
+    #[ORM\OneToMany(mappedBy: "id_role", targetEntity: Utilisateur::class)]
     private Collection $utilisateurss;
 
         public function getUtilisateurss(): Collection
@@ -46,7 +46,7 @@ class Roles
             return $this->utilisateurss;
         }
     
-        public function addUtilisateurs(Utilisateurs $utilisateurs): self
+        public function addUtilisateurs(Utilisateur $utilisateurs): self
         {
             if (!$this->utilisateurss->contains($utilisateurs)) {
                 $this->utilisateurss[] = $utilisateurs;
@@ -56,7 +56,7 @@ class Roles
             return $this;
         }
     
-        public function removeUtilisateurs(Utilisateurs $utilisateurs): self
+        public function removeUtilisateurs(Utilisateur $utilisateurs): self
         {
             if ($this->utilisateurss->removeElement($utilisateurs)) {
                 // set the owning side to null (unless already changed)
