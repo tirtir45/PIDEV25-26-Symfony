@@ -105,17 +105,28 @@ class UserEvenementController extends AbstractController
         ]);
     }
 
-    // ── QR verification (admin only) ─────────────────────────────────────────
+    // ── QR verification (admin only — friendly gate, no hard exception) ───────
     #[Route('/verify/{token}', name: 'user_reservation_verify', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function verify(string $token, ReservationRepository $repo): Response
     {
+        // Non-admin: show a friendly "admin required" page instead of a 403
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            return $this->render('user/verify.html.twig', [
+                'admin_required' => true,
+                'valid'          => false,
+                'reservation'    => null,
+                'evenement'      => null,
+                'utilisateur'    => null,
+            ]);
+        }
+
         $r = $repo->findOneBy(['tokenVerification' => $token]);
         return $this->render('user/verify.html.twig', [
-            'valid'       => $r !== null,
-            'reservation' => $r,
-            'evenement'   => $r?->getEvenement(),
-            'utilisateur' => $r?->getUtilisateur(),
+            'admin_required' => false,
+            'valid'          => $r !== null,
+            'reservation'    => $r,
+            'evenement'      => $r?->getEvenement(),
+            'utilisateur'    => $r?->getUtilisateur(),
         ]);
     }
 
