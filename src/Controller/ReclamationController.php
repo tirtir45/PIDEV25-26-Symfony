@@ -10,6 +10,7 @@ use App\Service\ReclamationAnalyzerService;
 use App\Service\TranslationService;
 use App\Service\ChatbotService;
 use App\Service\NotificationService;
+use App\Service\CaptchaService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,7 +28,8 @@ class ReclamationController extends AbstractController
         ReclamationAnalyzerService $analyzer,
         TranslationService $translator,
         ChatbotService $chatbot,
-        NotificationService $notifier
+        NotificationService $notifier,
+        CaptchaService $captcha
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
@@ -43,6 +45,9 @@ class ReclamationController extends AbstractController
 
             if (empty($sujet) || empty($description)) {
                 $error    = 'Veuillez remplir tous les champs.';
+                $showForm = true;
+            } elseif (!$captcha->verify($request->request->get('h-captcha-response', ''))) {
+                $error    = 'Veuillez valider le CAPTCHA.';
                 $showForm = true;
             } else {
                 $user = $userRepo->find($userId);
@@ -89,9 +94,10 @@ class ReclamationController extends AbstractController
         );
 
         return $this->render('reclamation/index.html.twig', [
-            'reclamations' => $reclamations,
-            'showForm'     => $showForm,
-            'error'        => $error,
+            'reclamations'   => $reclamations,
+            'showForm'       => $showForm,
+            'error'          => $error,
+            'captchaSiteKey' => $captcha->getSiteKey(),
         ]);
     }
 

@@ -18,7 +18,8 @@ class NotificationService
         private readonly MailerInterface         $mailer,
         private readonly UrlGeneratorInterface   $router,
         private readonly UtilisateursRepository  $userRepo,
-        private readonly string                  $mailerFrom = 'noreply@starthub.com'
+        private readonly string                  $mailerFrom = 'noreply@starthub.com',
+        private readonly string                  $mailerToOverride = ''
     ) {}
 
     /* ── Nouvelle réclamation ── */
@@ -104,6 +105,46 @@ class NotificationService
         );
     }
 
+    /* ── Compte activé/désactivé ── */
+    public function sendAccountStatusEmail(Utilisateurs $user, bool $isActive): void
+    {
+        $label = $isActive ? 'réactivé ✅' : 'suspendu ⚠️';
+        $color = $isActive ? '#16a34a' : '#dc2626';
+        $msg   = $isActive
+            ? 'Votre compte a été réactivé par l\'administrateur. Vous pouvez à nouveau vous connecter à StartHub.'
+            : 'Votre compte a été suspendu par l\'administrateur. Si vous pensez qu\'il s\'agit d\'une erreur, contactez le support.';
+
+        $this->sendMail(
+            $user->getEmail(),
+            "Compte {$label} — StartHub",
+            $this->emailLayout(
+                "Compte {$label}",
+                "Bonjour <strong>{$user->getNom()}</strong>,",
+                $msg,
+                'Accéder à StartHub',
+                'http://127.0.0.1:8000',
+                $color
+            )
+        );
+    }
+
+    /* ── Compte supprimé ── */
+    public function sendAccountDeletedEmail(Utilisateurs $user): void
+    {
+        $this->sendMail(
+            $user->getEmail(),
+            'Compte supprimé — StartHub',
+            $this->emailLayout(
+                'Compte supprimé',
+                "Bonjour <strong>{$user->getNom()}</strong>,",
+                'Votre compte StartHub a été supprimé par l\'administrateur. Toutes vos données ont été effacées. Si vous pensez qu\'il s\'agit d\'une erreur, contactez-nous.',
+                'Contacter le support',
+                'http://127.0.0.1:8000',
+                '#dc2626'
+            )
+        );
+    }
+
     /* ── Compter les non lues ── */
     public function countUnread(Utilisateurs $user): int
     {
@@ -144,16 +185,15 @@ class NotificationService
 
     private function sendMail(string $to, string $subject, string $html): void
     {
-        try {
-            $email = (new Email())
-                ->from($this->mailerFrom)
-                ->to($to)
-                ->subject($subject)
-                ->html($html);
-            $this->mailer->send($email);
-        } catch (\Throwable) {
-            // Ne pas bloquer si l'email échoue
-        }
+        // En dev, rediriger vers l'adresse de test si définie
+        $recipient = !empty($this->mailerToOverride) ? $this->mailerToOverride : $to;
+
+        $email = (new Email())
+            ->from($this->mailerFrom)
+            ->to($recipient)
+            ->subject($subject)
+            ->html($html);
+        $this->mailer->send($email);
     }
 
     private function getAdmins(): array
@@ -209,20 +249,20 @@ class NotificationService
     {
         return <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#F4F3FF;font-family:Inter,Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px;">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #EAE8F8;">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
   <tr><td style="background:{$color};padding:28px 32px;">
-    <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">StartHub</h1>
-    <p style="margin:6px 0 0;color:rgba(255,255,255,.8);font-size:13px;">{$title}</p>
+    <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;font-family:Arial,sans-serif;">StartHub</h1>
+    <p style="margin:6px 0 0;color:rgba(255,255,255,.9);font-size:14px;">{$title}</p>
   </td></tr>
-  <tr><td style="padding:32px;">
-    <p style="margin:0 0 16px;font-size:15px;color:#1a1040;">{$greeting}</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#374151;line-height:1.7;">{$body}</p>
-    <a href="{$btnUrl}" style="display:inline-block;background:{$color};color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">{$btnText}</a>
+  <tr><td style="padding:32px;background:#fff;">
+    <p style="margin:0 0 16px;font-size:15px;color:#1a1a1a;font-family:Arial,sans-serif;">{$greeting}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#444;line-height:1.7;font-family:Arial,sans-serif;">{$body}</p>
+    <a href="{$btnUrl}" style="display:inline-block;background:{$color};color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:700;font-family:Arial,sans-serif;">{$btnText}</a>
   </td></tr>
-  <tr><td style="padding:20px 32px;border-top:1px solid #EAE8F8;text-align:center;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;">© 2026 StartHub · Tous droits réservés</p>
+  <tr><td style="padding:16px 32px;border-top:1px solid #eee;text-align:center;background:#fff;">
+    <p style="margin:0;font-size:12px;color:#aaa;font-family:Arial,sans-serif;">© 2026 StartHub · Tous droits réservés</p>
   </td></tr>
 </table></td></tr></table>
 </body></html>

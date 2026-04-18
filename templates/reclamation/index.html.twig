@@ -48,6 +48,11 @@
                             <div class="invalid-feedback" id="description-error"></div>
                         </div>
 
+                        <div class="col-12">
+                            <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+                            <div class="h-captcha" data-sitekey="{{ captchaSiteKey }}"></div>
+                        </div>
+
                         <div class="col-12 d-flex gap-2 justify-content-end mt-4">
                             <a href="{{ path('reclamation_index') }}" class="btn btn-outline-secondary px-4">Annuler</a>
                             <button type="submit" class="btn btn-primary px-4">

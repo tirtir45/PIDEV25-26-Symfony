@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UtilisateursRepository;
 use App\Repository\RolesRepository;
+use App\Service\CaptchaService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class AuthController extends AbstractController
 {
     #[Route('/', name: 'app_login', methods: ['GET', 'POST'])]
-    public function login(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em): Response
+    public function login(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em, CaptchaService $captcha): Response
     {
         if ($request->getSession()->get('user_id')) {
             return $this->redirectByRole($request->getSession()->get('user_role'));
@@ -22,6 +23,13 @@ class AuthController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST')) {
+            // Vérification CAPTCHA
+            $captchaToken = $request->request->get('h-captcha-response', '');
+            if (!$captcha->verify($captchaToken)) {
+                $error = 'Veuillez valider le CAPTCHA.';
+                return $this->render('auth/login.html.twig', ['error' => $error, 'captchaSiteKey' => $captcha->getSiteKey()]);
+            }
+
             $email    = trim((string) $request->request->get('email', ''));
             $password = (string) $request->request->get('password', '');
 
@@ -56,16 +64,22 @@ class AuthController extends AbstractController
             }
         }
 
-        return $this->render('auth/login.html.twig', ['error' => $error]);
+        return $this->render('auth/login.html.twig', ['error' => $error, 'captchaSiteKey' => $captcha->getSiteKey()]);
     }
 
     #[Route('/inscription', name: 'app_register', methods: ['GET', 'POST'])]
-    public function register(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em, RolesRepository $roleRepo): Response
+    public function register(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em, RolesRepository $roleRepo, CaptchaService $captcha): Response
     {
         $roles = $roleRepo->findAll();
         $error = null;
 
         if ($request->isMethod('POST')) {
+            // Vérification CAPTCHA
+            $captchaToken = $request->request->get('h-captcha-response', '');
+            if (!$captcha->verify($captchaToken)) {
+                $error = 'Veuillez valider le CAPTCHA.';
+                return $this->render('auth/register.html.twig', ['error' => $error, 'roles' => $roles, 'captchaSiteKey' => $captcha->getSiteKey()]);
+            }
             $nom       = trim((string) $request->request->get('nom', ''));
             $email     = trim((string) $request->request->get('email', ''));
             $telephone = trim((string) $request->request->get('telephone', ''));
@@ -131,7 +145,7 @@ class AuthController extends AbstractController
             }
         }
 
-        return $this->render('auth/register.html.twig', ['error' => $error, 'roles' => $roles]);
+        return $this->render('auth/register.html.twig', ['error' => $error, 'roles' => $roles, 'captchaSiteKey' => $captcha->getSiteKey()]);
     }
 
     #[Route('/dashboard', name: 'app_dashboard')]

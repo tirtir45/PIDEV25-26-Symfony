@@ -285,8 +285,12 @@
                     {% for msg in messages %}
                         {% set isAdmin = msg.id_auteur.getId() == adminId %}
                         <div class="msg {{ isAdmin ? 'msg-right' : '' }}">
-                            <div class="msg-av {{ isAdmin ? 'av-admin' : 'av-user' }}">
-                                {{ msg.id_auteur.nom|slice(0,1)|upper }}
+                            <div class="msg-av {{ isAdmin ? 'av-admin' : 'av-user' }}" style="overflow:hidden;padding:0;">
+                                {% if msg.id_auteur.getPhoto() %}
+                                    <img src="{{ asset(msg.id_auteur.getPhoto()) }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                {% else %}
+                                    {{ msg.id_auteur.nom|slice(0,1)|upper }}
+                                {% endif %}
                             </div>
                             <div class="msg-inner">
                                 <div class="msg-who">

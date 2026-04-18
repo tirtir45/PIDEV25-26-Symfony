@@ -6,6 +6,7 @@ use App\Entity\Utilisateurs;
 use App\Entity\Roles;
 use App\Repository\UtilisateursRepository;
 use App\Repository\RolesRepository;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +34,9 @@ class AdminUserController extends AbstractController
         
         $qb = $userRepo->createQueryBuilder('u')
             ->leftJoin('u.role', 'r')
-            ->addSelect('r');
+            ->addSelect('r')
+            ->where('r.nomRole != :adminRole OR r.id IS NULL')
+            ->setParameter('adminRole', 'Administrateur');
 
         if ($search) {
             $qb->andWhere('u.nom LIKE :search OR u.email LIKE :search OR u.telephone LIKE :search')
@@ -57,10 +60,15 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/toggle-status', name: 'admin_user_toggle_status', methods: ['POST'])]
-    public function toggleStatus(Utilisateurs $user, EntityManagerInterface $em, Request $request): Response
+    public function toggleStatus(Utilisateurs $user, EntityManagerInterface $em, Request $request, NotificationService $notifier): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_login');
+        }
+
+        if ($user->getRole() && $user->getRole()->getNomRole() === 'Administrateur') {
+            $this->addFlash('error', 'Impossible de désactiver un compte Administrateur.');
+            return $this->redirectToRoute('admin_user_index');
         }
 
         $user->setActif(!$user->isActif());
@@ -69,26 +77,47 @@ class AdminUserController extends AbstractController
         $status = $user->isActif() ? 'activé' : 'désactivé';
         $this->addFlash('success', "Le compte de {$user->getNom()} a été {$status}.");
 
+        // Email à l'utilisateur
+        $notifier->sendAccountStatusEmail($user, $user->isActif());
+
         return $this->redirectToRoute('admin_user_index');
     }
 
     #[Route('/{id}/supprimer', name: 'admin_user_delete', methods: ['POST'])]
-    public function delete(Utilisateurs $user, EntityManagerInterface $em, Request $request): Response
+    public function delete(Utilisateurs $user, EntityManagerInterface $em, Request $request, NotificationService $notifier): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_login');
         }
 
-        // Prevent self-deletion
         if ($user->getId() === $request->getSession()->get('user_id')) {
             $this->addFlash('error', 'Vous ne pouvez pas supprimer votre propre compte.');
             return $this->redirectToRoute('admin_user_index');
         }
 
+        if ($user->getRole() && $user->getRole()->getNomRole() === 'Administrateur') {
+            $this->addFlash('error', 'Impossible de supprimer un compte Administrateur.');
+            return $this->redirectToRoute('admin_user_index');
+        }
+
+        // Email avant suppression
+        $notifier->sendAccountDeletedEmail($user);
+
+        $nom = $user->getNom();
+
+        // Supprimer les données liées
+        foreach ($em->getRepository(\App\Entity\Reclamations::class)->findBy(['utilisateur' => $user]) as $r) {
+            $em->remove($r);
+        }
+        foreach ($em->getRepository(\App\Entity\Notification::class)->findBy(['utilisateur' => $user]) as $n) {
+            $em->remove($n);
+        }
+        $em->flush();
+
         $em->remove($user);
         $em->flush();
 
-        $this->addFlash('success', "L'utilisateur {$user->getNom()} a été supprimé.");
+        $this->addFlash('success', "L'utilisateur {$nom} a été supprimé.");
 
         return $this->redirectToRoute('admin_user_index');
     }
