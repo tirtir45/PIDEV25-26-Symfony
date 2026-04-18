@@ -105,8 +105,9 @@ class UserEvenementController extends AbstractController
         ]);
     }
 
-    // ── QR verification ───────────────────────────────────────────────────────
+    // ── QR verification (admin only) ─────────────────────────────────────────
     #[Route('/verify/{token}', name: 'user_reservation_verify', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function verify(string $token, ReservationRepository $repo): Response
     {
         $r = $repo->findOneBy(['tokenVerification' => $token]);

@@ -123,6 +123,7 @@ class ReservationController extends AbstractController
         return $this->render('reservation/edit.html.twig', [
             'reservation' => $reservation,
             'form'        => $form->createView(),
+            'active'      => 'admin_res',
         ]);
     }
 

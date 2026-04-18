@@ -54,10 +54,17 @@
     </div>
 
     <!-- Utilisateur -->
-    <div style="margin-bottom:20px;">
+    <div style="margin-bottom:16px;">
         {{ form_label(form.utilisateur, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
         {{ form_widget(form.utilisateur, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
         {{ form_errors(form.utilisateur) }}
+    </div>
+
+    <!-- Statut paiement -->
+    <div style="margin-bottom:20px;">
+        {{ form_label(form.statutPaiement, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.statutPaiement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.statutPaiement) }}
     </div>
 
     <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
