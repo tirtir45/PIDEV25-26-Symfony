@@ -1,338 +1,364 @@
 {% extends 'base.html.twig' %}
-{% block title %}Réclamation #{{ reclamation.id }}{% endblock %}
+{% block title %}Ticket #{{ reclamation.id }}{% endblock %}
 
 {% block stylesheets %}
 <style>
-.recap-header {
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-    border-radius: 16px;
-    padding: 28px 32px;
-    color: white;
-    margin-bottom: 28px;
+* { box-sizing: border-box; }
+
+.ticket-page { display: flex; gap: 24px; align-items: flex-start; }
+
+/* ── Left panel ── */
+.ticket-left { flex: 1; min-width: 0; }
+
+/* Ticket header */
+.ticket-header {
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 12px; padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
 }
-.recap-header .badge-statut {
-    display: inline-block;
-    padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    backdrop-filter: blur(4px);
+.ticket-header-left { flex: 1; }
+.ticket-id { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.ticket-title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 8px; }
+.ticket-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ticket-meta span { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+.status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
 }
-.info-card {
-    background: #fff;
-    border-radius: 14px;
-    border: 1px solid #f0f0f5;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    padding: 24px;
-    height: 100%;
+.status-EN_ATTENTE { background: #fef3c7; color: #92400e; }
+.status-EN_COURS   { background: #dbeafe; color: #1e40af; }
+.status-RESOLU     { background: #d1fae5; color: #065f46; }
+.status-REJETE     { background: #fee2e2; color: #991b1b; }
+
+.statut-form { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.statut-form select {
+    border: 1px solid #e5e7eb; border-radius: 8px; padding: 7px 12px;
+    font-size: 13px; color: #374151; outline: none; background: #f9fafb; cursor: pointer;
 }
-.info-card .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #9ca3af;
-    margin-bottom: 8px;
+.statut-form select:focus { border-color: #8b5cf6; }
+.statut-form .btn-save {
+    background: #7c3aed; color: #fff; border: none;
+    border-radius: 8px; padding: 7px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background .2s;
 }
-.chat-card {
-    background: #fff;
-    border-radius: 14px;
-    border: 1px solid #f0f0f5;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    height: 560px;
+.statut-form .btn-save:hover { background: #6d28d9; }
+
+/* Conversation card */
+.conv-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;
 }
-.chat-header {
-    padding: 18px 24px;
-    border-bottom: 1px solid #f0f0f5;
-    font-weight: 600;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.conv-top {
+    padding: 14px 20px; border-bottom: 1px solid #f3f4f6;
+    display: flex; align-items: center; gap: 8px; background: #fafafa;
 }
-.chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    background: #fafafa;
+.conv-top .live { width: 8px; height: 8px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+.conv-top .conv-title { font-size: 14px; font-weight: 600; color: #111827; }
+.conv-top .conv-count { margin-left: auto; font-size: 12px; color: #9ca3af; }
+
+.conv-body {
+    padding: 24px 20px; min-height: 340px; max-height: 440px;
+    overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+    background: #f9fafb;
 }
-.chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
-.msg-bubble {
-    max-width: 70%;
-    display: flex;
-    flex-direction: column;
+.conv-body::-webkit-scrollbar { width: 4px; }
+.conv-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+/* Message */
+.msg { display: flex; gap: 12px; }
+.msg.msg-right { flex-direction: row-reverse; }
+
+.msg-av {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
 }
-.msg-bubble.me { align-self: flex-end; align-items: flex-end; }
-.msg-bubble.other { align-self: flex-start; align-items: flex-start; }
-.msg-bubble .bubble-meta {
-    font-size: 11px;
-    color: #9ca3af;
-    margin-bottom: 4px;
-}
-.msg-bubble .bubble-text {
-    padding: 12px 16px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.5;
-}
-.msg-bubble.me .bubble-text {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-.msg-bubble.other .bubble-text {
-    background: #fff;
-    color: #1f2937;
-    border: 1px solid #e5e7eb;
+.msg-av.av-admin { background: #7c3aed; }
+.msg-av.av-user  { background: #0ea5e9; }
+
+.msg-inner { max-width: 68%; display: flex; flex-direction: column; gap: 4px; }
+.msg.msg-right .msg-inner { align-items: flex-end; }
+
+.msg-who { font-size: 11px; font-weight: 600; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+.msg.msg-right .msg-who { color: #7c3aed; }
+
+.msg-text {
+    padding: 12px 16px; border-radius: 16px;
+    font-size: 14px; line-height: 1.6; color: #1f2937;
+    background: #fff; border: 1px solid #e5e7eb;
     border-bottom-left-radius: 4px;
 }
-.chat-input-area {
-    padding: 16px 20px;
-    border-top: 1px solid #f0f0f5;
-    background: #fff;
-    border-radius: 0 0 14px 14px;
+.msg.msg-right .msg-text {
+    background: #7c3aed; color: #fff; border: none;
+    border-bottom-right-radius: 4px; border-bottom-left-radius: 16px;
 }
-.chat-input-area .input-group {
-    background: #f8f7ff;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1.5px solid #e9e4ff;
-    transition: border-color 0.2s;
+.msg-when { font-size: 10px; color: #d1d5db; }
+.msg.msg-right .msg-when { color: #c4b5fd; }
+
+.conv-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 60px 0; color: #d1d5db;
 }
-.chat-input-area .input-group:focus-within {
-    border-color: #7c3aed;
+.conv-empty i { font-size: 40px; }
+.conv-empty p { font-size: 13px; margin: 0; }
+
+.conv-input {
+    padding: 16px 20px; border-top: 1px solid #f3f4f6; background: #fff;
 }
-.chat-input-area input {
-    background: transparent;
-    border: none;
-    padding: 12px 16px;
-    font-size: 14px;
-    outline: none;
-    box-shadow: none !important;
+.conv-input form { display: flex; gap: 10px; }
+.conv-input input {
+    flex: 1; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 11px 16px; font-size: 14px; color: #111827;
+    outline: none; background: #f9fafb; transition: .2s;
 }
-.chat-input-area .btn-send {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    border: none;
-    padding: 0 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
+.conv-input input:focus { border-color: #8b5cf6; background: #fff; box-shadow: 0 0 0 3px rgba(124,58,237,.08); }
+.conv-input input::placeholder { color: #9ca3af; }
+.conv-input .btn-reply {
+    background: #7c3aed; color: #fff; border: none; border-radius: 10px;
+    padding: 11px 20px; font-size: 14px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 7px; transition: .2s;
+    white-space: nowrap;
 }
-.chat-input-area .btn-send:hover { opacity: 0.9; }
-.chat-closed {
-    padding: 20px;
-    text-align: center;
-    color: #6b7280;
-    font-size: 13px;
-    background: #f9fafb;
-    border-radius: 0 0 14px 14px;
-    border-top: 1px solid #f0f0f5;
+.conv-input .btn-reply:hover { background: #6d28d9; }
+
+.conv-closed {
+    padding: 16px 20px; border-top: 1px solid #f3f4f6;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; color: #6b7280; background: #f9fafb;
 }
-.statut-form select {
-    border-radius: 8px;
-    border: 1.5px solid #e5e7eb;
-    padding: 6px 12px;
-    font-size: 13px;
-    outline: none;
+
+/* ── Right sidebar ── */
+.ticket-sidebar { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+
+.sidebar-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;
 }
-.statut-form .btn-update {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: 1.5px solid rgba(255,255,255,0.4);
-    border-radius: 8px;
-    padding: 6px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
+.sidebar-card-header {
+    padding: 12px 16px; border-bottom: 1px solid #f3f4f6;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .8px; color: #9ca3af; background: #fafafa;
+    display: flex; align-items: center; gap: 6px;
 }
-.statut-form .btn-update:hover { background: rgba(255,255,255,0.3); }
-.ai-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+.sidebar-card-body { padding: 16px; }
+
+.user-row { display: flex; align-items: center; gap: 12px; }
+.user-av-sm {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: #fff; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.empty-chat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    gap: 8px;
+.user-nm { font-size: 14px; font-weight: 600; color: #111827; }
+.user-em { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+.desc-body { font-size: 13px; line-height: 1.7; color: #374151; }
+.orig-box {
+    margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+    background: #fffbeb; border-left: 3px solid #f59e0b;
 }
-.empty-chat i { font-size: 36px; opacity: 0.3; }
+.orig-box .orig-lbl { font-size: 10px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.orig-box .orig-val { font-size: 12px; color: #78350f; }
+
+.ai-row { display: flex; flex-direction: column; gap: 8px; }
+.ai-item { display: flex; align-items: center; justify-content: space-between; }
+.ai-item .ai-lbl { font-size: 12px; color: #6b7280; }
+.ai-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid fade-in px-4">
+<div class="container-fluid px-4 py-3">
 
-    <a href="{{ path('admin_reclamation_index') }}" class="btn btn-sm btn-outline-secondary mb-4">
-        <i class="bi bi-arrow-left me-1"></i> Retour aux réclamations
+    <a href="{{ path('admin_reclamation_index') }}" style="display:inline-flex;align-items:center;gap:6px;color:#6b7280;font-size:13px;text-decoration:none;margin-bottom:20px;padding:6px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">
+        <i class="bi bi-arrow-left"></i> Retour
     </a>
 
-    {# Header #}
-    <div class="recap-header d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="badge-statut">
-                    {{ reclamation.statut == 'EN_ATTENTE' ? '⏳' : (reclamation.statut == 'RESOLU' ? '✅' : (reclamation.statut == 'EN_COURS' ? '🔄' : '❌')) }}
-                    {{ reclamation.statut|replace({'_': ' '}) }}
-                </span>
-                <span style="opacity:0.6; font-size:13px;">{{ reclamation.dateCreation|date('d/m/Y à H:i') }}</span>
-            </div>
-            <h2 class="mb-0 fw-bold" style="font-size:22px;">{{ reclamation.sujet }}</h2>
-        </div>
-        <form method="POST" action="{{ path('admin_reclamation_show', {id: reclamation.id}) }}" class="statut-form d-flex align-items-center gap-2">
-            <select name="statut">
-                <option value="EN_ATTENTE" {{ reclamation.statut == 'EN_ATTENTE' ? 'selected' : '' }}>⏳ En attente</option>
-                <option value="EN_COURS"   {{ reclamation.statut == 'EN_COURS'   ? 'selected' : '' }}>🔄 En cours</option>
-                <option value="RESOLU"     {{ reclamation.statut == 'RESOLU'     ? 'selected' : '' }}>✅ Résolu</option>
-                <option value="REJETE"     {{ reclamation.statut == 'REJETE'     ? 'selected' : '' }}>❌ Rejeté</option>
-            </select>
-            <button type="submit" class="btn-update">Mettre à jour</button>
-        </form>
-    </div>
+    <div class="ticket-page">
 
-    <div class="row g-4">
-        {# Colonne gauche : infos #}
-        <div class="col-lg-4">
-            <div class="info-card">
+        {# ── Left ── #}
+        <div class="ticket-left">
 
-                {# Utilisateur #}
-                <div class="section-label"><i class="bi bi-person me-1"></i>Utilisateur</div>
-                {% if reclamation.utilisateur %}
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;">
-                        {{ reclamation.utilisateur.nom|slice(0,1)|upper }}
-                    </div>
-                    <div>
-                        <div class="fw-semibold">{{ reclamation.utilisateur.nom }}</div>
-                        <div class="text-muted small">{{ reclamation.utilisateur.email }}</div>
+            {# Ticket header #}
+            <div class="ticket-header">
+                <div class="ticket-header-left">
+                    <div class="ticket-id">Ticket #{{ reclamation.id }}</div>
+                    <h1 class="ticket-title">{{ reclamation.sujet }}</h1>
+                    <div class="ticket-meta">
+                        <span class="status-badge status-{{ reclamation.statut }}">
+                            {{ reclamation.statut == 'EN_ATTENTE' ? '⏳' : (reclamation.statut == 'RESOLU' ? '✅' : (reclamation.statut == 'EN_COURS' ? '🔄' : '❌')) }}
+                            {{ reclamation.statut|replace({'_': ' '}) }}
+                        </span>
+                        <span><i class="bi bi-calendar3"></i> {{ reclamation.dateCreation|date('d/m/Y à H:i') }}</span>
+                        {% if reclamation.priorite %}
+                        <span><i class="bi bi-flag"></i> Priorité :
+                            <strong style="color:{{ reclamation.priorite == 'HIGH' ? '#ef4444' : (reclamation.priorite == 'MEDIUM' ? '#f59e0b' : '#22c55e') }};">
+                                {{ reclamation.priorite }}
+                            </strong>
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
-
-                <hr style="border-color:#f0f0f5;">
-
-                {# Description #}
-                <div class="section-label"><i class="bi bi-file-text me-1"></i>Description</div>
-                <p class="mb-0" style="font-size:14px;line-height:1.6;color:#374151;">{{ reclamation.description }}</p>
-
-                {% if reclamation.descriptionOriginale %}
-                <div class="mt-3 p-3 rounded-3" style="background:#fffbeb;border-left:3px solid #f59e0b;">
-                    <div class="small text-muted mb-1"><i class="bi bi-translate me-1"></i>Texte original
-                        <span class="badge bg-warning-subtle text-warning ms-1">{{ reclamation.langueOriginale }}</span>
-                    </div>
-                    <div style="font-size:13px;">{{ reclamation.descriptionOriginale }}</div>
-                </div>
-                {% endif %}
-
-                {% if reclamation.categorie or reclamation.sentiment or reclamation.priorite %}
-                <hr style="border-color:#f0f0f5;">
-                <div class="section-label"><i class="bi bi-robot me-1"></i>Analyse IA</div>
-                <div class="d-flex flex-wrap gap-2">
-                    {% if reclamation.categorie %}
-                        <span class="ai-badge" style="background:#eff6ff;color:#3b82f6;">
-                            <i class="bi bi-tag-fill"></i> {{ reclamation.categorie }}
-                        </span>
-                    {% endif %}
-                    {% if reclamation.sentiment %}
-                        <span class="ai-badge {{ reclamation.sentiment == 'négatif' ? '' : (reclamation.sentiment == 'positif' ? '' : '') }}"
-                            style="background:{{ reclamation.sentiment == 'négatif' ? '#fef2f2' : (reclamation.sentiment == 'positif' ? '#f0fdf4' : '#f9fafb') }};
-                                   color:{{ reclamation.sentiment == 'négatif' ? '#ef4444' : (reclamation.sentiment == 'positif' ? '#22c55e' : '#6b7280') }};">
-                            {{ reclamation.sentiment == 'négatif' ? '😠' : (reclamation.sentiment == 'positif' ? '😊' : '😐') }}
-                            {{ reclamation.sentiment }}
-                        </span>
-                    {% endif %}
-                    {% if reclamation.priorite %}
-                        <span class="ai-badge"
-                            style="background:{{ reclamation.priorite == 'HIGH' ? '#fef2f2' : (reclamation.priorite == 'MEDIUM' ? '#fffbeb' : '#f0fdf4') }};
-                                   color:{{ reclamation.priorite == 'HIGH' ? '#ef4444' : (reclamation.priorite == 'MEDIUM' ? '#f59e0b' : '#22c55e') }};">
-                            {{ reclamation.priorite == 'HIGH' ? '🔴' : (reclamation.priorite == 'MEDIUM' ? '🟡' : '🟢') }}
-                            {{ reclamation.priorite }}
-                        </span>
-                    {% endif %}
-                </div>
-                {% endif %}
-
-            </div>
-        </div>
-
-        {# Colonne droite : chat #}
-        <div class="col-lg-8">
-            <div class="chat-card">
-                <div class="chat-header">
-                    <i class="bi bi-chat-dots" style="color:#7c3aed;"></i>
-                    Discussion avec l'utilisateur
-                    <span class="ms-auto badge rounded-pill" style="background:#f3f0ff;color:#7c3aed;font-size:11px;">
-                        {{ messages|length }} message{{ messages|length > 1 ? 's' : '' }}
-                    </span>
-                </div>
-
-                <div class="chat-messages" id="chatBox">
-                    {% if messages is empty %}
-                        <div class="empty-chat">
-                            <i class="bi bi-chat-square-dots"></i>
-                            <span>Aucun message. Commencez la discussion.</span>
-                        </div>
+                <form method="POST" action="{{ path('admin_reclamation_show', {id: reclamation.id}) }}" class="statut-form">
+                    {% if reclamation.statut != 'RESOLU' and reclamation.statut != 'REJETE' %}
+                    <select name="statut">
+                        <option value="EN_ATTENTE" {{ reclamation.statut == 'EN_ATTENTE' ? 'selected' : '' }}>⏳ En attente</option>
+                        <option value="EN_COURS"   {{ reclamation.statut == 'EN_COURS'   ? 'selected' : '' }}>🔄 En cours</option>
+                        <option value="RESOLU"     {{ reclamation.statut == 'RESOLU'     ? 'selected' : '' }}>✅ Résolu</option>
+                        <option value="REJETE"     {{ reclamation.statut == 'REJETE'     ? 'selected' : '' }}>❌ Rejeté</option>
+                    </select>
+                    <button type="submit" class="btn-save">Enregistrer</button>
                     {% else %}
-                        {% for msg in messages %}
-                            {% set isAdmin = msg.id_auteur.getId() == adminId %}
-                            <div class="msg-bubble {{ isAdmin ? 'me' : 'other' }}">
-                                <div class="bubble-meta">
-                                    {% if isAdmin %}
-                                        <i class="bi bi-shield-check me-1" style="color:#7c3aed;"></i>Admin
-                                    {% else %}
-                                        <i class="bi bi-person me-1"></i>{{ msg.id_auteur.nom }}
-                                    {% endif %}
-                                    · {{ msg.date_commentaire|date('d/m à H:i') }}
-                                </div>
-                                <div class="bubble-text">{{ msg.commentaire }}</div>
-                            </div>
-                        {% endfor %}
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;background:{{ reclamation.statut == 'RESOLU' ? '#d1fae5' : '#fee2e2' }};color:{{ reclamation.statut == 'RESOLU' ? '#065f46' : '#991b1b' }};">
+                        <i class="bi bi-lock-fill"></i>
+                        {{ reclamation.statut == 'RESOLU' ? '✅ Ticket résolu' : '❌ Ticket rejeté' }}
+                    </span>
                     {% endif %}
+                </form>
+            </div>
+
+            {# Conversation #}
+            <div class="conv-card">
+                <div class="conv-top">
+                    <div class="live"></div>
+                    <span class="conv-title">Conversation</span>
+                    <span class="conv-count">{{ messages|length }} message{{ messages|length != 1 ? 's' : '' }}</span>
                 </div>
 
-                {% if reclamation.statut == 'RESOLU' %}
-                    <div class="chat-closed">
-                        <i class="bi bi-lock-fill me-2" style="color:#22c55e;"></i>
-                        Réclamation résolue — la communication est fermée.
+                <div class="conv-body" id="chatBody">
+                    {# Description initiale comme premier message #}
+                    <div class="msg">
+                        <div class="msg-av av-user">
+                            {{ reclamation.utilisateur ? reclamation.utilisateur.nom|slice(0,1)|upper : 'U' }}
+                        </div>
+                        <div class="msg-inner">
+                            <div class="msg-who">
+                                <i class="bi bi-person"></i>
+                                {{ reclamation.utilisateur ? reclamation.utilisateur.nom : 'Utilisateur' }}
+                                <span style="font-weight:400;color:#d1d5db;margin-left:4px;">· Réclamation initiale</span>
+                            </div>
+                            <div class="msg-text" style="background:#f0f9ff;border-color:#bae6fd;">
+                                {{ reclamation.description }}
+                                {% if reclamation.descriptionOriginale %}
+                                <div style="margin-top:10px;padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;font-size:12px;color:#78350f;">
+                                    <strong style="color:#92400e;font-size:10px;text-transform:uppercase;letter-spacing:.5px;">
+                                        <i class="bi bi-translate me-1"></i>Original · {{ reclamation.langueOriginale|upper }}
+                                    </strong><br>
+                                    {{ reclamation.descriptionOriginale }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <span class="msg-when">{{ reclamation.dateCreation|date('d/m/Y à H:i') }}</span>
+                        </div>
+                    </div>
+
+                    {# Séparateur #}
+                    {% if messages is not empty %}
+                    <div style="display:flex;align-items:center;gap:10px;margin:4px 0;">
+                        <div style="flex:1;height:1px;background:#f3f4f6;"></div>
+                        <span style="font-size:11px;color:#d1d5db;white-space:nowrap;">Échanges</span>
+                        <div style="flex:1;height:1px;background:#f3f4f6;"></div>
+                    </div>
+                    {% endif %}
+
+                    {% for msg in messages %}
+                        {% set isAdmin = msg.id_auteur.getId() == adminId %}
+                        <div class="msg {{ isAdmin ? 'msg-right' : '' }}">
+                            <div class="msg-av {{ isAdmin ? 'av-admin' : 'av-user' }}">
+                                {{ msg.id_auteur.nom|slice(0,1)|upper }}
+                            </div>
+                            <div class="msg-inner">
+                                <div class="msg-who">
+                                    {% if isAdmin %}<i class="bi bi-shield-check"></i> Admin{% else %}<i class="bi bi-person"></i> {{ msg.id_auteur.nom }}{% endif %}
+                                </div>
+                                <div class="msg-text">{{ msg.commentaire }}</div>
+                                <span class="msg-when">{{ msg.date_commentaire|date('d/m/Y à H:i') }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if reclamation.statut == 'RESOLU' or reclamation.statut == 'REJETE' %}
+                    <div class="conv-closed">
+                        <i class="bi bi-lock-fill" style="color:{{ reclamation.statut == 'RESOLU' ? '#10b981' : '#ef4444' }};"></i>
+                        {{ reclamation.statut == 'RESOLU' ? 'Ticket résolu — communication fermée.' : 'Ticket rejeté — communication fermée.' }}
                     </div>
                 {% else %}
-                    <div class="chat-input-area">
+                    <div class="conv-input">
                         <form method="POST" action="{{ path('admin_reclamation_show', {id: reclamation.id}) }}">
-                            <div class="input-group">
-                                <input type="text" name="message" placeholder="Répondre à l'utilisateur..." autocomplete="off" class="form-control">
-                                <button type="submit" class="btn-send">
-                                    <i class="bi bi-send-fill me-1"></i> Envoyer
-                                </button>
-                            </div>
+                            <input type="text" name="message" placeholder="Écrire une réponse..." autocomplete="off">
+                            <button type="submit" class="btn-reply">
+                                <i class="bi bi-send-fill"></i> Répondre
+                            </button>
                         </form>
                     </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-</div>
 
+        </div>{# /ticket-left #}
+
+        {# ── Sidebar ── #}
+        <div class="ticket-sidebar">
+
+            {# Utilisateur #}
+            <div class="sidebar-card">
+                <div class="sidebar-card-header"><i class="bi bi-person"></i> Demandeur</div>
+                <div class="sidebar-card-body">
+                    {% if reclamation.utilisateur %}
+                    <div class="user-row">
+                        <div class="user-av-sm">{{ reclamation.utilisateur.nom|slice(0,1)|upper }}</div>
+                        <div>
+                            <div class="user-nm">{{ reclamation.utilisateur.nom }}</div>
+                            <div class="user-em">{{ reclamation.utilisateur.email }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Analyse IA #}
+            {% if reclamation.categorie or reclamation.sentiment or reclamation.priorite %}
+            <div class="sidebar-card">
+                <div class="sidebar-card-header"><i class="bi bi-robot"></i> Analyse IA</div>
+                <div class="sidebar-card-body">
+                    <div class="ai-row">
+                        {% if reclamation.categorie %}
+                        <div class="ai-item">
+                            <span class="ai-lbl">Catégorie</span>
+                            <span class="ai-chip" style="background:#eff6ff;color:#3b82f6;"><i class="bi bi-tag-fill"></i>{{ reclamation.categorie }}</span>
+                        </div>
+                        {% endif %}
+                        {% if reclamation.sentiment %}
+                        <div class="ai-item">
+                            <span class="ai-lbl">Sentiment</span>
+                            <span class="ai-chip" style="background:{{ reclamation.sentiment == 'négatif' ? '#fef2f2' : (reclamation.sentiment == 'positif' ? '#f0fdf4' : '#f9fafb') }};color:{{ reclamation.sentiment == 'négatif' ? '#ef4444' : (reclamation.sentiment == 'positif' ? '#22c55e' : '#6b7280') }};">
+                                {{ reclamation.sentiment == 'négatif' ? '😠' : (reclamation.sentiment == 'positif' ? '😊' : '😐') }} {{ reclamation.sentiment }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if reclamation.priorite %}
+                        <div class="ai-item">
+                            <span class="ai-lbl">Priorité</span>
+                            <span class="ai-chip" style="background:{{ reclamation.priorite == 'HIGH' ? '#fef2f2' : (reclamation.priorite == 'MEDIUM' ? '#fffbeb' : '#f0fdf4') }};color:{{ reclamation.priorite == 'HIGH' ? '#ef4444' : (reclamation.priorite == 'MEDIUM' ? '#f59e0b' : '#22c55e') }};">
+                                {{ reclamation.priorite == 'HIGH' ? '🔴' : (reclamation.priorite == 'MEDIUM' ? '🟡' : '🟢') }} {{ reclamation.priorite }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>{# /sidebar #}
+
+    </div>{# /ticket-page #}
+
+</div>
 <script>
-    const box = document.getElementById('chatBox');
-    if (box) box.scrollTop = box.scrollHeight;
+    const b = document.getElementById('chatBody');
+    if (b) b.scrollTop = b.scrollHeight;
 </script>
 {% endblock %}

@@ -105,8 +105,8 @@ class ReclamationController extends AbstractController
         if ($request->isMethod('POST')) {
             $contenu = trim((string) $request->request->get('message', ''));
 
-            if ($reclamation->getStatut() === 'RESOLU') {
-                $this->addFlash('warning', 'Cette réclamation est résolue, la communication est fermée.');
+            if ($reclamation->getStatut() === 'RESOLU' || $reclamation->getStatut() === 'REJETE') {
+                $this->addFlash('warning', 'Cette réclamation est fermée, la communication est désactivée.');
                 return $this->redirectToRoute('reclamation_show', ['id' => $id]);
             }
 

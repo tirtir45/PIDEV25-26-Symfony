@@ -52,6 +52,26 @@ class AdminReclamationController extends AbstractController
         $qb->orderBy('r.' . $sort, $order);
         $reclamations = $qb->getQuery()->getResult();
 
+        // KPI stats
+        $all = $repo->findAll();
+        $stats = [
+            'total'     => count($all),
+            'attente'   => count(array_filter($all, fn($r) => $r->getStatut() === 'EN_ATTENTE')),
+            'en_cours'  => count(array_filter($all, fn($r) => $r->getStatut() === 'EN_COURS')),
+            'resolu'    => count(array_filter($all, fn($r) => $r->getStatut() === 'RESOLU')),
+            'rejete'    => count(array_filter($all, fn($r) => $r->getStatut() === 'REJETE')),
+            'high'      => count(array_filter($all, fn($r) => $r->getPriorite() === 'HIGH')),
+            'negatif'   => count(array_filter($all, fn($r) => $r->getSentiment() === 'négatif')),
+        ];
+
+        // Catégories
+        $cats = [];
+        foreach ($all as $r) {
+            $c = $r->getCategorie() ?? 'autre';
+            $cats[$c] = ($cats[$c] ?? 0) + 1;
+        }
+        arsort($cats);
+
         return $this->render('admin/reclamations.html.twig', [
             'reclamations' => $reclamations,
             'search'       => $search,
@@ -59,6 +79,8 @@ class AdminReclamationController extends AbstractController
             'sort'         => $sort,
             'order'        => $order,
             'total'        => count($reclamations),
+            'stats'        => $stats,
+            'cats'         => $cats,
         ]);
     }
 
@@ -92,7 +114,7 @@ class AdminReclamationController extends AbstractController
 
             // Envoi message admin
             if (!empty($contenu)) {
-                if ($reclamation->getStatut() === 'RESOLU') {
+                if ($reclamation->getStatut() === 'RESOLU' || $reclamation->getStatut() === 'REJETE') {
                     $this->addFlash('warning', 'Réclamation résolue, communication fermée.');
                     return $this->redirectToRoute('admin_reclamation_show', ['id' => $id]);
                 }
@@ -118,7 +140,7 @@ class AdminReclamationController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/reclamations/{id}/supprimer', name: 'admin_reclamation_delete', methods: ['POST'])]
+    #[Route('/admin/reclamations/{id}/statut', name: 'admin_reclamation_statut', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em): Response
     {
         if (!$this->checkAdmin($request)) {
@@ -135,7 +157,7 @@ class AdminReclamationController extends AbstractController
         return $this->redirectToRoute('admin_reclamation_index');
     }
 
-    #[Route('/admin/reclamations/{id}/supprimer', name: 'admin_reclamation_delete', methods: ['POST'])]
+    #[Route('/admin/reclamations/{id}/supprimer', name: 'admin_reclamation_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(int $id, ReclamationsRepository $repo, EntityManagerInterface $em, Request $request): Response
     {
         if (!$this->checkAdmin($request)) {

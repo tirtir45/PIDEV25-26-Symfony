@@ -204,10 +204,10 @@
                     {% endif %}
                 </div>
 
-                {% if reclamation.statut == 'RESOLU' %}
+                {% if reclamation.statut == 'RESOLU' or reclamation.statut == 'REJETE' %}
                     <div class="chat-closed">
-                        <i class="bi bi-check-circle-fill me-2" style="color:#22c55e;"></i>
-                        Réclamation résolue — merci de nous avoir contactés.
+                        <i class="bi bi-lock-fill me-2" style="color:{{ reclamation.statut == 'RESOLU' ? '#22c55e' : '#ef4444' }};"></i>
+                        {{ reclamation.statut == 'RESOLU' ? 'Réclamation résolue — merci de nous avoir contactés.' : 'Réclamation rejetée — communication fermée.' }}
                     </div>
                 {% else %}
                     <div class="chat-input-area">
