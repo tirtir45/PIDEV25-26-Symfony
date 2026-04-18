@@ -4,9 +4,10 @@ namespace App\Service;
 use App\Entity\Reservation;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Bacon\MatrixFactory;
+use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\Writer\SvgWriter;
+use Endroid\QrCode\QrCode;
 use Twig\Environment;
 
 class FacturePdfService
@@ -20,30 +21,14 @@ class FacturePdfService
     {
         $verifyUrl = $this->baseUrl . '/evenements/verify/' . $reservation->getTokenVerification();
 
-        // Generate QR as inline SVG — no GD / no image extension required
-        $qrSvg = null;
-        try {
-            $result = (new Builder(
-                writer: new SvgWriter(),
-                data: $verifyUrl,
-                errorCorrectionLevel: ErrorCorrectionLevel::High,
-                size: 150,
-                margin: 4,
-            ))->build();
-            // Strip XML declaration so DOMPDF accepts it as inline SVG
-            $svg = preg_replace('/<\?xml[^>]+\?>\s*/', '', $result->getString());
-            // Force fixed dimensions so DOMPDF renders at correct size
-            $svg = preg_replace('/<svg\b/', '<svg width="140" height="140"', $svg, 1);
-            $qrSvg = $svg;
-        } catch (\Throwable) {
-            // leave null — template shows fallback text
-        }
+        // Build QR code as an HTML table — works with DOMPDF, needs zero PHP extensions
+        $qrHtml = $this->buildQrTable($verifyUrl);
 
         $html = $this->twig->render('pdf/facture.html.twig', [
             'reservation' => $reservation,
             'evenement'   => $reservation->getEvenement(),
             'utilisateur' => $reservation->getUtilisateur(),
-            'qr_svg'      => $qrSvg,
+            'qr_html'     => $qrHtml,
             'verify_url'  => $verifyUrl,
         ]);
 
@@ -57,5 +42,46 @@ class FacturePdfService
         $dompdf->render();
 
         return $dompdf->output();
+    }
+
+    /**
+     * Renders a QR code as a pure HTML table (no GD, no SVG, no extensions needed).
+     */
+    private function buildQrTable(string $data): string
+    {
+        $qrCode = new QrCode(
+            data: $data,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 200,
+            margin: 2,
+        );
+
+        $matrix     = (new MatrixFactory())->create($qrCode);
+        $blockCount = $matrix->getBlockCount();
+        $blockSize  = round(140 / $blockCount, 2); // fit into 140px total
+
+        $html = sprintf(
+            '<table style="border-collapse:collapse;border-spacing:0;margin:0 auto;'
+            . 'background:#fff;padding:0;" cellpadding="0" cellspacing="0">'
+        );
+
+        for ($row = 0; $row < $blockCount; $row++) {
+            $html .= '<tr>';
+            for ($col = 0; $col < $blockCount; $col++) {
+                $dark  = $matrix->getBlockValue($row, $col) === 1;
+                $bg    = $dark ? '#000000' : '#ffffff';
+                $html .= sprintf(
+                    '<td style="width:%.2fpx;height:%.2fpx;background:%s;'
+                    . 'padding:0;border:none;font-size:0;line-height:0;"></td>',
+                    $blockSize, $blockSize, $bg
+                );
+            }
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+
+        return $html;
     }
 }
