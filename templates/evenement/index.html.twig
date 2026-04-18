@@ -176,4 +176,176 @@
 <div class="footer-pill" style="margin-top:20px;">
     <span>📅 {{ evenements|length }} événement(s) affiché(s)</span>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     📊 STATISTIQUES — embedded section
+     ════════════════════════════════════════════════════════════════════════ -->
+<div style="margin-top:32px;">
+    <!-- Section header with toggle -->
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+        <div style="flex:1; height:1px; background:#ead5f0;"></div>
+        <button onclick="toggleStats()" id="stats-toggle-btn"
+                style="background:#f3e8ff; color:#A155B9; border:1.5px solid #ead5f0;
+                       border-radius:20px; padding:8px 20px; font-size:12px; font-weight:700;
+                       cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <span>📊</span> <span id="stats-toggle-label">Afficher les statistiques</span>
+        </button>
+        <div style="flex:1; height:1px; background:#ead5f0;"></div>
+    </div>
+
+    <div id="stats-section" style="display:none;">
+
+        <!-- KPI mini-cards -->
+        <div class="stat-row" style="margin-bottom:20px;">
+            <div class="stat-card" style="border-color:#ddd6fe;">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value" style="color:#7c3aed;">{{ stat_total }}</div>
+                <div class="stat-label">Événements</div>
+            </div>
+            <div class="stat-card" style="border-color:#a7f3d0;">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-value" style="color:#059669;">{{ stat_futur }}</div>
+                <div class="stat-label">À venir</div>
+            </div>
+            <div class="stat-card" style="border-color:#e2e8f0;">
+                <div class="stat-icon">🏁</div>
+                <div class="stat-value" style="color:#64748b;">{{ count_passes }}</div>
+                <div class="stat-label">Passés</div>
+            </div>
+            <div class="stat-card" style="border-color:#fbcfe8;">
+                <div class="stat-icon">🎫</div>
+                <div class="stat-value" style="color:#db2777;">{{ stat_res }}</div>
+                <div class="stat-label">Réservations</div>
+            </div>
+            <div class="stat-card" style="border-color:#fde68a;">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" style="color:#d97706; font-size:18px;">{{ stat_revenu|number_format(2) }}<span style="font-size:11px;"> DT</span></div>
+                <div class="stat-label">Revenu total</div>
+            </div>
+        </div>
+
+        <!-- Charts 2×2 grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px;">
+
+            <div style="background:white; border-radius:14px; padding:18px 20px;
+                        border:1px solid #ead5f0; box-shadow:0 2px 8px rgba(161,85,185,.06);">
+                <p style="font-size:13px; font-weight:800; color:#4a3068; margin:0 0 12px;">
+                    📈 Réservations / mois (12 derniers mois)
+                </p>
+                <div id="chart_monthly" style="height:240px;"></div>
+            </div>
+
+            <div style="background:white; border-radius:14px; padding:18px 20px;
+                        border:1px solid #ead5f0; box-shadow:0 2px 8px rgba(161,85,185,.06);">
+                <p style="font-size:13px; font-weight:800; color:#4a3068; margin:0 0 12px;">
+                    🍩 Futurs vs Passés
+                </p>
+                <div id="chart_donut" style="height:240px;"></div>
+            </div>
+
+            <div style="background:white; border-radius:14px; padding:18px 20px;
+                        border:1px solid #ead5f0; box-shadow:0 2px 8px rgba(161,85,185,.06);">
+                <p style="font-size:13px; font-weight:800; color:#4a3068; margin:0 0 12px;">
+                    🏆 Top 5 événements les plus réservés
+                </p>
+                <div id="chart_top" style="height:240px;"></div>
+            </div>
+
+            <div style="background:white; border-radius:14px; padding:18px 20px;
+                        border:1px solid #ead5f0; box-shadow:0 2px 8px rgba(161,85,185,.06);">
+                <p style="font-size:13px; font-weight:800; color:#4a3068; margin:0 0 12px;">
+                    💸 Revenu par événement payant
+                </p>
+                <div id="chart_revenu" style="height:240px;"></div>
+            </div>
+
+        </div>
+
+    </div>{# /stats-section #}
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+var statsLoaded = false;
+
+function toggleStats() {
+    var sec = document.getElementById('stats-section');
+    var btn = document.getElementById('stats-toggle-label');
+    if (sec.style.display === 'none') {
+        sec.style.display = 'block';
+        btn.textContent   = 'Masquer les statistiques';
+        if (!statsLoaded) { google.charts.load('current',{packages:['corechart']}); google.charts.setOnLoadCallback(drawAllCharts); statsLoaded = true; }
+    } else {
+        sec.style.display = 'none';
+        btn.textContent   = 'Afficher les statistiques';
+    }
+}
+
+var dataMonthly = {{ count_by_month|json_encode|raw }};
+var dataTop     = {{ top_evenements|json_encode|raw }};
+var dataRevenu  = {{ revenu_par_ev|json_encode|raw }};
+var cntFuturs   = {{ stat_futur }};
+var cntPasses   = {{ count_passes }};
+
+function drawAllCharts() { drawMonthly(); drawDonut(); drawTop(); drawRevenu(); }
+
+function drawMonthly() {
+    var rows = [['Mois','Réservations']];
+    dataMonthly.forEach(function(r){ rows.push([r.month, parseInt(r.total)]); });
+    if (rows.length===1) rows.push(['—',0]);
+    var data = google.visualization.arrayToDataTable(rows);
+    new google.visualization.ColumnChart(document.getElementById('chart_monthly')).draw(data,{
+        legend:{position:'none'}, colors:['#A155B9'],
+        chartArea:{width:'82%',height:'68%'},
+        hAxis:{textStyle:{fontSize:10,color:'#64748b'}},
+        vAxis:{minValue:0,format:'0',textStyle:{fontSize:10}},
+        backgroundColor:'transparent'
+    });
+}
+
+function drawDonut() {
+    var data = google.visualization.arrayToDataTable([
+        ['Statut','Nombre'],['À venir',cntFuturs],['Passés',cntPasses]
+    ]);
+    new google.visualization.PieChart(document.getElementById('chart_donut')).draw(data,{
+        pieHole:0.42, colors:['#A155B9','#94a3b8'],
+        legend:{position:'right',textStyle:{fontSize:11}},
+        chartArea:{width:'86%',height:'82%'}, backgroundColor:'transparent'
+    });
+}
+
+function drawTop() {
+    var rows=[['Événement','Réservations',{role:'style'}]];
+    var colors=['#A155B9','#F765A3','#c472d4','#8a4ca0','#e04ab0'];
+    dataTop.forEach(function(r,i){
+        rows.push([r.titre.length>18?r.titre.substr(0,16)+'…':r.titre, parseInt(r.total),'color:'+(colors[i]||'#A155B9')]);
+    });
+    if (rows.length===1) rows.push(['—',0,'color:#e2e8f0']);
+    var data = google.visualization.arrayToDataTable(rows);
+    new google.visualization.ColumnChart(document.getElementById('chart_top')).draw(data,{
+        legend:{position:'none'},
+        chartArea:{width:'80%',height:'68%'},
+        hAxis:{textStyle:{fontSize:10,color:'#64748b'}},
+        vAxis:{minValue:0,format:'0',textStyle:{fontSize:10}},
+        backgroundColor:'transparent'
+    });
+}
+
+function drawRevenu() {
+    var rows=[['Événement','Revenu (DT)']];
+    dataRevenu.forEach(function(r){
+        rows.push([r.titre.length>20?r.titre.substr(0,18)+'…':r.titre, parseFloat(r.revenu)]);
+    });
+    if (rows.length===1) rows.push(['Aucun',0]);
+    var data = google.visualization.arrayToDataTable(rows);
+    new google.visualization.PieChart(document.getElementById('chart_revenu')).draw(data,{
+        colors:['#A155B9','#F765A3','#c472d4','#8a4ca0','#e04ab0','#6b21a8','#d946ef'],
+        legend:{position:'right',textStyle:{fontSize:10}},
+        chartArea:{width:'80%',height:'82%'}, backgroundColor:'transparent'
+    });
+}
+</script>
 {% endblock %}

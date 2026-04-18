@@ -27,7 +27,8 @@ class StripeService
                             $reservationId, $evenement->getLieu(),
                             $evenement->getDateEvenement()?->format("d/m/Y") ?? ""),
                     ],
-                    "unit_amount" => (int) round($evenement->getPrix() * 100),
+                    // Convert TND → EUR (1 DT ≈ 0.292 EUR), Stripe wants cents
+                    "unit_amount" => (int) round($evenement->getPrix() * 0.292 * 100),
                 ],
                 "quantity" => 1,
             ]],

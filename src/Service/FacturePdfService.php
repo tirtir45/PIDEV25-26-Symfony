@@ -27,10 +27,14 @@ class FacturePdfService
                 writer: new SvgWriter(),
                 data: $verifyUrl,
                 errorCorrectionLevel: ErrorCorrectionLevel::High,
-                size: 160,
-                margin: 6,
+                size: 150,
+                margin: 4,
             ))->build();
-            $qrSvg = $result->getString();
+            // Strip XML declaration so DOMPDF accepts it as inline SVG
+            $svg = preg_replace('/<\?xml[^>]+\?>\s*/', '', $result->getString());
+            // Force fixed dimensions so DOMPDF renders at correct size
+            $svg = preg_replace('/<svg\b/', '<svg width="140" height="140"', $svg, 1);
+            $qrSvg = $svg;
         } catch (\Throwable) {
             // leave null — template shows fallback text
         }

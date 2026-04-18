@@ -378,14 +378,8 @@
         {% if is_granted('ROLE_ADMIN') %}
             {# Admin sees only management items #}
             <a href="{{ path('admin_evenement_index') }}"
-               class="sidebar-item {% if active is defined and active == 'admin_events' %}active{% endif %}">
+               class="sidebar-item {% if active is defined and active in ['admin_events','admin_stats'] %}active{% endif %}">
                 <span class="icon">📅</span> Événements
-            </a>
-            {# Stats sub-item indented under Événements #}
-            <a href="{{ path('admin_evenement_stats') }}"
-               class="sidebar-item {% if active is defined and active == 'admin_stats' %}active{% endif %}"
-               style="padding-left:38px; font-size:12px; opacity:.88;">
-                <span class="icon">📊</span> Statistiques
             </a>
             <a href="{{ path('admin_reservation_index') }}"
                class="sidebar-item {% if active is defined and active == 'admin_res' %}active{% endif %}">

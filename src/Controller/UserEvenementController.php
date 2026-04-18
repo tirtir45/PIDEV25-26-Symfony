@@ -22,7 +22,7 @@ class UserEvenementController extends AbstractController
 {
     // ── Browse ────────────────────────────────────────────────────────────────
     #[Route('/', name: 'user_evenements', methods: ['GET'])]
-    public function index(EvenementRepository $repo, Request $request): Response
+    public function index(EvenementRepository $repo, ReservationRepository $reservationRepo, Request $request): Response
     {
         $search     = $request->query->get('search', '');
         $sort       = $request->query->get('sort', 'date_asc');
@@ -32,13 +32,23 @@ class UserEvenementController extends AbstractController
         $prixMax    = ($prixMaxRaw !== null && $prixMaxRaw !== '') ? (float) $prixMaxRaw : null;
         $evenements = $repo->findWithFilters($search ?: null, $sort, $prixMin, $prixMax);
 
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $reservedIds = [];
+        foreach ($reservationRepo->findByUtilisateur($user->getIdUtilisateur()) as $r) {
+            if ($r->getEvenement()) {
+                $reservedIds[] = $r->getEvenement()->getIdEvenement();
+            }
+        }
+
         return $this->render('user/evenements.html.twig', [
-            'evenements' => $evenements,
-            'search'     => $search,
-            'sort'       => $sort,
-            'prix_min'   => $prixMin,
-            'prix_max'   => $prixMax,
-            'active'     => 'events',
+            'evenements'   => $evenements,
+            'search'       => $search,
+            'sort'         => $sort,
+            'prix_min'     => $prixMin,
+            'prix_max'     => $prixMax,
+            'active'       => 'events',
+            'reserved_ids' => $reservedIds,
         ]);
     }
 

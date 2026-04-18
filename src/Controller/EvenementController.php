@@ -39,16 +39,21 @@ class EvenementController extends AbstractController
         $statRevenu = $reservationRepo->getTotalRevenu();
 
         return $this->render('evenement/index.html.twig', [
-            'evenements'  => $evenements,
-            'search'      => $search,
-            'sort'        => $sort,
-            'prix_min'    => $prixMin,
-            'prix_max'    => $prixMax,
-            'statut'      => $statut,
-            'stat_total'  => $statTotal,
-            'stat_futur'  => $statFutur,
-            'stat_res'    => $statRes,
-            'stat_revenu' => $statRevenu,
+            'evenements'        => $evenements,
+            'search'            => $search,
+            'sort'              => $sort,
+            'prix_min'          => $prixMin,
+            'prix_max'          => $prixMax,
+            'statut'            => $statut,
+            'stat_total'        => $statTotal,
+            'stat_futur'        => $statFutur,
+            'stat_res'          => $statRes,
+            'stat_revenu'       => $statRevenu,
+            // Charts data
+            'count_by_month'    => $reservationRepo->countByMonth(),
+            'top_evenements'    => $reservationRepo->topEvenements(5),
+            'revenu_par_ev'     => $reservationRepo->revenuParEvenement(),
+            'count_passes'      => $evenementRepo->countPasses(),
         ]);
     }
 

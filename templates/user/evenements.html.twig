@@ -133,7 +133,13 @@
             {% endif %}
 
             <!-- Reserve button -->
-            {% if ev.complet or isPast %}
+            {% if ev.idEvenement in reserved_ids %}
+                <button disabled
+                        style="width:100%; background:#ede9fe; color:#7c3aed; border:1.5px solid #ddd6fe;
+                               border-radius:10px; padding:9px; font-size:12px; font-weight:700; cursor:not-allowed;">
+                    ✅ Déjà réservé
+                </button>
+            {% elseif ev.complet or isPast %}
                 <button disabled
                         style="width:100%; background:#f1f5f9; color:#94a3b8; border:none;
                                border-radius:10px; padding:9px; font-size:12px; font-weight:700; cursor:not-allowed;">
