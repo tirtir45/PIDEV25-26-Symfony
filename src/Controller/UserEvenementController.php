@@ -54,14 +54,37 @@ class UserEvenementController extends AbstractController
 
     // ── My reservations ───────────────────────────────────────────────────────
     #[Route('/mes-reservations', name: 'user_mes_reservations', methods: ['GET'])]
-    public function mesReservations(ReservationRepository $repo): Response
+    public function mesReservations(ReservationRepository $repo, Request $request): Response
     {
         /** @var Utilisateur $user */
-        $user = $this->getUser();
+        $user   = $this->getUser();
+        $statut = $request->query->get('statut', '');
+        $periode = $request->query->get('periode', '');
+
+        $all = $repo->findByUtilisateur($user->getIdUtilisateur());
+
+        // PHP-level filters
+        $now = new \DateTime();
+        $reservations = array_filter($all, function (Reservation $r) use ($statut, $periode, $now) {
+            if ($statut !== '' && $r->getStatutPaiement() !== $statut) {
+                return false;
+            }
+            if ($periode === 'futur' && !($r->getEvenement()?->getDateEvenement() > $now)) {
+                return false;
+            }
+            if ($periode === 'passe' && !($r->getEvenement()?->getDateEvenement() <= $now)) {
+                return false;
+            }
+            return true;
+        });
+
         return $this->render('user/mes_reservations.html.twig', [
-            'reservations' => $repo->findByUtilisateur($user->getIdUtilisateur()),
+            'reservations' => array_values($reservations),
+            'total'        => count($all),
             'utilisateur'  => $user,
             'active'       => 'reservations',
+            'statut'       => $statut,
+            'periode'      => $periode,
         ]);
     }
 
@@ -82,7 +105,7 @@ class UserEvenementController extends AbstractController
         ]);
     }
 
-    // ── QR verification (public) ──────────────────────────────────────────────
+    // ── QR verification ───────────────────────────────────────────────────────
     #[Route('/verify/{token}', name: 'user_reservation_verify', methods: ['GET'])]
     public function verify(string $token, ReservationRepository $repo): Response
     {
@@ -99,10 +122,10 @@ class UserEvenementController extends AbstractController
     #[Route('/{id}/checkout', name: 'user_checkout', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function checkout(
         int $id,
-        EvenementRepository   $evenementRepo,
-        ReservationRepository $reservationRepo,
-        EntityManagerInterface $em,
-        StripeService          $stripe,
+        EvenementRepository      $evenementRepo,
+        ReservationRepository    $reservationRepo,
+        EntityManagerInterface   $em,
+        StripeService            $stripe,
         ReservationMailerService $mailer,
         Request $request
     ): Response {
@@ -132,7 +155,6 @@ class UserEvenementController extends AbstractController
             return $this->redirectToRoute('user_evenements');
         }
 
-        // Pre-create reservation
         $reservation = new Reservation();
         $reservation->setEvenement($evenement);
         $reservation->setUtilisateur($user);
@@ -141,14 +163,54 @@ class UserEvenementController extends AbstractController
         $em->persist($reservation);
         $em->flush();
 
-        // FREE — confirm immediately + send email with PDF
         if ($evenement->getPrix() <= 0) {
             try { $mailer->sendConfirmation($reservation); } catch (\Throwable $t) {}
             $this->addFlash('success', 'Réservation confirmée ! Votre billet PDF a été envoyé par email.');
             return $this->redirectToRoute('user_mes_reservations');
         }
 
-        // PAID — redirect to Stripe Checkout
+        return $this->launchStripe($reservation, $evenement, $stripe, $em);
+    }
+
+    // ── Pay a pending reservation ─────────────────────────────────────────────
+    #[Route('/payer/{id}', name: 'user_pay_pending', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function payPending(
+        int $id,
+        ReservationRepository  $repo,
+        EntityManagerInterface $em,
+        StripeService          $stripe,
+        Request $request
+    ): Response {
+        if (!$this->isCsrfTokenValid('payer'.$id, $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token invalide.');
+            return $this->redirectToRoute('user_mes_reservations');
+        }
+        /** @var Utilisateur $user */
+        $user        = $this->getUser();
+        $reservation = $repo->find($id);
+
+        if (!$reservation || $reservation->getUtilisateur()?->getIdUtilisateur() !== $user->getIdUtilisateur()) {
+            $this->addFlash('error', 'Réservation introuvable.');
+            return $this->redirectToRoute('user_mes_reservations');
+        }
+        if ($reservation->getStatutPaiement() !== 'pending') {
+            $this->addFlash('warning', 'Cette réservation est déjà confirmée.');
+            return $this->redirectToRoute('user_mes_reservations');
+        }
+        $evenement = $reservation->getEvenement();
+        if (!$evenement || $evenement->getDateEvenement() <= new \DateTime()) {
+            $this->addFlash('error', 'Impossible de payer : l\'événement est déjà passé.');
+            return $this->redirectToRoute('user_mes_reservations');
+        }
+
+        return $this->launchStripe($reservation, $evenement, $stripe, $em);
+    }
+
+    // ── Shared helper: create Stripe session and redirect ─────────────────────
+    private function launchStripe(
+        Reservation $reservation, $evenement,
+        StripeService $stripe, EntityManagerInterface $em
+    ): Response {
         try {
             $successUrl = $this->generateUrl('user_payment_success', [], 0)
                 .'?session_id={CHECKOUT_SESSION_ID}&res_id='.$reservation->getIdReservation();
@@ -160,11 +222,8 @@ class UserEvenementController extends AbstractController
             $em->flush();
             return $this->redirect($session->url);
         } catch (\Throwable $t) {
-            $evenement->setCapacite($evenement->getCapacite() + 1);
-            $em->remove($reservation);
-            $em->flush();
             $this->addFlash('error', 'Erreur Stripe : '.$t->getMessage());
-            return $this->redirectToRoute('user_evenements');
+            return $this->redirectToRoute('user_mes_reservations');
         }
     }
 
@@ -198,7 +257,7 @@ class UserEvenementController extends AbstractController
         return $this->redirectToRoute('user_mes_reservations');
     }
 
-    // ── Stripe cancel ─────────────────────────────────────────────────────────
+    // ── Stripe cancel → delete pending, restore capacity ─────────────────────
     #[Route('/payment/cancel', name: 'user_payment_cancel', methods: ['GET'])]
     public function paymentCancel(
         Request $request, ReservationRepository $repo, EntityManagerInterface $em
@@ -211,7 +270,7 @@ class UserEvenementController extends AbstractController
             $em->remove($reservation);
             $em->flush();
         }
-        $this->addFlash('warning', 'Paiement annulé. Réservation libérée.');
+        $this->addFlash('warning', 'Paiement annulé. Votre réservation a été libérée.');
         return $this->redirectToRoute('user_evenements');
     }
 
@@ -231,11 +290,18 @@ class UserEvenementController extends AbstractController
             $this->addFlash('error', 'Réservation introuvable.');
             return $this->redirectToRoute('user_mes_reservations');
         }
+
+        $wasPaid   = $reservation->getStatutPaiement() === 'paid';
         $evenement = $reservation->getEvenement();
         if ($evenement) $evenement->setCapacite($evenement->getCapacite() + 1);
         $em->remove($reservation);
         $em->flush();
-        $this->addFlash('success', 'Réservation annulée.');
+
+        if ($wasPaid) {
+            $this->addFlash('success', 'Réservation annulée. Notre équipe vous contactera dans les 48h pour procéder au remboursement.');
+        } else {
+            $this->addFlash('success', 'Réservation annulée avec succès.');
+        }
         return $this->redirectToRoute('user_mes_reservations');
     }
 }

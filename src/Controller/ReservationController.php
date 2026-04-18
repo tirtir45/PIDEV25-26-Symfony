@@ -17,11 +17,37 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ReservationController extends AbstractController
 {
     #[Route('/', name: 'admin_reservation_index', methods: ['GET'])]
-    public function index(ReservationRepository $repo): Response
+    public function index(ReservationRepository $repo, \Symfony\Component\HttpFoundation\Request $request): Response
     {
+        $statut  = $request->query->get('statut', '');
+        $periode = $request->query->get('periode', '');
+        $search  = $request->query->get('search', '');
+
+        $all = $repo->findAll();
+        $now = new \DateTime();
+
+        $reservations = array_filter($all, function ($r) use ($statut, $periode, $search, $now) {
+            if ($statut !== '' && $r->getStatutPaiement() !== $statut) return false;
+            if ($periode === 'futur' && !($r->getEvenement()?->getDateEvenement() > $now)) return false;
+            if ($periode === 'passe' && !($r->getEvenement()?->getDateEvenement() <= $now)) return false;
+            if ($search !== '') {
+                $haystack = strtolower(
+                    ($r->getEvenement()?->getTitre() ?? '') . ' ' .
+                    ($r->getUtilisateur()?->getNom() ?? '') . ' ' .
+                    ($r->getUtilisateur()?->getEmail() ?? '')
+                );
+                if (!str_contains($haystack, strtolower($search))) return false;
+            }
+            return true;
+        });
+
         return $this->render('reservation/index.html.twig', [
-            'reservations' => $repo->findAll(),
+            'reservations' => array_values($reservations),
+            'total'        => count($all),
             'total_revenu' => $repo->getTotalRevenu(),
+            'statut'       => $statut,
+            'periode'      => $periode,
+            'search'       => $search,
         ]);
     }
 

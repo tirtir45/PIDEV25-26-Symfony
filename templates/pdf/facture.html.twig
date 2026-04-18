@@ -201,7 +201,12 @@ body { font-family: DejaVu Sans, Arial, sans-serif; font-size:13px; color:#1e1e2
                     </div>
                 {% endif %}
             </div>
-            <div class="qr-token">{{ reservation.tokenVerification }}</div>
+            <div class="qr-token">
+                {{ reservation.tokenVerification|slice(0,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(8,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(16,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(24,8) }}
+            </div>
         </div>
     </div>
 

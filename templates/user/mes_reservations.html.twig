@@ -8,8 +8,8 @@
     <div style="flex:1">
         <p class="page-header-title">🎫 Mes Réservations</p>
         <p class="page-header-sub">
-            {% if utilisateur %}Bonjour {{ utilisateur.nom ?? 'Utilisateur' }} — {% endif %}
-            {{ reservations|length }} réservation(s)
+            {% if utilisateur %}Bonjour {{ utilisateur.nom ?? 'Utilisateur' }} —{% endif %}
+            {{ reservations|length }} / {{ total }} réservation(s) affichée(s)
         </p>
     </div>
     <a href="{{ path('user_evenements') }}"
@@ -18,26 +18,57 @@
     </a>
 </div>
 
-<!-- VIEW TOGGLE BAR -->
-<div style="background:white; border-radius:12px; padding:12px 16px; border:1px solid #ead5f0;
-            display:flex; gap:10px; margin-bottom:18px; box-shadow:0 2px 6px rgba(161,85,185,.06);">
-    <a href="{{ path('user_evenements') }}"
-       style="background:#f3e8ff; color:#A155B9; border:1px solid #ead5f0; border-radius:20px;
-              padding:7px 14px; font-size:12px; font-weight:700; text-decoration:none;">
-        📅 Tous les événements
-    </a>
-    <a href="{{ path('user_mes_reservations') }}"
-       class="btn-purple" style="text-decoration:none; border-radius:20px; font-size:12px;">
-        🎫 Mes Réservations
-    </a>
+<!-- NAV + FILTERS -->
+<div style="background:white; border-radius:12px; padding:14px 18px; border:1px solid #ead5f0;
+            margin-bottom:18px; box-shadow:0 2px 6px rgba(161,85,185,.06);">
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        <!-- Nav tabs -->
+        <a href="{{ path('user_evenements') }}"
+           style="background:#f3e8ff; color:#A155B9; border:1px solid #ead5f0;
+                  border-radius:20px; padding:6px 14px; font-size:12px; font-weight:700; text-decoration:none;">
+            📅 Événements
+        </a>
+        <a href="{{ path('user_mes_reservations') }}"
+           class="btn-purple" style="text-decoration:none; border-radius:20px; font-size:12px;">
+            🎫 Mes Réservations
+        </a>
+
+        <div style="flex:1; min-width:10px;"></div>
+
+        <!-- Filters -->
+        <form method="get" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select name="statut" class="form-select" style="width:auto; font-size:12px; border-radius:8px;"
+                    onchange="this.form.submit()">
+                <option value=""       {% if statut == ''        %}selected{% endif %}>Tous statuts</option>
+                <option value="paid"   {% if statut == 'paid'    %}selected{% endif %}>✅ Payé</option>
+                <option value="free"   {% if statut == 'free'    %}selected{% endif %}>🆓 Gratuit</option>
+                <option value="pending"{% if statut == 'pending' %}selected{% endif %}>⏳ En attente</option>
+            </select>
+            <select name="periode" class="form-select" style="width:auto; font-size:12px; border-radius:8px;"
+                    onchange="this.form.submit()">
+                <option value=""      {% if periode == ''      %}selected{% endif %}>Toutes périodes</option>
+                <option value="futur" {% if periode == 'futur' %}selected{% endif %}>🟢 À venir</option>
+                <option value="passe" {% if periode == 'passe' %}selected{% endif %}>🏁 Passés</option>
+            </select>
+            {% if statut or periode %}
+            <a href="{{ path('user_mes_reservations') }}"
+               style="color:#9b77b5; font-size:11px; text-decoration:none;
+                      padding:5px 10px; border:1px solid #ead5f0; border-radius:8px;">
+                ✕ Effacer
+            </a>
+            {% endif %}
+        </form>
+    </div>
 </div>
 
 {% if reservations is empty %}
 <div style="text-align:center; padding:80px 0; background:white; border-radius:14px;
             border:1px solid #ead5f0; color:#a78bca;">
     <div style="font-size:56px;">🎟️</div>
-    <p style="font-size:16px; font-weight:600; margin-top:16px;">Aucune réservation</p>
-    <p style="font-size:13px; color:#c4a3d8; margin-bottom:20px;">Parcourez les événements et réservez votre place !</p>
+    <p style="font-size:16px; font-weight:600; margin-top:16px;">Aucune réservation trouvée</p>
+    <p style="font-size:13px; color:#c4a3d8; margin-bottom:20px;">
+        {% if statut or periode %}Modifiez vos filtres ou {% endif %}parcourez les événements !
+    </p>
     <a href="{{ path('user_evenements') }}" class="btn-pink"
        style="text-decoration:none; display:inline-block;">
         📅 Voir les événements
@@ -46,64 +77,110 @@
 {% else %}
 <div class="events-grid">
     {% for r in reservations %}
-    <div class="event-card">
-        <div class="event-card-header" style="{% if r.evenement and not r.evenement.futur %}background: linear-gradient(135deg, #6b7280, #9ca3af);{% endif %}">
-            <p class="event-card-title">
-                {% if r.evenement %}{{ r.evenement.titre }}{% else %}Événement inconnu{% endif %}
-            </p>
-            <p class="event-card-lieu">
-                {% if r.evenement %}📍 {{ r.evenement.lieu }}{% endif %}
-            </p>
+    {% set isFutur = r.evenement and r.evenement.dateEvenement > date() %}
+    {% set isPast  = r.evenement and r.evenement.dateEvenement <= date() %}
+
+    <div class="event-card" style="width:290px;">
+        <!-- Card header: purple for future, gray for past -->
+        <div class="event-card-header"
+             style="{% if isPast %}background:linear-gradient(135deg,#6b7280,#9ca3af);{% endif %}">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="flex:1;">
+                    <p class="event-card-title">
+                        {{ r.evenement ? r.evenement.titre : 'Événement inconnu' }}
+                    </p>
+                    <p class="event-card-lieu">
+                        {{ r.evenement ? '📍 '~r.evenement.lieu : '' }}
+                    </p>
+                </div>
+                <!-- Payment status pill in header -->
+                <span style="font-size:9px; font-weight:800; padding:3px 8px; border-radius:20px; white-space:nowrap;
+                             {% if r.statutPaiement == 'paid' %}background:rgba(209,250,229,.9);color:#065f46;
+                             {% elseif r.statutPaiement == 'free' %}background:rgba(219,234,254,.9);color:#1e40af;
+                             {% else %}background:rgba(254,249,195,.9);color:#854d0e;{% endif %}">
+                    {% if r.statutPaiement == 'paid' %}✅ Payé
+                    {% elseif r.statutPaiement == 'free' %}🆓 Gratuit
+                    {% else %}⏳ En attente{% endif %}
+                </span>
+            </div>
         </div>
+
         <div class="event-card-body">
+            <!-- Date event -->
             {% if r.evenement %}
-                <div class="event-meta">📅 {{ r.evenement.dateEvenement|date('d/m/Y') }}</div>
+            <div class="event-meta">
+                📅 {{ r.evenement.dateEvenement|date('d/m/Y à H:i') }}
+                &nbsp;
+                {% if isFutur %}
+                    <span class="badge-futur" style="font-size:9px;">À venir</span>
+                {% else %}
+                    <span style="background:#f1f5f9;color:#64748b;font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;">Passé</span>
+                {% endif %}
+            </div>
             {% endif %}
+
+            <!-- Reserved on -->
             <div class="event-meta" style="color:#A155B9;">
                 🕐 Réservé le {{ r.dateReservation|date('d/m/Y à H:i') }}
             </div>
+
+            <!-- Price -->
             {% if r.evenement %}
-                <div style="margin: 8px 0; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
-                    <span class="event-prix-badge {% if r.evenement.prix == 0 %}event-price-free{% endif %}">
-                        {% if r.evenement.prix == 0 %}🆓 Gratuit{% else %}{{ r.evenement.prix|number_format(2) }} DT{% endif %}
-                    </span>
-                    {% if r.evenement.futur %}
-                        <span class="badge-futur">À venir</span>
-                    {% else %}
-                        <span style="background:#f1f5f9; color:#64748b; font-size:10px; padding:2px 8px; border-radius:20px; font-weight:600;">Passé</span>
-                    {% endif %}
-                    {# Payment status badge #}
-                    {% if r.statutPaiement == 'paid' %}
-                        <span style="background:#d1fae5; color:#065f46; font-size:10px; padding:2px 8px; border-radius:20px; font-weight:700;">✅ Payé</span>
-                    {% elseif r.statutPaiement == 'free' %}
-                        <span style="background:#dbeafe; color:#1e40af; font-size:10px; padding:2px 8px; border-radius:20px; font-weight:700;">🆓 Gratuit</span>
-                    {% else %}
-                        <span style="background:#fef9c3; color:#854d0e; font-size:10px; padding:2px 8px; border-radius:20px; font-weight:700;">⏳ En attente</span>
-                    {% endif %}
-                </div>
+            <div style="margin:8px 0;">
+                <span class="event-prix-badge {% if r.evenement.prix == 0 %}event-price-free{% endif %}">
+                    {% if r.evenement.prix == 0 %}🆓 Gratuit{% else %}{{ r.evenement.prix|number_format(2) }} DT{% endif %}
+                </span>
+            </div>
             {% endif %}
 
-            {# PDF download button — only for confirmed (paid or free) #}
+            <!-- PDF download — only for confirmed -->
             {% if r.statutPaiement in ['paid', 'free'] %}
             <a href="{{ path('user_facture', {id: r.idReservation}) }}"
-               style="display:block; width:100%; text-align:center; margin-top:10px;
+               style="display:block; text-align:center; margin-bottom:8px;
                       background:#f3e8ff; color:#A155B9; border:1.5px solid #ead5f0;
-                      border-radius:10px; padding:8px; font-size:12px; font-weight:700;
-                      text-decoration:none;">
+                      border-radius:10px; padding:8px; font-size:12px; font-weight:700; text-decoration:none;">
                 📄 Télécharger le billet PDF
             </a>
             {% endif %}
 
-            <!-- CANCEL BUTTON -->
-            <form method="post" action="{{ path('user_annuler_reservation', {id: r.idReservation}) }}"
-                  onsubmit="return confirm('Annuler cette réservation ?')" style="margin-top:8px;">
-                <input type="hidden" name="_token" value="{{ csrf_token('annuler' ~ r.idReservation) }}">
+            <!-- PAY NOW button — pending + future event only -->
+            {% if r.statutPaiement == 'pending' and isFutur %}
+            <form method="post" action="{{ path('user_pay_pending', {id: r.idReservation}) }}"
+                  style="margin-bottom:8px;">
+                <input type="hidden" name="_token" value="{{ csrf_token('payer' ~ r.idReservation) }}">
                 <button type="submit"
-                        style="width:100%; background:#fee2e2; color:#dc2626; border:none;
-                               border-radius:10px; padding:9px; font-size:12px; font-weight:700; cursor:pointer;">
-                    ✕ Annuler la réservation
+                        style="width:100%; background:#A155B9; color:white; border:none;
+                               border-radius:10px; padding:9px; font-size:12px; font-weight:700; cursor:pointer;
+                               box-shadow:0 3px 8px rgba(161,85,185,.35);">
+                    💳 Finaliser le paiement
                 </button>
             </form>
+            {% endif %}
+
+            <!-- CANCEL button logic -->
+            {% if isPast %}
+                <!-- Past event: no cancel, just info -->
+                <div style="width:100%; background:#f8fafc; color:#94a3b8; border:1px solid #e2e8f0;
+                            border-radius:10px; padding:9px; font-size:11px; font-weight:600;
+                            text-align:center;">
+                    🏁 Événement passé — annulation impossible
+                </div>
+            {% elseif isFutur %}
+                {% if r.statutPaiement == 'paid' %}
+                    {% set cancelMsg = "Annuler cette réservation ?\n\nℹ️ Remboursement : notre équipe vous contactera dans les 48h pour procéder au remboursement." %}
+                {% else %}
+                    {% set cancelMsg = "Annuler cette réservation ?" %}
+                {% endif %}
+                <form method="post" action="{{ path('user_annuler_reservation', {id: r.idReservation}) }}"
+                      onsubmit="return confirm('{{ cancelMsg|e('js') }}')">
+                    <input type="hidden" name="_token" value="{{ csrf_token('annuler' ~ r.idReservation) }}">
+                    <button type="submit"
+                            style="width:100%; background:#fee2e2; color:#dc2626; border:none;
+                                   border-radius:10px; padding:9px; font-size:12px; font-weight:700; cursor:pointer;">
+                        ✕ Annuler la réservation
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
@@ -111,6 +188,6 @@
 {% endif %}
 
 <div class="footer-pill">
-    <span>🎫 {{ reservations|length }} réservation(s) au total</span>
+    <span>🎫 {{ reservations|length }} réservation(s) affichée(s) sur {{ total }}</span>
 </div>
 {% endblock %}
