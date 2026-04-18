@@ -45,6 +45,9 @@ class Reclamations
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $langueOriginale = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $autoResponse = null;
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $dateCreation = null;
 
@@ -86,6 +89,9 @@ class Reclamations
 
     public function getLangueOriginale(): ?string { return $this->langueOriginale; }
     public function setLangueOriginale(?string $l): static { $this->langueOriginale = $l; return $this; }
+
+    public function getAutoResponse(): ?string { return $this->autoResponse; }
+    public function setAutoResponse(?string $r): static { $this->autoResponse = $r; return $this; }
 
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
 

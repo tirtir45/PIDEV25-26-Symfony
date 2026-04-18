@@ -8,6 +8,8 @@ use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
 use App\Service\ReclamationAnalyzerService;
 use App\Service\TranslationService;
+use App\Service\ChatbotService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +25,9 @@ class ReclamationController extends AbstractController
         UtilisateursRepository $userRepo,
         EntityManagerInterface $em,
         ReclamationAnalyzerService $analyzer,
-        TranslationService $translator
+        TranslationService $translator,
+        ChatbotService $chatbot,
+        NotificationService $notifier
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
@@ -64,8 +68,15 @@ class ReclamationController extends AbstractController
                 $r->setSentiment($analysis['sentiment']);
                 $r->setPriorite($analysis['priorite']);
 
+                // Réponse automatique chatbot
+                $autoReply = $chatbot->generateResponse($r->getDescription());
+                $r->setAutoResponse($autoReply);
+
                 $em->persist($r);
                 $em->flush();
+
+                // Notifications
+                $notifier->onNewReclamation($r);
 
                 $this->addFlash('success', 'Réclamation soumise avec succès.');
                 return $this->redirectToRoute('reclamation_index');

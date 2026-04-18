@@ -6,6 +6,7 @@ use App\Entity\Reclamations;
 use App\Entity\Reclamation_commentaires;
 use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -90,7 +91,8 @@ class AdminReclamationController extends AbstractController
         Request $request,
         ReclamationsRepository $repo,
         UtilisateursRepository $userRepo,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        NotificationService $notifier
     ): Response {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -107,8 +109,12 @@ class AdminReclamationController extends AbstractController
 
             // Changement de statut
             if ($statut) {
+                $oldStatut = $reclamation->getStatut();
                 $reclamation->setStatut($statut);
                 $em->flush();
+                if ($oldStatut !== $statut) {
+                    $notifier->onStatusChange($reclamation, $oldStatut);
+                }
                 $this->addFlash('success', 'Statut mis à jour.');
             }
 
@@ -128,6 +134,8 @@ class AdminReclamationController extends AbstractController
                 $msg->setDate_commentaire(new \DateTime());
                 $em->persist($msg);
                 $em->flush();
+
+                $notifier->onAdminReply($reclamation, $contenu);
             }
 
             return $this->redirectToRoute('admin_reclamation_show', ['id' => $id]);
@@ -141,7 +149,7 @@ class AdminReclamationController extends AbstractController
     }
 
     #[Route('/admin/reclamations/{id}/statut', name: 'admin_reclamation_statut', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em): Response
+    public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em, NotificationService $notifier): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -149,8 +157,12 @@ class AdminReclamationController extends AbstractController
 
         $r = $repo->find($id);
         if ($r) {
+            $oldStatut = $r->getStatut();
             $r->setStatut($request->request->get('statut', 'EN_ATTENTE'));
             $em->flush();
+            if ($oldStatut !== $r->getStatut()) {
+                $notifier->onStatusChange($r, $oldStatut);
+            }
             $this->addFlash('success', 'Statut mis à jour.');
         }
 

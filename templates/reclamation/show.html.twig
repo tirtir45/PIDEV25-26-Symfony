@@ -181,7 +181,21 @@
                 </div>
 
                 <div class="chat-messages" id="chatBox">
-                    {% if messages is empty %}
+                    {# Réponse automatique chatbot #}
+                    {% if reclamation.autoResponse %}
+                    <div class="msg-bubble other">
+                        <div class="bubble-meta">
+                            <i class="bi bi-stars me-1" style="color:#10b981;"></i>
+                            <span style="color:#10b981;font-weight:600;">Réponse automatique</span>
+                            · Immédiatement
+                        </div>
+                        <div class="bubble-text" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;">
+                            {{ reclamation.autoResponse }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if messages is empty and not reclamation.autoResponse %}
                         <div class="empty-chat">
                             <i class="bi bi-chat-square-dots"></i>
                             <span>Aucun message pour le moment.</span>
@@ -208,6 +222,11 @@
                     <div class="chat-closed">
                         <i class="bi bi-lock-fill me-2" style="color:{{ reclamation.statut == 'RESOLU' ? '#22c55e' : '#ef4444' }};"></i>
                         {{ reclamation.statut == 'RESOLU' ? 'Réclamation résolue — merci de nous avoir contactés.' : 'Réclamation rejetée — communication fermée.' }}
+                    </div>
+                {% elseif messages|length == 0 %}
+                    <div class="chat-closed" style="background:#f0fdf4;border-top:1px solid #bbf7d0;">
+                        <i class="bi bi-hourglass-split me-2" style="color:#16a34a;"></i>
+                        En attente de réponse de l'administrateur...
                     </div>
                 {% else %}
                     <div class="chat-input-area">

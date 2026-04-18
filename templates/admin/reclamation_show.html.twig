@@ -255,6 +255,24 @@
                         </div>
                     </div>
 
+                    {# Réponse automatique chatbot #}
+                    {% if reclamation.autoResponse %}
+                    <div class="msg msg-right">
+                        <div class="msg-av av-admin" style="background:#10b981;">
+                            <i class="bi bi-robot" style="font-size:14px;"></i>
+                        </div>
+                        <div class="msg-inner">
+                            <div class="msg-who" style="color:#10b981;">
+                                <i class="bi bi-stars"></i> Réponse automatique
+                            </div>
+                            <div class="msg-text" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-bottom-right-radius:4px;">
+                                {{ reclamation.autoResponse }}
+                            </div>
+                            <span class="msg-when">Réponse générée automatiquement</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {# Séparateur #}
                     {% if messages is not empty %}
                     <div style="display:flex;align-items:center;gap:10px;margin:4px 0;">

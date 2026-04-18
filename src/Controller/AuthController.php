@@ -47,6 +47,7 @@ class AuthController extends AbstractController
                         $request->getSession()->set('user_nom',   $user->getNom());
                         $request->getSession()->set('user_email', $user->getEmail());
                         $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
+                        $request->getSession()->set('user_photo', $user->getPhoto());
                         return $this->redirectByRole($request->getSession()->get('user_role'));
                     }
 

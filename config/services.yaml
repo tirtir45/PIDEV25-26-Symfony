@@ -18,6 +18,7 @@ services:
             $lowStockThreshold: '%low_stock_threshold%'
             $hfApiKey: '%hf_api_key%'
             $huggingFaceToken: '%env(HUGGING_FACE_TOKEN)%'
+            $mailerFrom: 'arijselmi580@gmail.com'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

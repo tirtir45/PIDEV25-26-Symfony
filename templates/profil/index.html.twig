@@ -50,16 +50,18 @@
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button onclick="document.getElementById('edit-section').scrollIntoView({behavior:'smooth'})" class="btn btn-primary">
+                    <button onclick="toggleEditForm()" class="btn btn-primary" id="editToggleBtn">
                         <i class="bi bi-pencil-square me-2"></i> Modifier mon profil
                     </button>
                     
+                    {% if app.session.get('user_role') != 'Administrateur' %}
                     <form method="POST" action="{{ path('app_profile') }}" onsubmit="return confirm('Supprimer définitivement votre compte ? Cette action est irréversible.')">
                         <input type="hidden" name="action" value="delete">
                         <button type="submit" class="btn btn-outline-danger w-100">
                             <i class="bi bi-person-dash me-2"></i> Supprimer le compte
                         </button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -67,9 +69,12 @@
         <!-- Main Content Area -->
         <div class="col-lg-8">
             <!-- Edit Section -->
-            <div class="card-modern" id="edit-section">
-                <div class="card-header-modern border-bottom p-4">
+            <div class="card-modern" id="edit-section" style="{{ errors is not empty ? '' : 'display:none;' }}">
+                <div class="card-header-modern border-bottom p-4 d-flex align-items-center justify-content-between">
                     <h4 class="mb-0">Détails du Compte</h4>
+                    <button type="button" onclick="toggleEditForm()" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Fermer
+                    </button>
                 </div>
                 <div class="card-body-modern p-4">
                     <form method="POST" action="{{ path('app_profile') }}" class="row g-3" enctype="multipart/form-data">
@@ -120,4 +125,20 @@
         </div>
     </div>
 </div>
+<script>
+function toggleEditForm() {
+    const section = document.getElementById('edit-section');
+    const btn = document.getElementById('editToggleBtn');
+    if (section.style.display === 'none') {
+        section.style.display = '';
+        section.scrollIntoView({behavior: 'smooth'});
+        btn.innerHTML = '<i class="bi bi-x-lg me-2"></i> Annuler';
+        btn.classList.replace('btn-primary', 'btn-outline-secondary');
+    } else {
+        section.style.display = 'none';
+        btn.innerHTML = '<i class="bi bi-pencil-square me-2"></i> Modifier mon profil';
+        btn.classList.replace('btn-outline-secondary', 'btn-primary');
+    }
+}
+</script>
 {% endblock %}

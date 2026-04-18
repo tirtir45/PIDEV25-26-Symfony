@@ -108,6 +108,9 @@ class ProfilController extends AbstractController
                 $em->flush();
                 $request->getSession()->set('user_nom', $nom);
                 $request->getSession()->set('user_email', $email);
+                if ($user->getPhoto()) {
+                    $request->getSession()->set('user_photo', $user->getPhoto());
+                }
                 $this->addFlash('success', 'Profil mis à jour avec succès.');
                 return $this->redirectToRoute('app_profile');
             }
