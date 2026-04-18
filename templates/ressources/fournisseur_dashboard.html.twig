@@ -1,0 +1,239 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Ressources - StartHub{% endblock %}
+
+{% block page_title %}
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div>
+            <p style="color: var(--gray-dark); font-size: 14px; font-weight: 500;">Gestion de Ressources</p>
+            <h1 class="page-title" style="margin-top: 4px;">Mes Ressources</h1>
+        </div>
+        <a href="{{ path('app_ressources_new', {'ctx': 'fournisseur'}) }}" class="btn btn-primary">
+            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+            </svg>
+            Nouvelle Ressource
+        </a>
+    </div>
+{% endblock %}
+
+{% block body %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+    <!-- Stats Section -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Total Ressources</p>
+                    <p class="stat-card-value">{{ ressources|length }}</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 7l-8-4m0 0L4 7m16 0l-8 4m0 0l8 4m-8-4v10m0 0l-8-4m0 0v10l8 4m0-10l8-4"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-success">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Disponibles</p>
+                    <p class="stat-card-value">{{ stats.disponibles|default(0) }}</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Ressources en vente</p>
+                    <p class="stat-card-value">{{ stats.listings_achat|default(0) }}</p>
+                    <p class="stat-card-label">{{ stats.items_achat|default(0) }} unite(s)</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13 3H5v14h8v-14zm6 3h-4v11h4V6z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Ressources en location</p>
+                    <p class="stat-card-value">{{ stats.listings_louer|default(0) }}</p>
+                    <p class="stat-card-label">{{ stats.items_louer|default(0) }} unite(s)</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 13h2v8H3zm4-8h2v16H7zm4-2h2v18h-2zm4 4h2v14h-2zm4-4h2v18h-2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <form class="filter-bar" method="get" action="{{ path('app_fournisseur_ressources') }}">
+        <input
+            type="text"
+            name="q"
+            value="{{ filters.q|default('') }}"
+            placeholder="Rechercher une ressource..."
+            class="search-input">
+        <select class="select-input" name="sort" onchange="this.form.submit()">
+            <option value="created_desc" {% if (filters.sort|default('created_desc')) == 'created_desc' %}selected{% endif %}>Récent</option>
+            <option value="created_asc" {% if (filters.sort|default('created_desc')) == 'created_asc' %}selected{% endif %}>Plus ancien</option>
+            <option value="name_asc" {% if (filters.sort|default('created_desc')) == 'name_asc' %}selected{% endif %}>Nom (A-Z)</option>
+            <option value="name_desc" {% if (filters.sort|default('created_desc')) == 'name_desc' %}selected{% endif %}>Nom (Z-A)</option>
+            <option value="quantity_desc" {% if (filters.sort|default('created_desc')) == 'quantity_desc' %}selected{% endif %}>Quantité (décr.)</option>
+            <option value="price_asc" {% if (filters.sort|default('created_desc')) == 'price_asc' %}selected{% endif %}>Prix (croissant)</option>
+            <option value="price_desc" {% if (filters.sort|default('created_desc')) == 'price_desc' %}selected{% endif %}>Prix (décroissant)</option>
+        </select>
+        <button class="btn btn-secondary" type="submit">Appliquer</button>
+    </form>
+
+    <!-- Resources Table -->
+    <div class="table-container">
+        {% if ressources|length > 0 %}
+        <div style="overflow-x: auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Prix</th>
+                        <th>Quantité</th>
+                        <th>Stock</th>
+                        <th>Catégorie</th>
+                        <th>Créé le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ressource in ressources %}
+                    <tr>
+                        <td>
+                            <div class="table-resource-name">
+                                {% if ressource.image_r %}
+                                    {% set imagePath = ressource.image_r %}
+                                    {% if not (imagePath starts with 'http://' or imagePath starts with 'https://' or imagePath starts with '/') %}
+                                        {% set imagePath = asset('uploads/ressources/' ~ imagePath) %}
+                                    {% endif %}
+                                    <img src="{{ imagePath }}"
+                                         alt="{{ ressource.nom }}"
+                                         class="table-image"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="table-image-placeholder" style="display:none;">
+                                        <svg fill="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; color: var(--gray-dark);">
+                                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="table-image-placeholder">
+                                        <svg fill="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; color: var(--gray-dark);">
+                                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                                <div class="table-resource-info">
+                                    <p class="table-resource-title">{{ ressource.nom }}</p>
+                                        {# ID hidden for user privacy #}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-blue">{{ ressource.type_r|default('N/A') }}</span>
+                        </td>
+                        <td>
+                            {% set offreNormalized = ressource.offre ? ressource.offre|lower|trim : '' %}
+                            {% if offreNormalized in ['louer', 'location', 'a louer', 'rent'] %}
+                                {% if ressource.prix_louer is not null and ressource.prix_louer > 0 %}
+                                    <strong>{{ ressource.prix_louer|number_format(2, '.', ' ') }} DT{% if ressource.unite_louer %} / {{ ressource.unite_louer }}{% endif %}</strong>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            {% else %}
+                                {% if ressource.prix_achat is not null and ressource.prix_achat > 0 %}
+                                    <strong>{{ ressource.prix_achat|number_format(2, '.', ' ') }} DT</strong>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ ressource.quantite|default(0) }}</td>
+                        <td>
+                            {% set stock = ressource.quantite|default(0) %}
+                            {% if stock > 0 %}
+                                <span class="badge badge-green">Disponible</span>
+                            {% else %}
+                                <span class="badge badge-red">Rupture</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ressource.etat|default('N/A') }}</td>
+                        <td>
+                            {% if ressource.createdAt is not null %}
+                                {{ ressource.createdAt|date('d/m/Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="{{ path('app_ressources_show', {'idRessource': ressource.id_ressource, 'ctx': 'fournisseur'}) }}" class="btn-view" title="Voir">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </a>
+                                <a href="{{ path('app_ressources_edit', {'idRessource': ressource.id_ressource, 'ctx': 'fournisseur'}) }}" class="btn-edit" title="Modifier">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <form method="post"
+                                      action="{{ path('app_ressources_delete', {'idRessource': ressource.id_ressource}) }}"
+                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette ressource ?');"
+                                      style="display:inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ressource.id_ressource) }}">
+                                    <button type="submit" class="btn-delete" title="Supprimer">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4m0 0L4 7m16 0l-8 4m0 0l8 4m-8-4v10m0 0l-8-4m0 0v10l8 4m0-10l8-4"></path>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">Aucune ressource</h3>
+            <p class="empty-state-text">Commencez par ajouter votre première ressource.</p>
+            <a href="{{ path('app_ressources_new', {'ctx': 'fournisseur'}) }}" class="btn btn-primary">
+                <svg fill="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                </svg>
+                Ajouter une Ressource
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

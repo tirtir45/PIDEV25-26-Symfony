@@ -2,8 +2,8 @@
 
 namespace App\Form;
 
-use App\Entity\Utilisateur;
-use App\Entity\Role;
+use App\Entity\Utilisateurs;
+use App\Entity\Roles;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -56,7 +56,7 @@ class UtilisateurType extends AbstractType
             ])
             ->add('telephone', TelType::class, ['label' => 'Téléphone', 'required' => false])
             ->add('role', EntityType::class, [
-                'class' => Role::class,
+                'class' => Roles::class,
                 'choice_label' => 'nomRole',
                 'label' => 'Rôle',
                 'required' => false,
@@ -76,7 +76,7 @@ class UtilisateurType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => Utilisateur::class,
+            'data_class' => Utilisateurs::class,
             'is_edit' => false,
         ]);
     }

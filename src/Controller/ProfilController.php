@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Repository\UtilisateurRepository;
+use App\Repository\UtilisateursRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,8 +11,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ProfilController extends AbstractController
 {
-    #[Route('/profil', name: 'app_profil', methods: ['GET', 'POST'])]
-    public function index(Request $request, UtilisateurRepository $repo, EntityManagerInterface $em): Response
+    #[Route('/profil', name: 'app_profile', methods: ['GET', 'POST'])]
+    public function index(Request $request, UtilisateursRepository $repo, EntityManagerInterface $em): Response
     {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
@@ -26,7 +26,7 @@ class ProfilController extends AbstractController
             $action = $request->request->get('action');
 
             if ($action === 'delete') {
-                $reclamations = $em->getRepository(\App\Entity\Reclamation::class)->findBy(['utilisateur' => $user]);
+                $reclamations = $em->getRepository(\App\Entity\Reclamations::class)->findBy(['utilisateur' => $user]);
                 foreach ($reclamations as $r) {
                     $em->remove($r);
                 }
@@ -108,8 +108,11 @@ class ProfilController extends AbstractController
                 $em->flush();
                 $request->getSession()->set('user_nom', $nom);
                 $request->getSession()->set('user_email', $email);
+                if ($user->getPhoto()) {
+                    $request->getSession()->set('user_photo', $user->getPhoto());
+                }
                 $this->addFlash('success', 'Profil mis à jour avec succès.');
-                return $this->redirectToRoute('app_profil');
+                return $this->redirectToRoute('app_profile');
             }
         }
 
