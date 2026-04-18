@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ utilisateur.nom }}{% endblock %}
+{% block page_title %}Détail de l'utilisateur{% endblock %}
+
+{% block body %}
+<div class="detail-container">
+    <div class="detail-header">
+        <div class="detail-title-group">
+            <h1 class="detail-title">{{ utilisateur.nom }}</h1>
+        </div>
+        <div class="detail-actions">
+            <a href="{{ path('utilisateur_edit', {id: utilisateur.id}) }}" class="btn btn-secondary">Modifier</a>
+            <a href="{{ path('utilisateur_index') }}" class="btn btn-outline">← Retour</a>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label class="detail-label">ID</label>
+                <div class="detail-value">{{ utilisateur.id }}</div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Email</label>
+                <div class="detail-value">{{ utilisateur.email }}</div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Téléphone</label>
+                <div class="detail-value">{{ utilisateur.telephone ?? '—' }}</div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Adresse</label>
+                <div class="detail-value">—</div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Rôle</label>
+                <div class="detail-value">
+                    {% if utilisateur.role %}
+                        <span class="badge badge-role">{{ utilisateur.role.nomRole }}</span>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Statut</label>
+                <div class="detail-value">
+                    {% if utilisateur.actif %}
+                        <span class="badge badge-active">Actif</span>
+                    {% else %}
+                        <span class="badge badge-inactive">Inactif</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <label class="detail-label">Date d'inscription</label>
+                <div class="detail-value">{{ utilisateur.dateInscription ? utilisateur.dateInscription|date('d/m/Y H:i') : '—' }}</div>
+            </div>
+
+            {% if utilisateur.bio is defined and utilisateur.bio %}
+            <div class="detail-item full-width">
+                <label class="detail-label">Bio</label>
+                <div class="detail-value">{{ utilisateur.bio }}</div>
+            </div>
+            {% endif %}
+
+            {% if utilisateur.competences is defined and utilisateur.competences %}
+            <div class="detail-item full-width">
+                <label class="detail-label">Compétences</label>
+                <div class="detail-value">{{ utilisateur.competences }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Section -->
+    <div class="delete-section">
+        <h3 class="delete-title">Zone de danger</h3>
+        <p class="delete-subtitle">Supprimer cet utilisateur de manière permanente</p>
+        <form method="post" action="{{ path('utilisateur_delete', {id: utilisateur.id}) }}"
+              onsubmit="return confirm('Êtes-vous sûr ? Cette action est irréversible.')">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ utilisateur.id) }}">
+            <button type="submit" class="btn btn-danger">Supprimer l'utilisateur</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,348 @@
+{# templates/base.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StartHub{% endblock %}</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link href="{{ asset('styles/style.css') }}" rel="stylesheet">
+
+    {% block stylesheets %}{% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+
+    {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+    {% if frankenphpHotReload %}
+        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
+        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
+        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
+    {% endif %}
+</head>
+{% block layout %}
+    <div class="layout-container">
+        {% block sidebar %}
+            {% set userRole = app.session.get('user_role') %}
+            {% if userRole == 'Entrepreneur' %}
+                {% include '_sidebar_entrepreneur.html.twig' %}
+            {% elseif userRole == 'Fournisseur' %}
+                {% include '_sidebar_fournisseur.html.twig' %}
+            {% elseif userRole == 'Administrateur' %}
+                {% include '_sidebar_admin.html.twig' %}
+            {% elseif userRole == 'Membre' %}
+                {% include '_sidebar_membre.html.twig' %}
+            {% elseif app.session.get('user_id') %}
+                {% include '_sidebar.html.twig' %}
+            {% endif %}
+        {% endblock %}
+
+        <div class="main-content">
+            {% block top_nav %}
+                {% if app.session.get('user_id') %}
+                    <nav class="top-nav">
+                        <button class="nav-icon-btn d-lg-none" id="toggleSidebar" type="button" aria-label="Toggle Navigation">
+                            <i class="bi bi-list fs-3"></i>
+                        </button>
+                        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <div class="nav-icons">
+                            <button class="nav-icon-btn" type="button" aria-label="Notifications">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                            </button>
+                            <a href="{{ path('app_profile') }}" class="nav-icon-btn" aria-label="Profile">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </nav>
+                {% endif %}
+            {% endblock %}
+
+            <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+            <main class="main-area">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="flash-message flash-{{ label }}">{{ message }}</div>
+                    {% endfor %}
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+    </div>
+{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('toggleSidebar')?.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            if (window.innerWidth <= 992 &&
+                sidebar && !sidebar.contains(event.target) &&
+                toggleBtn && !toggleBtn.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+
+            const bgColor = type === 'success'
+                ? 'linear-gradient(135deg, #10b981, #34d399)'
+                : type === 'warning'
+                ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
+                : 'linear-gradient(135deg, #ef4444, #f87171)';
+
+            const icon = type === 'success'
+                ? 'bi-check-circle-fill'
+                : type === 'warning'
+                ? 'bi-exclamation-triangle-fill'
+                : 'bi-x-circle-fill';
+
+            toast.innerHTML = `
+                <div style="background: ${bgColor}; color: white; padding: 1rem 1.5rem;
+                            border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                            display: flex; align-items: center; gap: 0.75rem; min-width: 300px;">
+                    <i class="bi ${icon}"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()"
+                            style="background: none; border: none; color: white;
+                                   margin-left: auto; cursor: pointer; font-size: 1.2rem;">
+                        &times;
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        {% for message in app.flashes('success') %}
+            showToast('{{ message|escape('js') }}', 'success');
+        {% endfor %}
+
+        {% for message in app.flashes('warning') %}
+            showToast('{{ message|escape('js') }}', 'warning');
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            showToast('{{ message|escape('js') }}', 'error');
+        {% endfor %}
+    </script>
+
+    {# ── Dynamic Per-Page Search (filters as you type) ── #}
+    <script>
+    (function() {
+        // ── Utility: debounce ──
+        function debounce(fn, ms) {
+            var timer;
+            return function() {
+                var ctx = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
+            };
+        }
+
+        // ── 1. Table-based pages (fournisseur_dashboard, fournisseur_ventes) ──
+        //    Targets: .search-input inside .filter-bar, filtering <tbody> rows
+        document.querySelectorAll('.filter-bar .search-input').forEach(function(input) {
+            var filterBar = input.closest('.filter-bar');
+            if (!filterBar) return;
+
+            // Find the table — look for .table-container after the filter bar
+            var tableContainer = filterBar.nextElementSibling;
+            while (tableContainer && !tableContainer.classList.contains('table-container')) {
+                tableContainer = tableContainer.nextElementSibling;
+            }
+            if (!tableContainer) return;
+
+            var tbody = tableContainer.querySelector('tbody');
+            if (!tbody) return;
+
+            // Store original rows
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                rows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Update the count pill if present
+                var pill = filterBar.querySelector('.count-pill');
+                if (pill) {
+                    pill.textContent = matchCount + (matchCount === 1 ? ' résultat' : ' résultats');
+                }
+
+                // Show/hide empty state
+                var emptyState = tableContainer.querySelector('.empty-state, .dynamic-no-results');
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state dynamic-no-results';
+                        emptyState.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucun élément ne correspond à votre recherche.</p>';
+                        tableContainer.appendChild(emptyState);
+                    }
+                    emptyState.style.display = '';
+                } else if (emptyState && emptyState.classList.contains('dynamic-no-results')) {
+                    emptyState.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent the form from submitting on Enter in the search field
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // ── 2. Card-based pages (ressources catalog) ──
+        //    Targets: .catalog-search-input, filtering .resource-card
+        document.querySelectorAll('.catalog-search-input').forEach(function(input) {
+            var form = input.closest('form');
+            if (!form) return;
+
+            // Find the catalog cards container
+            var cardsContainer = document.querySelector('.catalog-cards');
+            if (!cardsContainer) return;
+
+            var cards = Array.from(cardsContainer.querySelectorAll('.resource-card'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                cards.forEach(function(card) {
+                    var text = card.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    card.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Show/hide empty message
+                var panel = cardsContainer.closest('.catalog-panel');
+                var emptyMsg = panel ? panel.querySelector('.dynamic-no-results') : null;
+
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyMsg && panel) {
+                        emptyMsg = document.createElement('div');
+                        emptyMsg.className = 'empty-state dynamic-no-results';
+                        emptyMsg.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucune ressource ne correspond à votre recherche.</p>';
+                        panel.appendChild(emptyMsg);
+                    }
+                    if (emptyMsg) emptyMsg.style.display = '';
+                } else if (emptyMsg) {
+                    emptyMsg.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent form submission on Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // ── 3. Entrepreneur dashboard (.search-filters .search-box input) ──
+        //    Targets: input inside .search-box within .search-filters, filtering .custom-table rows
+        document.querySelectorAll('.search-filters .search-box input').forEach(function(input) {
+            var filtersBlock = input.closest('.search-filters');
+            if (!filtersBlock) return;
+
+            // Find the table — may be inside .card-modern further down
+            var tbody = document.querySelector('.custom-table tbody');
+            if (!tbody) return;
+
+            var tableWrap = tbody.closest('.card-modern') || tbody.closest('.custom-table-wrap');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            input.addEventListener('input', debounce(function() {
+                var query = this.value.trim().toLowerCase();
+
+                var matchCount = 0;
+                rows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    var match = query === '' || text.indexOf(query) !== -1;
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Update badge count if present
+                var badge = document.querySelector('.card-header-modern .badge');
+                if (badge) {
+                    badge.textContent = matchCount + ' projet' + (matchCount !== 1 ? 's' : '');
+                }
+
+                // Show/hide empty state
+                var container = tableWrap || tbody.parentElement;
+                var emptyState = container.querySelector('.dynamic-no-results');
+                if (matchCount === 0 && query !== '') {
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state dynamic-no-results';
+                        emptyState.style.margin = '20px';
+                        emptyState.innerHTML =
+                            '<div class="empty-state-icon">🔍</div>' +
+                            '<h3 class="empty-state-title">Aucun résultat</h3>' +
+                            '<p class="empty-state-text">Aucun projet ne correspond à votre recherche.</p>';
+                        container.appendChild(emptyState);
+                    }
+                    emptyState.style.display = '';
+                } else if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            }, 200));
+
+            // Prevent form submission on Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
+

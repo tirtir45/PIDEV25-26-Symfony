@@ -1,0 +1,108 @@
+{# templates/entrepreneur/nouveau_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="card-modern" style="max-width: 900px; margin: 0 auto;">
+        <div class="card-header-modern">
+            <h3><i class="bi bi-plus-circle"></i> Soumettre un Nouveau Projet</h3>
+        </div>
+        <div class="card-body-modern">
+            {{ form_start(form, {'attr': {'id': 'projectForm', 'novalidate': 'novalidate'}})}}
+                <div class="mb-4">
+                    {{ form_label(form.titre, 'Titre du projet', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                    {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Application mobile pour la santé', 'required': true}})}}
+                    <div class="invalid-feedback" id="titreError"></div>
+                </div>
+                
+                <div class="mb-4">
+                    {{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                    {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5, 'placeholder': 'Décrivez votre projet en détail...', 'required': true}})}}
+                    <div class="invalid-feedback" id="descriptionError"></div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        {{ form_label(form.secteur, 'Secteur', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(form.secteur, {'attr': {'class': 'form-select', 'required': true}})}}
+                        <div class="invalid-feedback" id="secteurError"></div>
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.objectifs, 'Objectifs', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                        {{ form_widget(form.objectifs, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Quels sont vos objectifs ?'}})}}
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                        <i class="bi bi-send"></i> Soumettre le projet
+                    </button>
+                    <a href="{{ path('entrepreneur_dashboard') }}" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+document.getElementById('projectForm').addEventListener('submit', function(e) {
+    let isValid = true;
+    
+    const titre = document.querySelector('#projet_titre');
+    const description = document.querySelector('#projet_description');
+    const secteur = document.querySelector('#projet_secteur');
+    
+    if (!titre.value.trim()) {
+        showFieldError(titre, 'titreError', 'Le titre du projet est obligatoire');
+        isValid = false;
+    }
+    
+    if (!description.value.trim()) {
+        showFieldError(description, 'descriptionError', 'La description est obligatoire');
+        isValid = false;
+    }
+    
+    if (!secteur.value) {
+        showFieldError(secteur, 'secteurError', 'Veuillez sélectionner un secteur');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+        showToast('Veuillez remplir tous les champs obligatoires', 'error');
+    }
+});
+
+function showFieldError(field, errorId, message) {
+    field.classList.add('is-invalid');
+    const errorDiv = document.getElementById(errorId);
+    if (errorDiv) {
+        errorDiv.textContent = message;
+    }
+}
+
+function clearFieldError(field, errorId) {
+    field.classList.remove('is-invalid');
+    const errorDiv = document.getElementById(errorId);
+    if (errorDiv) {
+        errorDiv.textContent = '';
+    }
+}
+
+document.querySelector('#projet_titre').addEventListener('input', function() {
+    if (this.value.trim()) clearFieldError(this, 'titreError');
+});
+
+document.querySelector('#projet_description').addEventListener('input', function() {
+    if (this.value.trim()) clearFieldError(this, 'descriptionError');
+});
+
+document.querySelector('#projet_secteur').addEventListener('change', function() {
+    if (this.value) clearFieldError(this, 'secteurError');
+});
+</script>
+{% endblock %}
+{% endblock %}

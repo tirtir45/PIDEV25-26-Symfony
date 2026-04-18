@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catalogue de Ressources{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .recommendation-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .recommendation-header h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .match-badge {
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .resource-card.recommended-card {
+            border: 2px solid transparent;
+            background-clip: padding-box, border-box;
+            background-origin: padding-box, border-box;
+            background-image: linear-gradient(white, white), linear-gradient(to right, #6366f1, #a855f7);
+            transform: scale(1.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .resource-card.recommended-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="ressource-catalog-page">
+    <section class="catalog-hero">
+        <div>
+            <h1>Catalogue de Ressources</h1>
+            <p>Decouvrez et reservez des ressources pour vos projets</p>
+        </div>
+    </section>
+
+    <section class="stats-grid">
+        <article class="stat-card">
+            <h3>Ressources Disponibles</h3>
+            <div class="stat-value">{{ stats.disponibles }}</div>
+        </article>
+        <article class="stat-card">
+            <h3>A Acheter</h3>
+            <div class="stat-value">{{ stats.achat }}</div>
+        </article>
+        <article class="stat-card">
+            <h3>A Louer</h3>
+            <div class="stat-value">{{ stats.louer }}</div>
+        </article>
+        <article class="stat-card accent">
+            <h3>Categories</h3>
+            <div class="stat-value">{{ stats.categories }}</div>
+        </article>
+    </section>
+
+    <form method="get" action="{{ path('app_ressources_index') }}" class="catalog-toolbar catalog-toolbar-clean">
+        <input type="text" name="q" value="{{ filters.q|default('') }}" class="catalog-search-input" placeholder="Rechercher">
+
+        <select name="offer" class="catalog-select">
+            <option value="all" {% if (filters.offer|default('all')) == 'all' %}selected{% endif %}>Offre</option>
+            <option value="achat" {% if (filters.offer|default('all')) == 'achat' %}selected{% endif %}>Achat</option>
+            <option value="louer" {% if (filters.offer|default('all')) == 'louer' %}selected{% endif %}>Location</option>
+        </select>
+
+        <select name="availability" class="catalog-select">
+            <option value="all" {% if (filters.availability|default('all')) == 'all' %}selected{% endif %}>Statut</option>
+            <option value="disponible" {% if (filters.availability|default('all')) == 'disponible' %}selected{% endif %}>Disponible</option>
+            <option value="rupture" {% if (filters.availability|default('all')) == 'rupture' %}selected{% endif %}>Rupture</option>
+            <option value="indisponible" {% if (filters.availability|default('all')) == 'indisponible' %}selected{% endif %}>Indisponible</option>
+        </select>
+
+        <select name="category" class="catalog-select">
+            <option value="all">Categorie</option>
+            {% for categoryValue, categoryLabel in filter_categories|default({}) %}
+                <option value="{{ categoryValue }}" {% if (filters.category|default('all')) == categoryValue %}selected{% endif %}>{{ categoryLabel }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="sort" class="catalog-select">
+            <option value="name_asc" {% if (filters.sort|default('name_asc')) == 'name_asc' %}selected{% endif %}>Nom A-Z</option>
+            <option value="name_desc" {% if (filters.sort|default('name_asc')) == 'name_desc' %}selected{% endif %}>Nom Z-A</option>
+            <option value="price_asc" {% if (filters.sort|default('name_asc')) == 'price_asc' %}selected{% endif %}>Prix +</option>
+            <option value="price_desc" {% if (filters.sort|default('name_asc')) == 'price_desc' %}selected{% endif %}>Prix -</option>
+            <option value="quantity_asc" {% if (filters.sort|default('name_asc')) == 'quantity_asc' %}selected{% endif %}>Quantite +</option>
+            <option value="quantity_desc" {% if (filters.sort|default('name_asc')) == 'quantity_desc' %}selected{% endif %}>Quantite -</option>
+        </select>
+
+        <button type="submit" class="btn btn-secondary btn-compact">Appliquer</button>
+        <a href="{{ path('app_ressources_index') }}" class="btn btn-ghost btn-compact">Annuler</a>
+    </form>
+
+
+    <section class="catalog-panel">
+        <div class="recommendation-header">
+            <h2 style="background: none; -webkit-text-fill-color: initial; font-weight: 700;">Toutes les ressources</h2>
+        </div>
+        <div class="catalog-cards">
+            {% for ressource in ressources %}
+                {% set rec_data = rec_map[ressource.id_ressource]|default(null) %}
+                {% include 'ressources/_card.html.twig' with {
+                    'ressource': ressource,
+                    'is_recommended': rec_data is not null,
+                    'recommended_for': rec_data ? rec_data.project : null
+                } %}
+            {% else %}
+                <div class="empty-state">
+                    Aucune ressource disponible pour le moment.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}

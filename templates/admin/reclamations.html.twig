@@ -1,0 +1,472 @@
+{% extends 'base.html.twig' %}
+{% block title %}Réclamations — StartHub{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+.rec-page { font-family: 'Inter', sans-serif; background: #F4F3FF; min-height: 100vh; padding: 28px 32px; }
+
+/* ── Topbar ── */
+.rec-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+}
+.rec-topbar-left h1 {
+    font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+    color: #1a1040; margin: 0 0 3px;
+}
+.rec-topbar-left p { font-size: 13px; color: #8b7fb8; margin: 0; }
+.rec-topbar-right { display: flex; align-items: center; gap: 10px; }
+.btn-filter {
+    border: 1.5px solid #D4CFEE; background: #fff; color: #5a4f8a;
+    border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 6px; transition: .15s;
+    font-family: 'Inter', sans-serif;
+}
+.btn-filter:hover { border-color: #7C5CFC; color: #7C5CFC; }
+.btn-primary-rec {
+    background: #7C5CFC; color: #fff; border: none;
+    border-radius: 10px; padding: 8px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    font-family: 'Inter', sans-serif; transition: .15s;
+}
+.btn-primary-rec:hover { background: #6a4de8; }
+
+/* ── KPI Cards ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+    background: #fff; border: 1px solid #EAE8F8; border-radius: 14px;
+    padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;
+}
+.kpi-label { font-size: 12px; font-weight: 600; color: #8b7fb8; text-transform: uppercase; letter-spacing: .6px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #1a1040; line-height: 1; }
+.kpi-footer { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.kpi-trend-up   { color: #16a34a; }
+.kpi-trend-down { color: #dc2626; }
+.kpi-trend-neu  { color: #8b7fb8; }
+
+/* ── Main layout ── */
+.rec-layout { display: flex; gap: 20px; align-items: flex-start; }
+.rec-main { flex: 1; min-width: 0; }
+.rec-aside { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Filter bar ── */
+.filter-bar-rec {
+    background: #fff; border: 1px solid #EAE8F8; border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 18px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.filter-bar-rec .search-wrap {
+    flex: 1; min-width: 180px; position: relative;
+}
+.filter-bar-rec .search-wrap i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: #a89fd4; font-size: 14px;
+}
+.filter-bar-rec input {
+    width: 100%; border: 1.5px solid #EAE8F8; border-radius: 9px;
+    padding: 8px 12px 8px 34px; font-size: 13px; color: #1a1040;
+    outline: none; background: #F4F3FF; font-family: 'Inter', sans-serif;
+    transition: .15s;
+}
+.filter-bar-rec input:focus { border-color: #7C5CFC; background: #fff; }
+.filter-bar-rec select {
+    border: 1.5px solid #EAE8F8; border-radius: 9px; padding: 8px 12px;
+    font-size: 13px; color: #1a1040; outline: none; background: #F4F3FF;
+    font-family: 'Inter', sans-serif; cursor: pointer;
+}
+.filter-bar-rec select:focus { border-color: #7C5CFC; }
+.filter-bar-rec .btn-go {
+    background: #7C5CFC; color: #fff; border: none; border-radius: 9px;
+    padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Ticket cards ── */
+.ticket-list { display: flex; flex-direction: column; gap: 12px; }
+.ticket-item {
+    background: #fff; border: 1px solid #EAE8F8; border-radius: 12px;
+    padding: 16px 18px; display: flex; align-items: flex-start; gap: 14px;
+    transition: border-color .15s;
+}
+.ticket-item:hover { border-color: #c4b8f5; }
+.ticket-item.priority-high { border-left: 3px solid #ef4444; }
+.ticket-item.priority-medium { border-left: 3px solid #f59e0b; }
+.ticket-item.priority-low { border-left: 3px solid #22c55e; }
+
+.ticket-av {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: #EDE9FF; color: #7C5CFC; font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+.ticket-body { flex: 1; min-width: 0; }
+.ticket-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.ticket-title { font-size: 14px; font-weight: 600; color: #1a1040; margin: 0; }
+.ticket-meta { font-size: 11px; color: #a89fd4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.ticket-desc { font-size: 13px; color: #5a4f8a; line-height: 1.5; margin-bottom: 8px; }
+.ticket-desc.rtl { direction: rtl; text-align: right; color: #7C5CFC; font-style: italic; }
+.ticket-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Badges */
+.badge-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    font-family: 'Inter', sans-serif;
+}
+.badge-attente  { background: #fef3c7; color: #92400e; }
+.badge-cours    { background: #dbeafe; color: #1e40af; }
+.badge-resolu   { background: #d1fae5; color: #065f46; }
+.badge-rejete   { background: #fee2e2; color: #991b1b; }
+.badge-cat      { background: #EDE9FF; color: #7C5CFC; }
+.badge-high     { background: #fee2e2; color: #dc2626; }
+.badge-medium   { background: #fef3c7; color: #b45309; }
+.badge-low      { background: #d1fae5; color: #15803d; }
+.badge-neg      { background: #fee2e2; color: #dc2626; }
+.badge-pos      { background: #d1fae5; color: #15803d; }
+.badge-neu      { background: #f3f4f6; color: #6b7280; }
+
+/* Ticket actions */
+.ticket-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-action {
+    border: 1.5px solid #EAE8F8; background: #fff; border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif; color: #5a4f8a; transition: .15s;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.btn-action:hover { border-color: #7C5CFC; color: #7C5CFC; }
+.btn-action.approve { border-color: #bbf7d0; color: #15803d; }
+.btn-action.approve:hover { background: #f0fdf4; }
+.btn-action.reject  { border-color: #fecaca; color: #dc2626; }
+.btn-action.reject:hover  { background: #fef2f2; }
+.btn-action.discuss { border-color: #c4b8f5; color: #7C5CFC; }
+.btn-action.discuss:hover { background: #EDE9FF; }
+.btn-action.danger  { border-color: #fecaca; color: #dc2626; padding: 6px 8px; }
+.btn-action.danger:hover  { background: #fef2f2; }
+
+/* ── Aside cards ── */
+.aside-card {
+    background: #fff; border: 1px solid #EAE8F8; border-radius: 12px; overflow: hidden;
+}
+.aside-card-header {
+    padding: 12px 16px; border-bottom: 1px solid #EAE8F8;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .7px; color: #8b7fb8; background: #faf9ff;
+    display: flex; align-items: center; gap: 6px;
+}
+.aside-card-body { padding: 16px; }
+
+/* Mini stats grid */
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-stat {
+    background: #F4F3FF; border-radius: 10px; padding: 12px;
+    text-align: center;
+}
+.mini-stat .ms-val { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: #1a1040; }
+.mini-stat .ms-lbl { font-size: 10px; color: #8b7fb8; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+/* Progress bars */
+.prog-item { margin-bottom: 12px; }
+.prog-item:last-child { margin-bottom: 0; }
+.prog-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.prog-top span { font-size: 12px; color: #5a4f8a; font-weight: 500; }
+.prog-top .prog-pct { font-weight: 700; color: #7C5CFC; }
+.prog-bar { height: 6px; background: #EAE8F8; border-radius: 10px; overflow: hidden; }
+.prog-fill { height: 100%; background: #7C5CFC; border-radius: 10px; transition: width .4s; }
+
+/* Activity feed */
+.activity-feed { display: flex; flex-direction: column; }
+.activity-item { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+.activity-item:not(:last-child)::before {
+    content: ''; position: absolute; left: 7px; top: 26px;
+    width: 2px; height: calc(100% - 10px); background: #EAE8F8;
+}
+.act-dot {
+    width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+    margin-top: 2px; border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #EAE8F8;
+}
+.act-dot.green  { background: #22c55e; box-shadow: 0 0 0 2px #d1fae5; }
+.act-dot.red    { background: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
+.act-dot.yellow { background: #f59e0b; box-shadow: 0 0 0 2px #fef3c7; }
+.act-dot.blue   { background: #3b82f6; box-shadow: 0 0 0 2px #dbeafe; }
+.act-dot.purple { background: #7C5CFC; box-shadow: 0 0 0 2px #EDE9FF; }
+.act-content .act-text { font-size: 12px; color: #1a1040; font-weight: 500; line-height: 1.4; }
+.act-content .act-time { font-size: 11px; color: #a89fd4; margin-top: 2px; }
+
+/* Empty */
+.empty-rec {
+    background: #fff; border: 1px solid #EAE8F8; border-radius: 12px;
+    padding: 60px 20px; text-align: center; color: #a89fd4;
+}
+.empty-rec i { font-size: 40px; margin-bottom: 12px; display: block; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="rec-page">
+
+    {# ── Topbar ── #}
+    <div class="rec-topbar">
+        <div class="rec-topbar-left">
+            <h1>Gestion des Réclamations</h1>
+            <p>{{ "now"|date("l d MMMM Y") }} · {{ stats.total }} tickets au total</p>
+        </div>
+        <div class="rec-topbar-right">
+            <button class="btn-filter" onclick="document.getElementById('filterBar').scrollIntoView({behavior:'smooth'})">
+                <i class="bi bi-funnel"></i> Filtrer
+            </button>
+            <button class="btn-filter">
+                <i class="bi bi-search"></i> Rechercher
+            </button>
+        </div>
+    </div>
+
+    {# ── KPIs ── #}
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total tickets</div>
+            <div class="kpi-value">{{ stats.total }}</div>
+            <div class="kpi-footer kpi-trend-neu">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                Tous statuts confondus
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">En attente</div>
+            <div class="kpi-value" style="color:#b45309;">{{ stats.attente }}</div>
+            <div class="kpi-footer kpi-trend-down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                Nécessitent une action
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Résolus</div>
+            <div class="kpi-value" style="color:#15803d;">{{ stats.resolu }}</div>
+            <div class="kpi-footer kpi-trend-up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                Tickets traités
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Priorité HIGH</div>
+            <div class="kpi-value" style="color:#dc2626;">{{ stats.high }}</div>
+            <div class="kpi-footer kpi-trend-down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                Urgents
+            </div>
+        </div>
+    </div>
+
+    {# ── Main layout ── #}
+    <div class="rec-layout">
+
+        {# ── Left: list ── #}
+        <div class="rec-main">
+
+            {# Filter bar #}
+            <div class="filter-bar-rec" id="filterBar">
+                <form method="GET" action="{{ path('admin_reclamation_index') }}" style="display:contents;">
+                    <div class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input type="text" name="search" placeholder="Rechercher un ticket..." value="{{ search }}">
+                    </div>
+                    <select name="statut" onchange="this.form.submit()">
+                        <option value="" {{ statut == '' ? 'selected' : '' }}>Tous les statuts</option>
+                        <option value="EN_ATTENTE" {{ statut == 'EN_ATTENTE' ? 'selected' : '' }}>⏳ En attente</option>
+                        <option value="EN_COURS"   {{ statut == 'EN_COURS'   ? 'selected' : '' }}>🔄 En cours</option>
+                        <option value="RESOLU"     {{ statut == 'RESOLU'     ? 'selected' : '' }}>✅ Résolu</option>
+                        <option value="REJETE"     {{ statut == 'REJETE'     ? 'selected' : '' }}>❌ Rejeté</option>
+                    </select>
+                    <select name="sort" onchange="this.form.submit()">
+                        <option value="dateCreation" {{ sort == 'dateCreation' ? 'selected' : '' }}>Plus récent</option>
+                        <option value="sujet"        {{ sort == 'sujet'        ? 'selected' : '' }}>Sujet A–Z</option>
+                        <option value="statut"       {{ sort == 'statut'       ? 'selected' : '' }}>Statut</option>
+                    </select>
+                    <button type="submit" class="btn-go">Appliquer</button>
+                </form>
+            </div>
+
+            {# Ticket list #}
+            {% if reclamations is empty %}
+                <div class="empty-rec">
+                    <i class="bi bi-inbox"></i>
+                    <p style="font-size:14px;font-weight:600;color:#5a4f8a;">Aucun ticket trouvé</p>
+                </div>
+            {% else %}
+                <div class="ticket-list">
+                    {% for r in reclamations %}
+                    <div class="ticket-item {{ r.priorite == 'HIGH' ? 'priority-high' : (r.priorite == 'MEDIUM' ? 'priority-medium' : 'priority-low') }}">
+
+                        {# Avatar #}
+                        <div class="ticket-av">
+                            {{ r.utilisateur ? r.utilisateur.nom|slice(0,1)|upper : '?' }}
+                        </div>
+
+                        {# Body #}
+                        <div class="ticket-body">
+                            <div class="ticket-top">
+                                <span class="ticket-title">{{ r.sujet }}</span>
+                                <span class="badge-pill {{ r.statut == 'EN_ATTENTE' ? 'badge-attente' : (r.statut == 'EN_COURS' ? 'badge-cours' : (r.statut == 'RESOLU' ? 'badge-resolu' : 'badge-rejete')) }}">
+                                    {{ r.statut|replace({'_': ' '}) }}
+                                </span>
+                                {% if r.priorite %}
+                                <span class="badge-pill {{ r.priorite == 'HIGH' ? 'badge-high' : (r.priorite == 'MEDIUM' ? 'badge-medium' : 'badge-low') }}">
+                                    {{ r.priorite }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="ticket-meta">
+                                {% if r.utilisateur %}
+                                    <span><i class="bi bi-person"></i> {{ r.utilisateur.nom }}</span>
+                                    <span>{{ r.utilisateur.email }}</span>
+                                {% endif %}
+                                <span><i class="bi bi-calendar3"></i> {{ r.dateCreation|date('d/m/Y à H:i') }}</span>
+                            </div>
+                            <div class="ticket-desc {{ r.descriptionOriginale ? 'rtl' : '' }}">
+                                {{ (r.descriptionOriginale ?? r.description)|slice(0, 120) }}{% if (r.descriptionOriginale ?? r.description)|length > 120 %}…{% endif %}
+                            </div>
+                            <div class="ticket-tags">
+                                {% if r.categorie %}
+                                    <span class="badge-pill badge-cat"><i class="bi bi-tag-fill"></i> {{ r.categorie }}</span>
+                                {% endif %}
+                                {% if r.sentiment %}
+                                    <span class="badge-pill {{ r.sentiment == 'négatif' ? 'badge-neg' : (r.sentiment == 'positif' ? 'badge-pos' : 'badge-neu') }}">
+                                        {{ r.sentiment == 'négatif' ? '😠' : (r.sentiment == 'positif' ? '😊' : '😐') }} {{ r.sentiment }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Actions #}
+                        <div class="ticket-actions">
+                            <a href="{{ path('admin_reclamation_show', {id: r.id}) }}" class="btn-action discuss">
+                                <i class="bi bi-chat-dots"></i> Discussion
+                            </a>
+                            <form method="POST" action="{{ path('admin_reclamation_statut', {id: r.id}) }}" style="display:contents;">
+                                <input type="hidden" name="statut" value="RESOLU">
+                                <button type="submit" class="btn-action approve" title="Approuver">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ path('admin_reclamation_statut', {id: r.id}) }}" style="display:contents;">
+                                <input type="hidden" name="statut" value="REJETE">
+                                <button type="submit" class="btn-action reject" title="Rejeter">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ path('admin_reclamation_delete', {id: r.id}) }}"
+                                  onsubmit="return confirm('Supprimer ?')" style="display:contents;">
+                                <button type="submit" class="btn-action danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        </div>{# /rec-main #}
+
+        {# ── Right aside ── #}
+        <div class="rec-aside">
+
+            {# Mini stats #}
+            <div class="aside-card">
+                <div class="aside-card-header"><i class="bi bi-bar-chart-fill"></i> Vue d'ensemble</div>
+                <div class="aside-card-body">
+                    <div class="mini-grid">
+                        <div class="mini-stat">
+                            <div class="ms-val" style="color:#b45309;">{{ stats.attente }}</div>
+                            <div class="ms-lbl">Attente</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="ms-val" style="color:#1e40af;">{{ stats.en_cours }}</div>
+                            <div class="ms-lbl">En cours</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="ms-val" style="color:#15803d;">{{ stats.resolu }}</div>
+                            <div class="ms-lbl">Résolus</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="ms-val" style="color:#991b1b;">{{ stats.rejete }}</div>
+                            <div class="ms-lbl">Rejetés</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Catégories #}
+            {% if cats is not empty %}
+            <div class="aside-card">
+                <div class="aside-card-header"><i class="bi bi-pie-chart"></i> Par catégorie</div>
+                <div class="aside-card-body">
+                    {% for cat, count in cats %}
+                    <div class="prog-item">
+                        <div class="prog-top">
+                            <span>{{ cat|capitalize }}</span>
+                            <span class="prog-pct">{{ stats.total > 0 ? ((count / stats.total) * 100)|round : 0 }}%</span>
+                        </div>
+                        <div class="prog-bar">
+                            <div class="prog-fill" style="width:{{ stats.total > 0 ? ((count / stats.total) * 100)|round : 0 }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# Sentiment #}
+            <div class="aside-card">
+                <div class="aside-card-header"><i class="bi bi-emoji-smile"></i> Sentiment</div>
+                <div class="aside-card-body">
+                    {% set neg = stats.negatif %}
+                    {% set pos = stats.total - neg %}
+                    <div class="prog-item">
+                        <div class="prog-top">
+                            <span>😠 Négatif</span>
+                            <span class="prog-pct" style="color:#dc2626;">{{ stats.total > 0 ? ((neg / stats.total) * 100)|round : 0 }}%</span>
+                        </div>
+                        <div class="prog-bar">
+                            <div class="prog-fill" style="width:{{ stats.total > 0 ? ((neg / stats.total) * 100)|round : 0 }}%;background:#ef4444;"></div>
+                        </div>
+                    </div>
+                    <div class="prog-item">
+                        <div class="prog-top">
+                            <span>😊 Positif / Neutre</span>
+                            <span class="prog-pct" style="color:#15803d;">{{ stats.total > 0 ? ((pos / stats.total) * 100)|round : 0 }}%</span>
+                        </div>
+                        <div class="prog-bar">
+                            <div class="prog-fill" style="width:{{ stats.total > 0 ? ((pos / stats.total) * 100)|round : 0 }}%;background:#22c55e;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Activity feed #}
+            <div class="aside-card">
+                <div class="aside-card-header"><i class="bi bi-activity"></i> Activité récente</div>
+                <div class="aside-card-body">
+                    <div class="activity-feed">
+                        {% for r in reclamations|slice(0, 5) %}
+                        <div class="activity-item">
+                            <div class="act-dot {{ r.statut == 'RESOLU' ? 'green' : (r.statut == 'REJETE' ? 'red' : (r.statut == 'EN_COURS' ? 'blue' : 'yellow')) }}"></div>
+                            <div class="act-content">
+                                <div class="act-text">{{ r.sujet|slice(0, 35) }}{% if r.sujet|length > 35 %}…{% endif %}</div>
+                                <div class="act-time">{{ r.dateCreation|date('d/m à H:i') }} · {{ r.statut|replace({'_': ' '}) }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>{# /rec-aside #}
+
+    </div>{# /rec-layout #}
+
+</div>
+{% endblock %}
