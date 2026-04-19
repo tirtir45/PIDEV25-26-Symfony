@@ -7,6 +7,7 @@ use App\Entity\Reclamation_commentaires;
 use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
 use App\Service\NotificationService;
+use App\Service\UserVerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -92,7 +93,8 @@ class AdminReclamationController extends AbstractController
         ReclamationsRepository $repo,
         UtilisateursRepository $userRepo,
         EntityManagerInterface $em,
-        NotificationService $notifier
+        NotificationService $notifier,
+        UserVerificationService $verifier
     ): Response {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -114,6 +116,10 @@ class AdminReclamationController extends AbstractController
                 $em->flush();
                 if ($oldStatut !== $statut) {
                     $notifier->onStatusChange($reclamation, $oldStatut);
+                    // Vérifier badge si réclamation résolue
+                    if ($statut === 'RESOLU' && $reclamation->getUtilisateur()) {
+                        $verifier->checkAndUpdate($reclamation->getUtilisateur());
+                    }
                 }
                 $this->addFlash('success', 'Statut mis à jour.');
             }

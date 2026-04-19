@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+{% block title %}Demandes de vérification{% endblock %}
+{% block body %}
+<div class="container-fluid fade-in px-4 py-3">
+    <div class="header">
+        <div>
+            <h1>Demandes de Badge Vérifié</h1>
+            <div class="page-subtitle">Gérez les demandes de vérification des utilisateurs</div>
+        </div>
+        <span class="badge bg-primary rounded-pill px-3 py-2">{{ demandes|length }} demande{{ demandes|length > 1 ? 's' : '' }}</span>
+    </div>
+
+    {% if demandes is empty %}
+        <div style="background:#fff;border:1px solid #EAE8F8;border-radius:14px;padding:60px;text-align:center;color:#9ca3af;">
+            <div style="font-size:40px;margin-bottom:12px;">✔️</div>
+            <p style="font-size:14px;font-weight:600;">Aucune demande pour le moment.</p>
+        </div>
+    {% else %}
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px;">
+            {% for d in demandes %}
+            <div style="background:#fff;border:1px solid #EAE8F8;border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                {# Avatar #}
+                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C5CFC,#a78bfa);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+                    {% if d.id_utilisateur.getPhoto() %}
+                        <img src="{{ asset(d.id_utilisateur.getPhoto()) }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                    {% else %}
+                        {{ d.id_utilisateur.getNom()|slice(0,1)|upper }}
+                    {% endif %}
+                </div>
+
+                {# Info #}
+                <div style="flex:1;min-width:200px;">
+                    <div style="font-weight:700;color:#1a1040;font-size:14px;">
+                        {{ d.id_utilisateur.getNom() }}
+                        {% if d.id_utilisateur.isBadgeVerifie() %}
+                            <span style="background:#dbeafe;color:#1d4ed8;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:4px;">✔️ Vérifié</span>
+                        {% endif %}
+                    </div>
+                    <div style="font-size:12px;color:#9ca3af;">{{ d.id_utilisateur.getEmail() }} · {{ d.type_role }}</div>
+                    <div style="font-size:13px;color:#374151;margin-top:6px;font-style:italic;">"{{ d.raison_demande|slice(0,120) }}{% if d.raison_demande|length > 120 %}...{% endif %}"</div>
+                    <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Soumise le {{ d.date_demande|date('d/m/Y à H:i') }}</div>
+
+                    {# Score IA #}
+                    {% if d.commentaire_admin starts with 'Score IA' %}
+                    <div style="margin-top:8px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;color:#0369a1;">
+                        🤖 {{ d.commentaire_admin }}
+                    </div>
+                    {% endif %}
+
+                    {# Critères #}
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:{{ d.id_utilisateur.getEmail() ? '#d1fae5' : '#fee2e2' }};color:{{ d.id_utilisateur.getEmail() ? '#065f46' : '#991b1b' }};">
+                            {{ d.id_utilisateur.getEmail() ? '✔️' : '❌' }} Email
+                        </span>
+                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:{{ d.id_utilisateur.getTelephone() ? '#d1fae5' : '#fee2e2' }};color:{{ d.id_utilisateur.getTelephone() ? '#065f46' : '#991b1b' }};">
+                            {{ d.id_utilisateur.getTelephone() ? '✔️' : '❌' }} Téléphone
+                        </span>
+                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:{{ d.id_utilisateur.getPhoto() ? '#d1fae5' : '#fee2e2' }};color:{{ d.id_utilisateur.getPhoto() ? '#065f46' : '#991b1b' }};">
+                            {{ d.id_utilisateur.getPhoto() ? '✔️' : '❌' }} Photo
+                        </span>
+                        <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:{{ d.id_utilisateur.getBio() ? '#d1fae5' : '#fee2e2' }};color:{{ d.id_utilisateur.getBio() ? '#065f46' : '#991b1b' }};">
+                            {{ d.id_utilisateur.getBio() ? '✔️' : '❌' }} Bio
+                        </span>
+                    </div>
+                </div>
+
+                {# Statut + Actions #}
+                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                    <span style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+                        background:{{ d.statut == 'EN_ATTENTE' ? '#fef3c7' : (d.statut == 'ACCEPTEE' ? '#d1fae5' : '#fee2e2') }};
+                        color:{{ d.statut == 'EN_ATTENTE' ? '#92400e' : (d.statut == 'ACCEPTEE' ? '#065f46' : '#991b1b') }};">
+                        {{ d.statut == 'EN_ATTENTE' ? '⏳ En attente' : (d.statut == 'ACCEPTEE' ? '✅ Acceptée' : '❌ Rejetée') }}
+                    </span>
+
+                    {% if d.statut == 'EN_ATTENTE' %}
+                    <form method="POST" action="{{ path('admin_verification_accept', {id: d.id_demande}) }}" style="display:contents;">
+                        <input type="hidden" name="commentaire" value="Demande acceptée par l'administrateur.">
+                        <button type="submit" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
+                            ✔️ Accepter
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ path('admin_verification_reject', {id: d.id_demande}) }}" style="display:contents;" onsubmit="return confirm('Rejeter cette demande ?')">
+                        <input type="hidden" name="commentaire" value="Demande rejetée par l'administrateur.">
+                        <button type="submit" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
+                            ❌ Rejeter
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

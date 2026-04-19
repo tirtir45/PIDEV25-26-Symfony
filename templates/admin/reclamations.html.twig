@@ -319,7 +319,11 @@
                             </div>
                             <div class="ticket-meta">
                                 {% if r.utilisateur %}
-                                    <span><i class="bi bi-person"></i> {{ r.utilisateur.nom }}</span>
+                                    <span><i class="bi bi-person"></i> {{ r.utilisateur.nom }}
+                                        {% if r.utilisateur.badgeVerifie %}
+                                        <span style="background:#dbeafe;color:#1d4ed8;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:3px;">✔️</span>
+                                        {% endif %}
+                                    </span>
                                     <span>{{ r.utilisateur.email }}</span>
                                 {% endif %}
                                 <span><i class="bi bi-calendar3"></i> {{ r.dateCreation|date('d/m/Y à H:i') }}</span>
@@ -344,6 +348,7 @@
                             <a href="{{ path('admin_reclamation_show', {id: r.id}) }}" class="btn-action discuss">
                                 <i class="bi bi-chat-dots"></i> Discussion
                             </a>
+                            {% if r.statut != 'RESOLU' and r.statut != 'REJETE' %}
                             <form method="POST" action="{{ path('admin_reclamation_statut', {id: r.id}) }}" style="display:contents;">
                                 <input type="hidden" name="statut" value="RESOLU">
                                 <button type="submit" class="btn-action approve" title="Approuver">
@@ -356,6 +361,12 @@
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             </form>
+                            {% else %}
+                            <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;background:{{ r.statut == 'RESOLU' ? '#d1fae5' : '#fee2e2' }};color:{{ r.statut == 'RESOLU' ? '#065f46' : '#991b1b' }};">
+                                <i class="bi {{ r.statut == 'RESOLU' ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
+                                {{ r.statut == 'RESOLU' ? 'Traitée ✅' : 'Rejetée ❌' }}
+                            </span>
+                            {% endif %}
                             <form method="POST" action="{{ path('admin_reclamation_delete', {id: r.id}) }}"
                                   onsubmit="return confirm('Supprimer ?')" style="display:contents;">
                                 <button type="submit" class="btn-action danger" title="Supprimer">

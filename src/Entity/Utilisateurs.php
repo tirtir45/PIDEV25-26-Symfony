@@ -192,6 +192,12 @@ class Utilisateurs
     public function getPhoto(): ?string { return $this->photo; }
     public function setPhoto(?string $p): static { $this->photo = $p; return $this; }
 
+    public function isBadgeVerifie(): bool { return $this->badgeVerifie; }
+    public function setBadgeVerifie(bool $b): static { $this->badgeVerifie = $b; return $this; }
+
+    public function getDateVerification(): ?\DateTimeInterface { return $this->dateVerification; }
+    public function setDateVerification(?\DateTimeInterface $d): static { $this->dateVerification = $d; return $this; }
+
     // ===== GETTERS FOR COLLECTIONS =====
 
     public function getProjetss(): Collection { return $this->projetss; }

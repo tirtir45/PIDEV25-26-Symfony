@@ -81,8 +81,8 @@ class ProfilController extends AbstractController
             }
 
             // Validation compétences
-            if (!empty($competences) && strlen($competences) < 3) {
-                $errors['competences'] = 'Les compétences doivent contenir au moins 3 caractères.';
+            if (!empty($competences) && strlen($competences) < 4) {
+                $errors['competences'] = 'Les compétences doivent contenir au moins 4 caractères.';
             } elseif (!empty($competences) && strlen($competences) > 1000) {
                 $errors['competences'] = 'Les compétences ne peuvent pas dépasser 1000 caractères.';
             }

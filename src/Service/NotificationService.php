@@ -171,7 +171,7 @@ class NotificationService
     }
 
     /* ── Helpers privés ── */
-    private function save(Utilisateurs $user, string $type, string $titre, string $message, ?string $lien = null): void
+    public function save(Utilisateurs $user, string $type, string $titre, string $message, ?string $lien = null): void
     {
         $n = new Notification();
         $n->setUtilisateur($user);

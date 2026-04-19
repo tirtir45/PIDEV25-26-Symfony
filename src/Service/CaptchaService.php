@@ -25,7 +25,24 @@ class CaptchaService
      */
     public function verify(string $token): bool
     {
-        // Accepter si le token est présent (widget coché)
-        return !empty($token);
+        if (empty($token)) {
+            return false;
+        }
+
+        try {
+            $response = $this->httpClient->request('POST', self::VERIFY_URL, [
+                'body' => [
+                    'secret'   => $this->hcaptchaSecretKey,
+                    'response' => $token,
+                ],
+                'timeout' => 5,
+            ]);
+
+            $data = $response->toArray();
+            return $data['success'] ?? false;
+
+        } catch (\Throwable) {
+            return !empty($token);
+        }
     }
 }

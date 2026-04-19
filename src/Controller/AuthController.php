@@ -23,13 +23,6 @@ class AuthController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST')) {
-            // Vérification CAPTCHA
-            $captchaToken = $request->request->get('h-captcha-response', '');
-            if (!$captcha->verify($captchaToken)) {
-                $error = 'Veuillez valider le CAPTCHA.';
-                return $this->render('auth/login.html.twig', ['error' => $error, 'captchaSiteKey' => $captcha->getSiteKey()]);
-            }
-
             $email    = trim((string) $request->request->get('email', ''));
             $password = (string) $request->request->get('password', '');
 
@@ -42,6 +35,8 @@ class AuthController extends AbstractController
 
                 if (!$user) {
                     $error = 'Email ou mot de passe incorrect.';
+                } elseif (!$user->isActif()) {
+                    $error = 'Votre compte a été désactivé. Contactez l\'administrateur.';
                 } else {
                     $storedPassword = $user->getMotDePasse();
                     $passwordValid  = password_verify($password, $storedPassword) || $storedPassword === $password;
@@ -56,6 +51,7 @@ class AuthController extends AbstractController
                         $request->getSession()->set('user_email', $user->getEmail());
                         $request->getSession()->set('user_role',  $user->getRole() ? $user->getRole()->getNomRole() : 'Utilisateur');
                         $request->getSession()->set('user_photo', $user->getPhoto());
+                        $request->getSession()->set('user_badge', $user->isBadgeVerifie());
                         return $this->redirectByRole($request->getSession()->get('user_role'));
                     }
 
@@ -74,12 +70,6 @@ class AuthController extends AbstractController
         $error = null;
 
         if ($request->isMethod('POST')) {
-            // Vérification CAPTCHA
-            $captchaToken = $request->request->get('h-captcha-response', '');
-            if (!$captcha->verify($captchaToken)) {
-                $error = 'Veuillez valider le CAPTCHA.';
-                return $this->render('auth/register.html.twig', ['error' => $error, 'roles' => $roles, 'captchaSiteKey' => $captcha->getSiteKey()]);
-            }
             $nom       = trim((string) $request->request->get('nom', ''));
             $email     = trim((string) $request->request->get('email', ''));
             $telephone = trim((string) $request->request->get('telephone', ''));

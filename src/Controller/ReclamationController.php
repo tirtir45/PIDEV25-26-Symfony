@@ -11,6 +11,8 @@ use App\Service\TranslationService;
 use App\Service\ChatbotService;
 use App\Service\NotificationService;
 use App\Service\CaptchaService;
+use App\Service\SpamDetectionService;
+use App\Service\ProfanityFilterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,14 +31,16 @@ class ReclamationController extends AbstractController
         TranslationService $translator,
         ChatbotService $chatbot,
         NotificationService $notifier,
-        CaptchaService $captcha
+        CaptchaService $captcha,
+        SpamDetectionService $spamDetector,
+        ProfanityFilterService $profanityFilter
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
             return $this->redirectToRoute('app_login');
         }
 
-        $showForm = $request->query->get('new') === '1';
+        $showForm = $request->query->get('new') === '1' || $request->isMethod('POST');
         $error = null;
 
         if ($request->isMethod('POST')) {
@@ -46,45 +50,52 @@ class ReclamationController extends AbstractController
             if (empty($sujet) || empty($description)) {
                 $error    = 'Veuillez remplir tous les champs.';
                 $showForm = true;
-            } elseif (!$captcha->verify($request->request->get('h-captcha-response', ''))) {
-                $error    = 'Veuillez valider le CAPTCHA.';
-                $showForm = true;
             } else {
                 $user = $userRepo->find($userId);
-                $r = new Reclamations();
-                $r->setUtilisateur($user);
 
-                // Traduction automatique du sujet et de la description en français
-                $sujetResult = $translator->translate($sujet, 'fr');
-                $descResult  = $translator->translate($description, 'fr');
-
-                $r->setSujet($sujetResult['translated']);
-
-                // Stocker l'original si la langue source n'est pas le français
-                if ($descResult['sourceLang'] !== 'fr' && $descResult['translated'] !== $description) {
-                    $r->setDescriptionOriginale($description);
-                    $r->setLangueOriginale($descResult['sourceLang']);
+                // Détection spam AVANT traduction
+                $spamError = $spamDetector->check($user, $sujet, $description);
+                if ($spamError) {
+                    $this->addFlash('spam', $spamError);
+                    return $this->redirectToRoute('reclamation_index', ['new' => '1']);
                 }
-                $r->setDescription($descResult['translated']);
 
-                // Analyse IA automatique (sur le texte traduit)
-                $analysis = $analyzer->analyze($sujet . ' ' . $r->getDescription());
-                $r->setCategorie($analysis['categorie']);
-                $r->setSentiment($analysis['sentiment']);
-                $r->setPriorite($analysis['priorite']);
+                // Détection contenu offensant
+                $profanityError = $profanityFilter->check($sujet . ' ' . $description);
+                if ($profanityError) {
+                    $this->addFlash('spam', $profanityError);
+                    return $this->redirectToRoute('reclamation_index', ['new' => '1']);
+                } else {
+                    $r = new Reclamations();
+                    $r->setUtilisateur($user);
 
-                // Réponse automatique chatbot
-                $autoReply = $chatbot->generateResponse($r->getDescription());
-                $r->setAutoResponse($autoReply);
+                    // Traduction automatique
+                    $sujetResult = $translator->translate($sujet, 'fr');
+                    $descResult  = $translator->translate($description, 'fr');
+                    $r->setSujet($sujetResult['translated']);
 
-                $em->persist($r);
-                $em->flush();
+                    if ($descResult['sourceLang'] !== 'fr' && $descResult['translated'] !== $description) {
+                        $r->setDescriptionOriginale($description);
+                        $r->setLangueOriginale($descResult['sourceLang']);
+                    }
+                    $r->setDescription($descResult['translated']);
 
-                // Notifications
-                $notifier->onNewReclamation($r);
+                    // Analyse IA
+                    $analysis = $analyzer->analyze($sujet . ' ' . $r->getDescription());
+                    $r->setCategorie($analysis['categorie']);
+                    $r->setSentiment($analysis['sentiment']);
+                    $r->setPriorite($analysis['priorite']);
 
-                $this->addFlash('success', 'Réclamation soumise avec succès.');
-                return $this->redirectToRoute('reclamation_index');
+                    // Chatbot
+                    $r->setAutoResponse($chatbot->generateResponse($r->getDescription()));
+
+                    $em->persist($r);
+                    $em->flush();
+
+                    $notifier->onNewReclamation($r);
+                    $this->addFlash('success', 'Votre réclamation a été envoyée avec succès.');
+                    return $this->redirectToRoute('reclamation_index');
+                }
             }
         }
 

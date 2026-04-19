@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nouveau mot de passe{% endblock %}
+{% block layout %}
+<div class="auth-layout">
+    <div class="auth-container">
+        <div class="auth-left">
+            <h1 class="auth-brand">StartHub</h1>
+            <p class="auth-tagline">Nouveau mot de passe</p>
+            <ul class="auth-features">
+                <li><i class="bi bi-check-circle"></i> Identité vérifiée</li>
+                <li><i class="bi bi-lock"></i> Mot de passe sécurisé</li>
+                <li><i class="bi bi-shield-check"></i> Chiffrement bcrypt</li>
+            </ul>
+        </div>
+        <div class="auth-right">
+            <h2 class="auth-title">Nouveau mot de passe</h2>
+            <p class="auth-subtitle">Choisissez un mot de passe sécurisé</p>
+
+            {% if error %}
+                <div style="background:#fef2f2;border:1.5px solid #ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#dc2626;font-size:13px;font-weight:600;">
+                    ⚠️ {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ path('password_reset', {token: token}) }}" class="auth-form">
+                <div class="auth-field">
+                    <label class="auth-label">Nouveau mot de passe</label>
+                    <input type="password" name="password" id="pwd" class="auth-input"
+                           placeholder="••••••••" required minlength="6">
+                    <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Min. 6 caractères, 1 majuscule, 1 chiffre</div>
+                </div>
+                <div class="auth-field">
+                    <label class="auth-label">Confirmer le mot de passe</label>
+                    <input type="password" name="confirm" id="confirm" class="auth-input"
+                           placeholder="••••••••" required>
+                    <div id="match-msg" style="font-size:12px;margin-top:4px;display:none;"></div>
+                </div>
+                <button type="submit" class="btn-auth">Enregistrer le mot de passe</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+const pwd = document.getElementById('pwd');
+const confirm = document.getElementById('confirm');
+const msg = document.getElementById('match-msg');
+confirm.addEventListener('input', () => {
+    if (confirm.value && confirm.value !== pwd.value) {
+        msg.style.display = 'block'; msg.style.color = '#dc2626';
+        msg.textContent = '⚠️ Les mots de passe ne correspondent pas.';
+    } else if (confirm.value && confirm.value === pwd.value) {
+        msg.style.display = 'block'; msg.style.color = '#16a34a';
+        msg.textContent = '✔️ Les mots de passe correspondent.';
+    } else { msg.style.display = 'none'; }
+});
+</script>
+{% endblock %}

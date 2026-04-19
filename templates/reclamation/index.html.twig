@@ -20,6 +20,24 @@
         </div>
     </div>
 
+    {# ── Flash messages ── #}
+    {% for msg in app.flashes('success') %}
+    <div style="background:#f0fdf4;border:1.5px solid #22c55e;border-left:5px solid #16a34a;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:20px;flex-shrink:0;"></i>
+        <span style="color:#15803d;font-weight:600;font-size:14px;">{{ msg }}</span>
+    </div>
+    {% endfor %}
+
+    {% for msg in app.flashes('spam') %}
+    <div style="background:#fef2f2;border:1.5px solid #ef4444;border-left:5px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;">
+        <i class="bi bi-shield-exclamation" style="color:#dc2626;font-size:20px;flex-shrink:0;"></i>
+        <div>
+            <div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:2px;">🚫 Action bloquée — Détection de spam</div>
+            <div style="color:#b91c1c;font-size:13px;">{{ msg }}</div>
+        </div>
+    </div>
+    {% endfor %}
+
     {% if showForm %}
     <!-- Form Card -->
     <div class="row justify-content-center mt-4 mb-5">
@@ -30,7 +48,10 @@
                 </div>
                 <div class="card-body-modern p-4">
                     {% if error %}
-                        <div class="alert alert-danger rounded-3 mb-4">{{ error }}</div>
+                        <div style="background:#fef2f2;border:1.5px solid #ef4444;border-left:4px solid #dc2626;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
+                            <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;font-size:18px;flex-shrink:0;"></i>
+                            <span style="color:#b91c1c;font-size:13px;">{{ error }}</span>
+                        </div>
                     {% endif %}
 
                     <form method="POST" action="{{ path('reclamation_index') }}" id="reclamForm" class="row g-3">
@@ -46,11 +67,6 @@
                             <textarea name="description" id="description" class="form-control"
                                       placeholder="Décrivez votre problème en détail... (arabe, anglais, français...)" rows="5" required></textarea>
                             <div class="invalid-feedback" id="description-error"></div>
-                        </div>
-
-                        <div class="col-12">
-                            <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
-                            <div class="h-captcha" data-sitekey="{{ captchaSiteKey }}"></div>
                         </div>
 
                         <div class="col-12 d-flex gap-2 justify-content-end mt-4">

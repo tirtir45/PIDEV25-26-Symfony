@@ -49,7 +49,11 @@ class AdminUserController extends AbstractController
         }
 
         $users = $qb->getQuery()->getResult();
-        $roles = $roleRepo->findAll();
+        $roles = $roleRepo->createQueryBuilder('r')
+            ->where('r.nomRole IN (:roles)')
+            ->setParameter('roles', ['Candidat', 'Entrepreneur', 'Fournisseur'])
+            ->orderBy('r.nomRole', 'ASC')
+            ->getQuery()->getResult();
 
         return $this->render('admin/users.html.twig', [
             'users' => $users,

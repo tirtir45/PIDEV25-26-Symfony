@@ -1598,6 +1598,7 @@ img { display: block; max-width: 100%; }
 .flash-error   { background: rgba(239, 68, 68, 0.12);  color: var(--danger);  border-left: 4px solid var(--danger); }
 .flash-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); border-left: 4px solid var(--warning); }
 .flash-info    { background: rgba(14, 165, 233, 0.12);  color: var(--info);    border-left: 4px solid var(--info); }
+.flash-spam    { background: #fef2f2; color: #dc2626; border-left: 5px solid #dc2626; font-weight: 700; }
 
 /* ============================================================
    MODAL

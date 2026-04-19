@@ -40,12 +40,7 @@
                         <span class="small text-danger" id="password-error"></span>
                     </div>
 
-                    <div class="mb-3" style="display:flex;justify-content:center;">
-                        <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
-                        <div class="h-captcha" data-sitekey="{{ captchaSiteKey }}" data-theme="light"></div>
-                    </div>
-
-                    <button type="submit" class="btn-auth">Se connecter</button>
+                    <button type="submit" class="btn-auth" id="loginSubmitBtn">Se connecter</button>
                 </form>
 
                 <script>
@@ -117,6 +112,8 @@
 
                 <div class="auth-footer">
                     <p>Vous n'avez pas de compte ? <a href="{{ path('app_register') }}">S'inscrire</a></p>
+                    <p><a href="{{ path('password_forgot') }}" style="color:#9ca3af;font-size:13px;">Mot de passe oublié ?</a></p>
+                    <p><a href="{{ path('password_forgot') }}" style="color:#9ca3af;font-size:13px;">Mot de passe oublié ?</a></p>
                     <div class="mt-3">
                         <a href="{{ path('app_home') }}" class="text-muted text-decoration-none small">
                             <i class="bi bi-arrow-left"></i> Retour à l'accueil

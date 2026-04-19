@@ -29,7 +29,14 @@
                     </div>
                 </div>
                 
-                <h3 class="fw-bold text-main mb-1">{{ user.nom }}</h3>
+                <h3 class="fw-bold text-main mb-1">
+                    {{ user.nom }}
+                    {% if user.badgeVerifie %}
+                        <span title="Compte vérifié" style="display:inline-flex;align-items:center;gap:3px;background:#dbeafe;color:#1d4ed8;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:6px;vertical-align:middle;">
+                            ✔️ Vérifié
+                        </span>
+                    {% endif %}
+                </h3>
                 <div class="badge bg-primary-subtle text-primary rounded-pill px-3 mb-3">
                     {{ user.role ? user.role.nomRole : 'Utilisateur' }}
                 </div>
@@ -53,6 +60,18 @@
                     <button onclick="toggleEditForm()" class="btn btn-primary" id="editToggleBtn">
                         <i class="bi bi-pencil-square me-2"></i> Modifier mon profil
                     </button>
+
+                    {% if not user.badgeVerifie and app.session.get('user_role') != 'Administrateur' %}
+                    <a href="{{ path('verification_request') }}" class="btn btn-outline-primary">
+                        ✔️ Demander la vérification
+                    </a>
+                    {% elseif user.badgeVerifie %}
+                    <div class="text-center">
+                        <span style="background:#d1fae5;color:#065f46;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;">
+                            ✔️ Compte vérifié
+                        </span>
+                    </div>
+                    {% endif %}
                     
                     {% if app.session.get('user_role') != 'Administrateur' %}
                     <form method="POST" action="{{ path('app_profile') }}" onsubmit="return confirm('Supprimer définitivement votre compte ? Cette action est irréversible.')">
@@ -69,14 +88,23 @@
         <!-- Main Content Area -->
         <div class="col-lg-8">
             <!-- Edit Section -->
-            <div class="card-modern" id="edit-section" style="{{ errors is not empty ? '' : 'display:none;' }}">
-                <div class="card-header-modern border-bottom p-4 d-flex align-items-center justify-content-between">
+            <div class="card-modern" id="edit-section" style="{{ errors is not empty ? '' : 'display:none;' }}">                <div class="card-header-modern border-bottom p-4 d-flex align-items-center justify-content-between">
                     <h4 class="mb-0">Détails du Compte</h4>
                     <button type="button" onclick="toggleEditForm()" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-x-lg"></i> Fermer
                     </button>
                 </div>
                 <div class="card-body-modern p-4">
+                    {% if errors is not empty %}
+                    <div style="background:#fef2f2;border:1.5px solid #ef4444;border-radius:10px;padding:14px 18px;margin-bottom:20px;">
+                        <div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Veuillez corriger les erreurs suivantes :</div>
+                        <ul style="margin:0;padding-left:18px;color:#b91c1c;font-size:13px;">
+                            {% for field, msg in errors %}
+                            <li>{{ msg }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                     <form method="POST" action="{{ path('app_profile') }}" class="row g-3" enctype="multipart/form-data">
                         <div class="col-md-6">
                             <label class="form-label text-muted small fw-bold">Nom Complet</label>
@@ -104,14 +132,20 @@
 
                         <div class="col-12">
                             <label class="form-label text-muted small fw-bold">Biographie</label>
-                            <textarea name="bio" class="form-control {{ errors.bio is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Parlez-nous de vous...">{{ user.bio ?? '' }}</textarea>
-                            {% if errors.bio is defined %}<div class="invalid-feedback">{{ errors.bio }}</div>{% endif %}
+                            <textarea name="bio" id="bioField" class="form-control {{ errors.bio is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Parlez-nous de vous... (min. 10 caractères)" oninput="checkLen(this,'bio-msg',10)">{{ user.bio ?? '' }}</textarea>
+                            {% if errors.bio is defined %}
+                                <div class="invalid-feedback">{{ errors.bio }}</div>
+                            {% endif %}
+                            <div id="bio-msg" style="color:#dc2626;font-size:12px;margin-top:4px;display:{{ (user.bio is not null and user.bio|length > 0 and user.bio|length < 10) ? 'block' : 'none' }};">⚠️ La bio doit contenir au moins 10 caractères.</div>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label text-muted small fw-bold">Compétences</label>
-                            <textarea name="competences" class="form-control {{ errors.competences is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Séparées par des virgules...">{{ user.competences ?? '' }}</textarea>
-                            {% if errors.competences is defined %}<div class="invalid-feedback">{{ errors.competences }}</div>{% endif %}
+                            <textarea name="competences" id="competencesField" class="form-control {{ errors.competences is defined ? 'is-invalid' : '' }}" rows="3" placeholder="Séparées par des virgules... (min. 4 caractères)" oninput="checkLen(this,'comp-msg',4)">{{ user.competences ?? '' }}</textarea>
+                            {% if errors.competences is defined %}
+                                <div class="invalid-feedback">{{ errors.competences }}</div>
+                            {% endif %}
+                            <div id="comp-msg" style="color:#dc2626;font-size:12px;margin-top:4px;display:{{ (user.competences is not null and user.competences|length > 0 and user.competences|length < 4) ? 'block' : 'none' }};">⚠️ Les compétences doivent contenir au moins 4 caractères.</div>
                         </div>
 
                         <div class="col-12 text-end mt-4">
@@ -126,6 +160,19 @@
     </div>
 </div>
 <script>
+function checkLen(el, msgId, min) {
+    const msg = document.getElementById(msgId);
+    if (!msg) return;
+    const len = el.value.length;
+    if (len > 0 && len < min) {
+        msg.style.display = 'block';
+        el.style.borderColor = '#ef4444';
+    } else {
+        msg.style.display = 'none';
+        el.style.borderColor = '';
+    }
+}
+
 function toggleEditForm() {
     const section = document.getElementById('edit-section');
     const btn = document.getElementById('editToggleBtn');
@@ -139,6 +186,50 @@ function toggleEditForm() {
         btn.innerHTML = '<i class="bi bi-pencil-square me-2"></i> Modifier mon profil';
         btn.classList.replace('btn-outline-secondary', 'btn-primary');
     }
+}
+
+// Validation bio en temps réel
+const bioField = document.getElementById('bioField');
+const bioError = document.getElementById('bio-error');
+const bioCount = document.getElementById('bio-count');
+if (bioField) {
+    const updateBio = () => {
+        const len = bioField.value.length;
+        if (bioCount) bioCount.textContent = len;
+        if (bioError) {
+            if (len > 0 && len < 10) {
+                bioError.style.display = 'block';
+                bioField.style.borderColor = '#ef4444';
+            } else {
+                bioError.style.display = 'none';
+                bioField.style.borderColor = '';
+            }
+        }
+    };
+    bioField.addEventListener('input', updateBio);
+    updateBio();
+}
+
+// Validation compétences en temps réel
+const compField = document.getElementById('competencesField');
+const compError = document.getElementById('competences-error');
+const compCount = document.getElementById('comp-count');
+if (compField) {
+    const updateComp = () => {
+        const len = compField.value.length;
+        if (compCount) compCount.textContent = len;
+        if (compError) {
+            if (len > 0 && len < 4) {
+                compError.style.display = 'block';
+                compField.style.borderColor = '#ef4444';
+            } else {
+                compError.style.display = 'none';
+                compField.style.borderColor = '';
+            }
+        }
+    };
+    compField.addEventListener('input', updateComp);
+    updateComp();
 }
 </script>
 {% endblock %}

@@ -22,9 +22,11 @@
                 <p class="auth-subtitle">Remplissez les informations ci-dessous</p>
 
                 {% if error %}
-                    <div class="alert alert-danger rounded-4 mb-4 border-0 shadow-sm" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
-                        {{ error }}
+                    <div id="registerError" style="background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:#ef4444;font-size:18px;flex-shrink:0;"></i>
+                        <span style="color:#dc2626;font-weight:600;font-size:13px;">{{ error }}</span>
                     </div>
+                    <script>document.getElementById('registerError').scrollIntoView({behavior:'smooth'});</script>
                 {% endif %}
 
                 <form method="POST" action="{{ path('app_register') }}" class="auth-form" id="registerForm" novalidate>
@@ -83,11 +85,6 @@
                                 <span class="small text-danger" id="confirm-error"></span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mb-3" style="display:flex;justify-content:center;">
-                        <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
-                        <div class="h-captcha" data-sitekey="{{ captchaSiteKey }}" data-theme="light"></div>
                     </div>
 
                     <button type="submit" class="btn-auth w-100">S'inscrire</button>
