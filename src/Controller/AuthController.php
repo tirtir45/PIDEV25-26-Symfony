@@ -30,6 +30,8 @@ class AuthController extends AbstractController
                 $error = 'Veuillez remplir tous les champs.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = 'Adresse email invalide.';
+            } elseif (!$captcha->verify((string) $request->request->get('h-captcha-response', ''))) {
+                $error = 'Veuillez valider le captcha.';
             } else {
                 $user = $repo->findOneBy(['email' => $email]);
 

@@ -41,7 +41,10 @@
                     </div>
 
                     <button type="submit" class="btn-auth" id="loginSubmitBtn">Se connecter</button>
+
+                    <div class="h-captcha" data-sitekey="{{ captchaSiteKey }}" style="margin-bottom:16px;"></div>
                 </form>
+                <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
                 <script>
                 const loginForm = document.getElementById('loginForm');

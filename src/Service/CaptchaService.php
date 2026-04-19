@@ -25,6 +25,11 @@ class CaptchaService
      */
     public function verify(string $token): bool
     {
+        // En dev ou avec clé de test — bypass captcha
+        if ($this->appEnv === 'dev' || $this->hcaptchaSecretKey === '0x0000000000000000000000000000000000000000') {
+            return true;
+        }
+
         if (empty($token)) {
             return false;
         }
