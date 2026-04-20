@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Réservation #{{ reservation.idReservation }}{% endblock %}
+
+{% set active = 'admin_res' %}
+
+{% block body %}
+<div class="page-header">
+    <div style="flex:1">
+        <p class="page-header-title">✏️ Modifier la Réservation</p>
+        <p class="page-header-sub">
+            #{{ reservation.idReservation }}
+            {% if reservation.evenement %} — {{ reservation.evenement.titre }}{% endif %}
+        </p>
+    </div>
+    <a href="{{ path('admin_reservation_index') }}" class="btn-outline-purple"
+       style="color:white; border-color:rgba(255,255,255,.4); text-decoration:none;">
+        ← Retour
+    </a>
+</div>
+
+<div style="background:white; border-radius:16px; padding:30px;
+            border:1px solid #ead5f0; box-shadow:0 6px 14px rgba(161,85,185,.08);
+            max-width:560px; margin:0 auto;">
+
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:22px; color:#A155B9; font-weight:800;">|</span>
+        <span style="font-size:17px; font-weight:800; color:#2d0a3e;">
+            Modifier la réservation #{{ reservation.idReservation }}
+        </span>
+    </div>
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    <!-- Date réservation — read-only display, not editable -->
+    <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;">
+            Date de réservation
+        </label>
+        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:9px;
+                    padding:11px 14px; font-size:13px; color:#475569;">
+            📅 {{ reservation.dateReservation|date('d/m/Y à H:i') }}
+            <span style="font-size:11px; color:#94a3b8; margin-left:8px;">(non modifiable)</span>
+        </div>
+    </div>
+
+    <!-- Événement -->
+    <div style="margin-bottom:16px;">
+        {{ form_label(form.evenement, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.evenement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.evenement) }}
+    </div>
+
+    <!-- Utilisateur -->
+    <div style="margin-bottom:16px;">
+        {{ form_label(form.utilisateur, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.utilisateur, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.utilisateur) }}
+    </div>
+
+    <!-- Statut paiement -->
+    <div style="margin-bottom:20px;">
+        {{ form_label(form.statutPaiement, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.statutPaiement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.statutPaiement) }}
+    </div>
+
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
+
+    <div style="display:flex; gap:14px; align-items:center; justify-content:flex-end;">
+        <a href="{{ path('admin_reservation_index') }}"
+           style="background:white; color:#A155B9; border:2px solid #A155B9; border-radius:10px;
+                  padding:10px 24px; font-size:13px; font-weight:700; text-decoration:none;">
+            Annuler
+        </a>
+        <button type="submit" class="btn-purple" style="font-size:13px; padding:10px 26px;">
+            💾 Enregistrer
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}

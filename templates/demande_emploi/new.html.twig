@@ -1,0 +1,62 @@
+{# templates/demande_emploi/new.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Candidature{% endblock %}
+
+{% block body %}
+<div class="form-page-container">
+
+    <header class="form-header">
+        <div>
+            <h1>Ajouter une Candidature</h1>
+            <p>Ajouter manuellement une candidature pour une offre</p>
+        </div>
+        <a href="{{ path('app_admin_publication_index') }}" class="btn-outline">
+            ← Retour
+        </a>
+    </header>
+
+    <main class="form-card" style="max-width: 700px;">
+        {{ form_start(form) }}
+        <div class="form-title">
+            <span class="form-title-icon">▎</span>
+            <span class="form-title-text">Nouvelle Candidature</span>
+        </div>
+        <div class="form-divider"></div>
+
+        {% if not form.vars.valid %}
+            <div class="form-error-summary">
+                Veuillez corriger les erreurs ci-dessous.
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+            {# Utilisation de form_row pour simplifier et standardiser #}
+            {{ form_row(form.publication) }}
+
+            {{ form_row(form.candidat) }}
+
+            {# --- BLOC CORRIGÉ POUR LE CV --- #}
+            {# On remplace le champ cvUrl par cvFile #}
+            {{ form_row(form.cvFile) }}
+            {# ------------------------------- #}
+
+            {{ form_row(form.lettreMotivation) }}
+
+            {{ form_row(form.motivationCiblee) }}
+
+            {{ form_row(form.statutDemande) }}
+
+            {{ form_row(form.dateDemande) }}
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-actions">
+            <a href="{{ path('app_admin_publication_index') }}" class="btn-cancel">Annuler</a>
+            <button type="submit" class="btn-submit">Ajouter la candidature</button>
+        </div>
+        {{ form_end(form) }}
+    </main>
+</div>
+{% endblock %}

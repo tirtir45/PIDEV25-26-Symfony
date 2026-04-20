@@ -1,0 +1,192 @@
+{# templates/publication/new.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Offre d'Emploi{% endblock %}
+
+{% block body %}
+
+<!-- HEADER (matches ajouterPublication.fxml header) -->
+<div style="padding: 10px; background-color: #f5f5f5;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;
+                background: linear-gradient(to right, #A155B9, #c472d4);
+                border-radius: 16px; padding: 22px 28px;
+                box-shadow: 0 6px 18px rgba(161, 85, 185, 0.35); margin-bottom: 20px;">
+        
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+            <p style="font-size: 26px; font-weight: 800; color: white; margin: 0;">Ajouter une Offre d'Emploi</p>
+            <p style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin: 0;">Renseignez les informations de l'offre</p>
+        </div>
+
+        <a href="{{ path('app_admin_publication_index') }}"
+           style="background-color: #F765A3; color: white; font-size: 13px; font-weight: 700;
+                  border-radius: 10px; cursor: pointer; padding: 10px 20px;
+                  box-shadow: 0 3px 10px rgba(247, 101, 163, 0.45);
+                  text-decoration: none;">
+            Voir les offres
+        </a>
+    </div>
+
+    <!-- FORM CARD (matches ajouterPublication.fxml form card) -->
+    <div style="background: white; border-radius: 16px; padding: 30px;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+                display: flex; flex-direction: column; gap: 22px;">
+
+        <div>
+            <p style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Nouvelle Offre</p>
+            <hr style="border: none; height: 1px; background-color: #e2e8f0; margin-top: 10px;">
+        </div>
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+        <!-- Error summary (mimics Java errorLabel) -->
+        {% if not form.vars.valid %}
+            <div style="color: #dc2626; font-size: 13px; font-weight: 500;
+                        background-color: #fef2f2; border-radius: 8px;
+                        padding: 10px 14px; border: 1px solid #fecaca;">
+                Veuillez corriger les erreurs dans le formulaire ci-dessous.
+            </div>
+        {% endif %}
+
+        <!-- FIELDS GRID (mimics GridPane with 2 columns) -->
+        <div style="display: grid; grid-template-columns: 130px 1fr; row-gap: 16px; column-gap: 20px; align-items: start;">
+
+            {# --- Titre --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Titre *
+            </label>
+            <div>
+                {{ form_widget(form.titre, {'attr': {'placeholder': 'Ex: Développeur Java Senior'}}) }}
+                {{ form_errors(form.titre) }}
+            </div>
+
+            {# --- Description --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Description *
+            </label>
+            <div>
+                {{ form_widget(form.description, {'attr': {'placeholder': 'Décrivez le poste en détail...', 'rows': '5'}}) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            {# --- Type Contrat --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Type contrat *
+            </label>
+            <div>
+                {{ form_widget(form.type_contrat, {'attr': {'placeholder': 'Choisir un type'}}) }}
+                {{ form_errors(form.type_contrat) }}
+            </div>
+
+            {# --- Departement (à ajouter dans votre FormType) --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Département *
+            </label>
+            <div>
+                {# Assurez-vous d'avoir un champ 'departement' dans votre PublicationType #}
+                {{ form_widget(form.departement, {'attr': {'placeholder': 'Ex: Informatique'}}) }}
+                {{ form_errors(form.departement) }}
+            </div>
+
+            {# --- Localisation --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Localisation *
+            </label>
+            <div>
+                {{ form_widget(form.localisation, {'attr': {'placeholder': 'Ex: Tunis, Tunisie'}}) }}
+                {{ form_errors(form.localisation) }}
+            </div>
+
+            {# --- Date Expiration (à ajouter dans votre FormType) --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Date expiration *
+            </label>
+            <div>
+                {# Assurez-vous d'avoir un champ 'date_expiration' dans votre FormType #}
+                {{ form_widget(form.date_expiration) }}
+                {{ form_errors(form.date_expiration) }}
+            </div>
+
+            {# --- Statut --- #}
+            <label style="font-size: 14px; font-weight: 700; color: #1e293b; padding-top: 12px; text-align: right;">
+                Statut *
+            </label>
+            <div>
+                {{ form_widget(form.statut, {'attr': {'placeholder': 'Choisir un statut'}}) }}
+                {{ form_errors(form.statut) }}
+            </div>
+
+        </div>
+
+        <hr style="border: none; height: 1px; background-color: #e2e8f0; margin-top: 0;">
+
+        <!-- ACTION BUTTONS (matches button row) -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <a href="{{ path('app_admin_publication_index') }}"
+               style="background-color: transparent; color: #64748b; font-size: 15px; font-weight: 600;
+                      border-radius: 8px; cursor: pointer; height: 45px; width: 160px;
+                      border: 1.5px solid #cbd5e1; text-decoration: none;
+                      display: flex; justify-content: center; align-items: center;">
+                ANNULER
+            </a>
+            <button type="submit"
+                    style="background-color: #a155b9; color: white; font-size: 15px; font-weight: 700;
+                           border-radius: 8px; cursor: pointer; height: 45px; width: 220px; border: none;
+                           box-shadow: 0 2px 10px rgba(161, 85, 185, 0.3);">
+                AJOUTER L'OFFRE
+            </button>
+        </div>
+
+        <!-- FOOTER NOTE -->
+        <div style="display: flex; justify-content: center;">
+            <span style="background-color: #f1f5f9; border-radius: 20px; padding: 6px 20px;
+                         font-size: 12px; color: #475569;">
+                Tous les champs marqués * sont obligatoires
+            </span>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {# Styles globaux pour tous les champs du formulaire pour éviter la répétition #}
+    <style>
+        form input, form textarea, form select {
+            width: 100%;
+            border-radius: 8px !important;
+            padding: 12px 15px !important;
+            font-size: 14px !important;
+            background-color: #f8fafc !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: none !important;
+            transition: border-color 0.2s;
+        }
+
+        form input:focus, form textarea:focus, form select:focus {
+            border-color: #A155B9 !important;
+            outline: none;
+        }
+
+        form select {
+            /* Styles spécifiques pour que le select ressemble aux textfields */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem !important;
+        }
+        
+        /* Style pour les messages d'erreur de Symfony */
+        .form-error-message { 
+            color: #dc2626; 
+            font-size: 12px; 
+            font-weight: 500; 
+            margin-top: 6px; 
+            display: block; 
+        }
+    </style>
+{% endblock %}

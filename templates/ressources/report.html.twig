@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signaler {{ resource.nom }}{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h2 class="mb-4">Signaler cet article</h2>
+                    <p class="text-muted mb-4">
+                        Vous signalez : <strong>{{ resource.nom }}</strong><br>
+                        Veuillez nous indiquer pourquoi cet article ne respecte pas nos conditions d'utilisation.
+                    </p>
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Raison du signalement</label>
+                            <select name="reason" class="form-select" required>
+                                <option value="Contenu illégal">Contenu illégal (Drogues, Armes, etc.)</option>
+                                <option value="Arnaque / Scam">Arnaque / Tentative de fraude</option>
+                                <option value="Produit interdit">Produit interdit sur la plateforme</option>
+                                <option value="Harcèlement">Harcèlement ou haine</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label font-weight-bold">Précisions (Optionnel)</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Donnez-nous plus de détails pour aider nos modérateurs..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg" style="border-radius: 12px;">Envoyer le signalement</button>
+                            <a href="{{ path('app_ressources_index') }}" class="btn btn-light" style="border-radius: 12px;">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ma Réclamation - {{ reclamation.sujet }}{% endblock %}
+
+{% block stylesheets %}
+<style>
+.recap-header {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    color: white;
+    margin-bottom: 28px;
+}
+.recap-header .badge-statut {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+.info-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f0f0f5;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+.chat-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f0f0f5;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+}
+.chat-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #f0f0f5;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #fafafa;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+.msg-bubble { max-width: 70%; display: flex; flex-direction: column; }
+.msg-bubble.me { align-self: flex-end; align-items: flex-end; }
+.msg-bubble.other { align-self: flex-start; align-items: flex-start; }
+.msg-bubble .bubble-meta { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+.msg-bubble .bubble-text {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.msg-bubble.me .bubble-text {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+.msg-bubble.other .bubble-text {
+    background: #fff;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+}
+.chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid #f0f0f5;
+    background: #fff;
+    border-radius: 0 0 14px 14px;
+}
+.chat-input-area .input-group {
+    background: #f8f7ff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid #e9e4ff;
+    transition: border-color 0.2s;
+}
+.chat-input-area .input-group:focus-within { border-color: #7c3aed; }
+.chat-input-area input {
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    font-size: 14px;
+    outline: none;
+    box-shadow: none !important;
+}
+.chat-input-area .btn-send {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.chat-closed {
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 13px;
+    background: #f9fafb;
+    border-radius: 0 0 14px 14px;
+    border-top: 1px solid #f0f0f5;
+}
+.empty-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    gap: 8px;
+}
+.empty-chat i { font-size: 36px; opacity: 0.3; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid fade-in px-4">
+
+    <a href="{{ path('reclamation_index') }}" class="btn btn-sm btn-outline-secondary mb-4">
+        <i class="bi bi-arrow-left me-1"></i> Mes réclamations
+    </a>
+
+    {# Header #}
+    <div class="recap-header">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge-statut">
+                {{ reclamation.statut == 'EN_ATTENTE' ? '⏳' : (reclamation.statut == 'RESOLU' ? '✅' : (reclamation.statut == 'EN_COURS' ? '🔄' : '❌')) }}
+                {{ reclamation.statut|replace({'_': ' '}) }}
+            </span>
+            <span style="opacity:0.6; font-size:13px;">{{ reclamation.dateCreation|date('d/m/Y à H:i') }}</span>
+        </div>
+        <h2 class="mb-0 fw-bold" style="font-size:22px;">{{ reclamation.sujet }}</h2>
+    </div>
+
+    <div class="row g-4">
+        {# Description #}
+        <div class="col-12">
+            <div class="info-card">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#9ca3af;margin-bottom:8px;">
+                    <i class="bi bi-file-text me-1"></i>Description
+                </div>
+                <p class="mb-0" style="font-size:14px;line-height:1.7;color:#374151;">{{ reclamation.description }}</p>
+                {% if reclamation.descriptionOriginale %}
+                <div class="mt-3 p-3 rounded-3" style="background:#fffbeb;border-left:3px solid #f59e0b;">
+                    <div class="small text-muted mb-1">
+                        <i class="bi bi-translate me-1"></i>Texte original
+                        <span class="badge bg-warning-subtle text-warning ms-1">{{ reclamation.langueOriginale }}</span>
+                    </div>
+                    <div style="font-size:13px;">{{ reclamation.descriptionOriginale }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Chat #}
+        <div class="col-12">
+            <div class="chat-card">
+                <div class="chat-header">
+                    <i class="bi bi-chat-dots" style="color:#7c3aed;"></i>
+                    Discussion avec le support
+                    <span class="ms-auto badge rounded-pill" style="background:#f3f0ff;color:#7c3aed;font-size:11px;">
+                        {{ messages|length }} message{{ messages|length > 1 ? 's' : '' }}
+                    </span>
+                </div>
+
+                <div class="chat-messages" id="chatBox">
+                    {# Réponse automatique chatbot #}
+                    {% if reclamation.autoResponse %}
+                    <div class="msg-bubble other">
+                        <div class="bubble-meta">
+                            <i class="bi bi-stars me-1" style="color:#10b981;"></i>
+                            <span style="color:#10b981;font-weight:600;">Réponse automatique</span>
+                            · Immédiatement
+                        </div>
+                        <div class="bubble-text" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;">
+                            {{ reclamation.autoResponse }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if messages is empty and not reclamation.autoResponse %}
+                        <div class="empty-chat">
+                            <i class="bi bi-chat-square-dots"></i>
+                            <span>Aucun message pour le moment.</span>
+                        </div>
+                    {% else %}
+                        {% for msg in messages %}
+                            {% set isMe = msg.id_auteur.getId() == userId %}
+                            <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px;{{ isMe ? 'flex-direction:row-reverse;' : '' }}">
+                                {# Avatar #}
+                                <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;{{ isMe ? 'background:linear-gradient(135deg,#7c3aed,#a78bfa);' : 'background:linear-gradient(135deg,#0ea5e9,#38bdf8);' }}display:flex;align-items:center;justify-content:center;">
+                                    {% if msg.id_auteur.getPhoto() %}
+                                        <img src="{{ asset(msg.id_auteur.getPhoto()) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                                    {% else %}
+                                        <span style="color:#fff;font-size:13px;font-weight:700;">{{ msg.id_auteur.nom|slice(0,1)|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="msg-bubble {{ isMe ? 'me' : 'other' }}">
+                                    <div class="bubble-meta">
+                                        {% if not isMe %}
+                                            <i class="bi bi-shield-check me-1" style="color:#7c3aed;"></i>Support
+                                        {% else %}
+                                            Vous
+                                        {% endif %}
+                                        · {{ msg.date_commentaire|date('d/m à H:i') }}
+                                    </div>
+                                    <div class="bubble-text">{{ msg.commentaire }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                {% if reclamation.statut == 'RESOLU' or reclamation.statut == 'REJETE' %}
+                    <div class="chat-closed">
+                        <i class="bi bi-lock-fill me-2" style="color:{{ reclamation.statut == 'RESOLU' ? '#22c55e' : '#ef4444' }};"></i>
+                        {{ reclamation.statut == 'RESOLU' ? 'Réclamation résolue — merci de nous avoir contactés.' : 'Réclamation rejetée — communication fermée.' }}
+                    </div>
+                {% elseif messages|length == 0 %}
+                    <div class="chat-closed" style="background:#f0fdf4;border-top:1px solid #bbf7d0;">
+                        <i class="bi bi-hourglass-split me-2" style="color:#16a34a;"></i>
+                        En attente de réponse de l'administrateur...
+                    </div>
+                {% else %}
+                    <div class="chat-input-area">
+                        <form method="POST" action="{{ path('reclamation_show', {id: reclamation.id}) }}">
+                            <div class="input-group">
+                                <input type="text" name="message" placeholder="Écrire un message..." autocomplete="off" class="form-control">
+                                <button type="submit" class="btn-send">
+                                    <i class="bi bi-send-fill me-1"></i> Envoyer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const box = document.getElementById('chatBox');
+    if (box) box.scrollTop = box.scrollHeight;
+</script>
+{% endblock %}

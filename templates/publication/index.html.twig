@@ -1,0 +1,96 @@
+{# templates/publication/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Gestion des Offres d'Emploi{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+<div class="page-container">
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="header-titles">
+            <h1>Gestion des Offres d'Emploi</h1>
+            <p>Gérez vos publications de recrutement</p>
+        </div>
+        
+        {# CORRECTION : Le bouton pointe vers la route de création de l'admin #}
+        <a href="{{ path('app_admin_publication_new') }}" class="btn-pink">
+            ＋ Ajouter une offre
+        </a>
+    </header>
+
+    <!-- TABLE CARD -->
+    <main class="table-card">
+
+        <!-- EN-TÊTES DES COLONNES -->
+        <div class="table-row table-header">
+            <div class="table-cell" style="flex-basis: 35%;">Poste de travail</div>
+            <div class="table-cell" style="flex-basis: 15%; text-align: center;">Candidatures</div>
+            <div class="table-cell" style="flex-basis: 20%;">Statut</div>
+            <div class="table-cell" style="flex-basis: 30%; text-align: right;">Actions</div>
+        </div>
+
+        <!-- LIGNES DE DONNÉES -->
+        <div class="table-body">
+            {% for publication in publications %}
+                <div class="table-row">
+                    <div class="table-cell" style="flex-basis: 35%;">
+                        {# On utilise les propriétés de l'entité Publication #}
+                        <strong>{{ publication.titre }}</strong>
+                        <span>{{ publication.departement }} - {{ publication.localisation }}</span>
+                    </div>
+
+                    <div class="table-cell" style="flex-basis: 15%; text-align: center; font-weight: 600; font-size: 14px;">
+                        {# On utilise la propriété de relation snake_case #}
+                        <a href="{{ path('app_publication_show', {'publication_id': publication.getPublication_id()}) }}" style="text-decoration: none; color: #A155B9;">
+                            {{ publication.demande_emplois|length }}
+                        </a>
+                    </div>
+
+                    <div class="table-cell" style="flex-basis: 20%;">
+                        <span class="badge badge-{{ publication.statut|lower }}">{{ publication.statut }}</span>
+                    </div>
+
+                    <div class="table-cell actions-cell" style="flex-basis: 30%; text-align: right;">
+                        <div style="display:flex; justify-content: flex-end; align-items: center; gap: 8px;">
+
+                            {# CORRECTION : Route pour voir le détail #}
+                            <a href="{{ path('app_publication_show', {'publication_id': publication.getPublication_id()}) }}" class="action-link" style="background: #f3e8f9; color: #A155B9;">Voir</a>
+                            
+                            {# CORRECTION : Route pour modifier (admin) #}
+                            <a href="{{ path('app_admin_publication_edit', {'publication_id': publication.getPublication_id()}) }}" class="action-link" style="background: #eef2ff; color: #4338ca;">Modifier</a>
+
+                            {# CORRECTION : Formulaire de suppression avec la route admin #}
+                            <form method="post" action="{{ path('app_admin_publication_delete', {'publication_id': publication.getPublication_id()}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette offre ?');" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ publication.getPublication_id()) }}">
+                                <button type="submit" class="action-link" style="background: #fee2e2; color: #dc2626; border: none; cursor: pointer;">Supprimer</button>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-results">
+                    <p>Aucune offre d'emploi trouvée. Commencez par en ajouter une !</p>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+
+</div>
+
+{# Ajout d'un style rapide pour les liens d'action #}
+<style>
+    .action-link {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Panier{% endblock %}
+
+{% block body %}
+<div class="cart-page">
+    <section class="cart-hero">
+        <div>
+            <h1>Mon Panier</h1>
+            <p>Vérifiez et validez votre commande</p>
+        </div>
+        <a class="cart-hero-link" href="{{ path('app_ressources_index') }}">← Continuer mes achats</a>
+    </section>
+
+    <section class="cart-summary-grid">
+        <article class="cart-summary-card">
+            <h3>Articles</h3>
+            <div class="cart-summary-value">{{ totals.items }}</div>
+        </article>
+        <article class="cart-summary-card">
+            <h3>Sous-total</h3>
+            <div class="cart-summary-value">{{ totals.subtotal|number_format(2, '.', ' ') }} DT</div>
+        </article>
+        <article class="cart-summary-card">
+            <h3>TVA 19%</h3>
+            <div class="cart-summary-value">{{ totals.tva|number_format(2, '.', ' ') }} DT</div>
+        </article>
+        <article class="cart-summary-card accent">
+            <h3>Total TTC</h3>
+            <div class="cart-summary-value">{{ totals.total|number_format(2, '.', ' ') }} DT</div>
+        </article>
+    </section>
+
+    <section class="cart-toolbar">
+        <div class="cart-toolbar-actions">
+            <button type="button" class="chip active" data-cart-action="select-all">Tout sélectionner</button>
+            <button type="button" class="chip" data-cart-action="deselect-all">Désélectionner</button>
+        </div>
+        <div class="count-pill">{{ selected_count|default(0) }} sélectionné(s)</div>
+    </section>
+
+    {% if items is not empty %}
+        <div class="cart-panel">
+            <div class="cart-note">Les articles non cochés restent dans le panier jusqu'à votre prochaine décision.</div>
+            <div class="cart-row-forms">
+                {% for item in items %}
+                    {% set ressource = item.ressource %}
+                    <form id="cartRowForm-{{ ressource.id_ressource }}" method="post" action="{{ path('app_panier_update', {'idRessource': ressource.id_ressource}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('cart-row-' ~ ressource.id_ressource) }}">
+                        <input type="hidden" name="selected" value="0">
+                    </form>
+                {% endfor %}
+            </div>
+            <form id="cartSelectionForm" method="post" action="{{ path('app_panier_selection') }}" class="cart-selection-form"></form>
+            <div class="cart-table-wrap">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th class="cart-select-head"><input type="checkbox" disabled></th>
+                            <th>Ressource</th>
+                            <th>Type</th>
+                            <th>Quantité</th>
+                            <th>Date début</th>
+                            <th>Date fin</th>
+                            <th>Prix unitaire</th>
+                            <th>Total ligne</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            {% set ressource = item.ressource %}
+                            {% set imageSrc = ressource.image_r and (ressource.image_r starts with 'http://' or ressource.image_r starts with 'https://')
+                                ? ressource.image_r
+                                : (ressource.image_r ? asset('uploads/ressources/' ~ ressource.image_r) : '') %}
+                            <tr>
+                                <td class="cart-select-cell">
+                                    <input
+                                        form="cartRowForm-{{ ressource.id_ressource }}"
+                                        type="checkbox"
+                                        name="selected"
+                                        value="1"
+                                        {% if item.selected %}checked{% endif %}
+                                        onchange="document.getElementById('cartRowForm-{{ ressource.id_ressource }}').submit()">
+                                </td>
+                                <td>
+                                    <div class="cart-resource-name">
+                                        {% if imageSrc %}
+                                            <img src="{{ imageSrc }}" alt="{{ ressource.nom }}" class="cart-table-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="cart-table-image-placeholder" style="display:none;">Aucune image</div>
+                                        {% else %}
+                                            <div class="cart-table-image-placeholder">Aucune image</div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="cart-resource-title">{{ ressource.nom }}</div>
+                                            <div class="cart-resource-subtitle">{{ ressource.description ? ressource.description|slice(0, 60) : '—' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ ressource.offre|capitalize }}</td>
+                                <td>
+                                    <input form="cartRowForm-{{ ressource.id_ressource }}" type="number" name="quantite" value="{{ item.quantite }}" min="1" class="cart-input cart-qty-input" onchange="document.getElementById('cartRowForm-{{ ressource.id_ressource }}').submit()">
+                                </td>
+                                <td>
+                                    {% if item.is_rental %}
+                                        <input form="cartRowForm-{{ ressource.id_ressource }}" type="date" name="date_deb" value="{{ item.date_deb }}" class="cart-input" onchange="document.getElementById('cartRowForm-{{ ressource.id_ressource }}').submit()">
+                                    {% else %}
+                                        <span class="cart-na">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.is_rental %}
+                                        <input form="cartRowForm-{{ ressource.id_ressource }}" type="date" name="date_fin" value="{{ item.date_fin }}" class="cart-input" onchange="document.getElementById('cartRowForm-{{ ressource.id_ressource }}').submit()">
+                                    {% else %}
+                                        <span class="cart-na">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ item.unit_price|number_format(2, '.', ' ') }} DT</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ item.line_total|number_format(2, '.', ' ') }} DT</strong>
+                                </td>
+                                <td>
+                                    <form method="post" action="{{ path('app_panier_remove', {'idRessource': ressource.id_ressource}) }}" onsubmit="return confirm('Retirer cette ressource du panier ?');">
+                                        <button type="submit" class="cart-remove-btn">Retirer</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="cart-delivery-section">
+                <h3>Informations de Livraison</h3>
+                {{ form_start(form, {'attr': {'id': 'checkoutForm', 'action': path('app_panier_checkout')}}) }}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            {{ form_row(form.adresse_livraison, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form_row(form.ville_livraison, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form_row(form.code_postal, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                        <div class="form-group">
+                            {{ form_row(form.telephone_livraison, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+
+            <div class="cart-actions">
+                <div class="cart-actions-note">Confirmez la commande pour enregistrer les lignes dans les tables de commandes.</div>
+                <button type="submit" form="checkoutForm" class="btn btn-save">✓ Confirmer la commande</button>
+            </div>
+        </div>
+    {% else %}
+        <section class="cart-empty-panel">
+            <div class="cart-empty-icon">🛒</div>
+            <h2>Votre panier est vide</h2>
+            <p>Ajoutez des ressources depuis le catalogue.</p>
+            <a href="{{ path('app_ressources_index') }}" class="btn btn-save">Parcourir le catalogue</a>
+        </section>
+    {% endif %}
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectAllButton = document.querySelector('[data-cart-action="select-all"]');
+        const deselectAllButton = document.querySelector('[data-cart-action="deselect-all"]');
+        const selectionForm = document.getElementById('cartSelectionForm');
+
+        const submitSelection = (checked) => {
+            if (!selectionForm) return;
+
+            selectionForm.innerHTML = '';
+            document.querySelectorAll('.cart-select-cell input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.checked = checked;
+            });
+
+            if (checked) {
+                document.querySelectorAll('.cart-row-forms form').forEach((rowForm) => {
+                    const resourceId = rowForm.id.replace('cartRowForm-', '');
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'selected_ids[]';
+                    hidden.value = resourceId;
+                    selectionForm.appendChild(hidden);
+                });
+            }
+
+            selectionForm.submit();
+        };
+
+        if (selectAllButton) {
+            selectAllButton.addEventListener('click', () => submitSelection(true));
+        }
+
+        if (deselectAllButton) {
+            deselectAllButton.addEventListener('click', () => submitSelection(false));
+        }
+    });
+</script>
+{% endblock %}

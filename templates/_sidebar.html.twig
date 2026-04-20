@@ -1,0 +1,14 @@
+{% set currentRoute = app.request.attributes.get('_route')|default('') %}
+
+{% if currentRoute starts with 'admin_' %}
+    {{ include('_sidebar_admin.html.twig') }}
+{% elseif currentRoute starts with 'entrepreneur_' %}
+    {{ include('_sidebar_entrepreneur.html.twig') }}
+{% elseif currentRoute starts with 'app_fournisseur_' %}
+    {{ include('_sidebar_fournisseur.html.twig') }}
+{% elseif currentRoute starts with 'member_' %}
+    {{ include('_sidebar_membre.html.twig') }}
+{% else %}
+    {# Fallback or default sidebar #}
+    {{ include('_sidebar_entrepreneur.html.twig') }}
+{% endif %}

@@ -1,0 +1,92 @@
+{# templates/user/publication.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Offres d'emploi — StartHub{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+<div class="page-container">
+
+    <!-- HEADER BANNER -->
+    <header class="page-header">
+        <div>
+            <p class="page-header-title">Offres d'emploi</p>
+            <p class="page-header-sub">Trouvez le poste qui correspond à votre profil</p>
+        </div>
+        <div style="flex-grow: 1;"></div>
+        
+        {# Lien vers la page des candidatures de l'utilisateur #}
+        <a href="{{ path('app_candidat_mes_candidatures') }}" class="btn-pink">
+            📂 Mes Candidatures
+        </a>
+    </header>
+
+    <!-- SEARCH & FILTER BAR -->
+    {# CORRECTION : L'action du formulaire pointe bien vers la route de cette page #}
+    <form method="get" action="{{ path('app_user_publication_index') }}" class="filter-bar">
+        <input type="text" name="recherche" placeholder="🔍 Rechercher un poste..." value="{{ app.request.query.get('recherche') }}" style="width: 300px;">
+        
+        {# Le filtre sur le contrat est correct #}
+        <select name="contrat" style="width: 160px;">
+            <option value="">Type de Contrat</option>
+            <option value="CDI" {{ app.request.query.get('contrat') == 'CDI' ? 'selected' : '' }}>CDI</option>
+            <option value="CDD" {{ app.request.query.get('contrat') == 'CDD' ? 'selected' : '' }}>CDD</option>
+            <option value="Stage" {{ app.request.query.get('contrat') == 'Stage' ? 'selected' : '' }}>Stage</option>
+            <option value="Alternance" {{ app.request.query.get('contrat') == 'Alternance' ? 'selected' : '' }}>Alternance</option>
+        </select>
+
+        {# Le filtre sur la localisation est correct #}
+        <select name="localisation" style="width: 160px;">
+            <option value="">Localisation</option>
+            {% for loc in localisations %}
+                <option value="{{ loc }}" {{ app.request.query.get('localisation') == loc ? 'selected' : '' }}>{{ loc }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit" class="btn-purple" style="margin-left: auto;">Filtrer</button>
+    </form>
+
+    <!-- OFFERS LIST CARD -->
+    <main class="offers-card">
+        <h2 class="offers-title">Offres disponibles</h2>
+        <div class="offers-divider"></div>
+
+        {% if publications is empty %}
+            <div style="text-align: center; padding: 40px; color: #A155B9; font-style: italic;">
+                Aucune offre ne correspond à votre recherche pour le moment.
+            </div>
+        {% else %}
+            <!-- GRID HEADER -->
+            <div class="grid-header">
+                <span class="grid-header-label">Poste</span>
+                <span class="grid-header-label">Département</span>
+                <span class="grid-header-label">Lieu</span>
+                <span class="grid-header-label">Contrat</span>
+                <span class="grid-header-label">Action</span>
+            </div>
+
+            <!-- ROWS CONTAINER -->
+            <div>
+                {% for publication in publications %}
+                    <div class="offer-row">
+                        {# CORRECTION : Utilisation des propriétés en snake_case #}
+                        <div class="offer-title">{{ publication.titre }}</div>
+                        <div class="offer-details">{{ publication.departement }}</div>
+                        <div class="offer-details">{{ publication.localisation }}</div> {# Utilisation de 'localisation' au lieu de 'lieu' #}
+                        <div class="offer-details">{{ publication.type_contrat }}</div>
+                        <div>
+                            {# CORRECTION : Utilisation de publication.publication_id pour le paramètre de la route #}
+                            <a href="{{ path('app_publication_show', {'publication_id': publication.getPublication_id()}) }}" class="btn-purple" style="font-size: 12px; padding: 7px 14px;">
+                                Voir & Postuler
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

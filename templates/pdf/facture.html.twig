@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: DejaVu Sans, Arial, sans-serif; font-size:13px; color:#1e1e2e; background:#fff; }
+
+/* ── HEADER ── */
+.header {
+    background: #5b21b6;
+    padding: 0;
+    color: white;
+    position: relative;
+}
+.header-top {
+    padding: 24px 36px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.brand { font-size: 24px; font-weight: bold; letter-spacing: 1px; }
+.brand-sub { font-size: 10px; opacity: .75; margin-top: 2px; letter-spacing: .5px; text-transform: uppercase; }
+.ticket-label { text-align: right; }
+.ticket-title { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: .8; }
+.ticket-num { font-size: 28px; font-weight: bold; line-height: 1; }
+.header-stripe {
+    background: #7c3aed;
+    padding: 10px 36px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    opacity: .92;
+}
+
+/* ── PERFORATED DIVIDER ── */
+.perf {
+    border-top: 2px dashed #d8b4fe;
+    margin: 0 36px;
+    position: relative;
+}
+
+/* ── BODY ── */
+.body { padding: 22px 36px; }
+
+.section-label {
+    font-size: 9px;
+    font-weight: bold;
+    color: #7c3aed;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+/* ── INFO COLUMNS ── */
+.cols { display: flex; gap: 20px; margin-bottom: 18px; }
+.col-main { flex: 1; }
+.col-qr { width: 150px; text-align: center; }
+
+.infobox {
+    background: #faf5ff;
+    border-left: 3px solid #7c3aed;
+    border-radius: 4px;
+    padding: 10px 14px;
+}
+.info-row { display: flex; margin-bottom: 4px; }
+.info-label { width: 100px; font-size: 11px; color: #6b7280; flex-shrink: 0; }
+.info-val { font-size: 11px; font-weight: bold; color: #1e1e2e; }
+
+/* ── EVENT BOX ── */
+.evbox {
+    border: 1px solid #e9d5ff;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 16px;
+    background: #fefcff;
+}
+.ev-title { font-size: 15px; font-weight: bold; color: #5b21b6; margin-bottom: 8px; }
+
+/* ── PRICE + STATUS ── */
+.price-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: stretch;
+}
+.pricebox {
+    flex: 1;
+    background: #5b21b6;
+    color: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+.price-label { font-size: 10px; opacity: .8; text-transform: uppercase; letter-spacing: 1px; }
+.price-amt { font-size: 22px; font-weight: bold; margin-top: 2px; }
+.statusbox {
+    background: #d1fae5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+}
+.status-label { font-size: 10px; color: #065f46; text-transform: uppercase; letter-spacing: 1px; }
+.status-val { font-size: 14px; font-weight: bold; color: #059669; margin-top: 2px; }
+
+/* ── QR SECTION ── */
+.qr-label { font-size: 9px; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+.qr-token { font-size: 7px; color: #7c3aed; margin-top: 5px; word-break: break-all; line-height: 1.4; }
+.qr-box svg { display: block; margin: 0 auto; }
+
+/* ── NOTICE ── */
+.notice {
+    background: #fdf4ff;
+    border: 1px dashed #c084fc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 10px;
+    color: #7c3aed;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+/* ── FOOTER ── */
+.footer {
+    border-top: 1px solid #ede9fe;
+    padding: 12px 36px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #9ca3af;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-top">
+        <div>
+            <div class="brand">⭐ StartHub</div>
+            <div class="brand-sub">Plateforme Entrepreneuriale</div>
+        </div>
+        <div class="ticket-label">
+            <div class="ticket-title">Billet officiel</div>
+            <div class="ticket-num">#{{ reservation.idReservation }}</div>
+        </div>
+    </div>
+    <div class="header-stripe">
+        <span>📅 Réservé le {{ reservation.dateReservation|date('d/m/Y à H:i') }}</span>
+        <span>
+            {% if evenement and evenement.prix == 0 %}
+                🆓 GRATUIT
+            {% else %}
+                ✅ PAYÉ
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+<!-- PERFORATED LINE -->
+<div class="perf" style="margin-top:16px;"></div>
+
+<div class="body">
+
+    <!-- CLIENT + QR -->
+    <div class="cols">
+        <div class="col-main">
+            <div class="section-label">Titulaire du billet</div>
+            <div class="infobox">
+                <div class="info-row">
+                    <span class="info-label">Nom :</span>
+                    <span class="info-val">{{ utilisateur ? utilisateur.nom : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email :</span>
+                    <span class="info-val">{{ utilisateur ? utilisateur.email : '—' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Réf. billet :</span>
+                    <span class="info-val">#{{ reservation.idReservation }}</span>
+                </div>
+                <div class="info-row" style="margin-bottom:0;">
+                    <span class="info-label">Statut :</span>
+                    <span class="info-val" style="color:#059669;">
+                        {% if reservation.statutPaiement == 'paid' %}Payé
+                        {% elseif reservation.statutPaiement == 'free' %}Gratuit
+                        {% else %}En attente{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-qr">
+            <div class="qr-label">QR Verification</div>
+            <div class="qr-box">
+                {% if qr_html %}
+                    {{ qr_html|raw }}
+                {% else %}
+                    <div style="width:140px;height:140px;border:1.5px dashed #c084fc;
+                                border-radius:6px;font-size:9px;color:#a155b9;
+                                text-align:center;padding:20px 8px;">
+                        Vérifiez via le token
+                    </div>
+                {% endif %}
+            </div>
+            <div class="qr-token">
+                {{ reservation.tokenVerification|slice(0,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(8,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(16,8) }}&nbsp;
+                {{ reservation.tokenVerification|slice(24,8) }}
+            </div>
+        </div>
+    </div>
+
+    <!-- EVENT DETAILS -->
+    <div class="section-label">Détails de l'événement</div>
+    <div class="evbox">
+        <div class="ev-title">{{ evenement ? evenement.titre : '—' }}</div>
+        <div class="info-row">
+            <span class="info-label">📅 Date :</span>
+            <span class="info-val">{{ evenement and evenement.dateEvenement ? evenement.dateEvenement|date('d/m/Y à H:i') : '—' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">📍 Lieu :</span>
+            <span class="info-val">{{ evenement ? evenement.lieu : '—' }}</span>
+        </div>
+        {% if evenement and evenement.description %}
+        <div class="info-row" style="margin-top:6px;">
+            <span class="info-label">Description :</span>
+            <span class="info-val" style="font-weight:normal; color:#4b5563; font-size:10px;">
+                {{ evenement.description|slice(0,130) }}{% if evenement.description|length > 130 %}…{% endif %}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- PRICE + STATUS -->
+    <div class="price-row">
+        <div class="pricebox">
+            <div class="price-label">Montant total — 1 place</div>
+            <div class="price-amt">
+                {{ evenement and evenement.prix > 0 ? evenement.prix|number_format(2, '.', ' ') ~ ' DT' : 'GRATUIT' }}
+            </div>
+        </div>
+        <div class="statusbox">
+            <div class="status-label">Paiement</div>
+            <div class="status-val">
+                {% if reservation.statutPaiement == 'paid' %}✅ Confirmé
+                {% elseif reservation.statutPaiement == 'free' %}🆓 Gratuit
+                {% else %}⏳ En attente{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTICE -->
+    <div class="notice">
+        Ce billet est personnel et non transférable. Présentez ce QR code à l'entrée de l'événement.
+        Généré le {{ "now"|date('d/m/Y à H:i') }}.
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <span>StartHub — Plateforme Entrepreneuriale</span>
+    <span>Ce document tient lieu de billet d'entrée</span>
+</div>
+
+</body>
+</html>

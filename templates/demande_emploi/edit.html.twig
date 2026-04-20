@@ -1,0 +1,66 @@
+{# templates/demande_emploi/edit.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Candidature{% endblock %}
+
+{% block body %}
+<div class="form-page-container">
+
+    <header class="form-header">
+        <div>
+            <h1>Modifier la Candidature</h1>
+            <p>Pour l'offre : {{ demande.getPublication().titre }}</p>
+        </div>
+        <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="btn-outline">
+            ← Retour à l'offre
+        </a>
+    </header>
+
+    <main class="form-card" style="max-width: 700px;">
+        {% set isLocked = demande.getStatutDemande() != 'En attente' %}
+
+        {% if isLocked %}
+            <div class="lock-info-label">
+                🔒 Cette candidature n'est plus modifiable car son statut est « {{ demande.getStatutDemande() }} ».
+            </div>
+        {% endif %}
+
+        {{ form_start(form) }}
+
+        <div class="form-grid">
+            <label class="form-label">Candidat</label>
+            <div>
+                <input type="text" value="{{ demande.getCandidat().nom ?? 'N/A' }}" disabled class="form-control-disabled">
+            </div>
+
+            {# --- BLOC CORRIGÉ POUR LE CV --- #}
+            {# On remplace tout l'ancien bloc par cette seule ligne, beaucoup plus simple et plus puissante. #}
+            {{ form_row(form.cvFile) }}
+            {# ------------------------------- #}
+            
+            <label class="form-label">Lettre de motivation *</label>
+            <div>
+                {{ form_widget(form.lettreMotivation, {'attr': {'rows': 5, 'disabled': isLocked}}) }}
+                {{ form_errors(form.lettreMotivation) }}
+            </div>
+            
+            <label class="form-label">Statut *</label>
+            <div>
+                {{ form_widget(form.statutDemande, {'attr': {'disabled': isLocked }}) }}
+                {{ form_errors(form.statutDemande) }}
+            </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-actions">
+            <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="btn-cancel">Annuler</a>
+            <button type="submit" class="btn-submit" {{ isLocked ? 'disabled' : '' }}>
+                ✓ Enregistrer les modifications
+            </button>
+        </div>
+
+        {{ form_end(form) }}
+    </main>
+</div>
+{% endblock %}

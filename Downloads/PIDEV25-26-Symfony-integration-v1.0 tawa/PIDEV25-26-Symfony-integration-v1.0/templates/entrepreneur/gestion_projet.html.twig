@@ -1,0 +1,236 @@
+{# templates/entrepreneur/gestion_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block page_title %}
+    Gestion du projet : {{ projet.titre }}
+{% endblock %}
+
+{% block body %}
+<div class="page-content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="page-title-main">{{ projet.titre }}</h1>
+            <div class="page-subtitle text-muted">
+                <i class="bi bi-person-circle"></i> {{ projet.entrepreneur.nom ?? 'N/A' }}
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge status-badge-lg 
+                {% if projet.etat == 'En attente' %}status-pending
+                {% elseif projet.etat == 'Accepté' %}status-accepted
+                {% elseif projet.etat == 'Refusé' %}status-refused
+                {% elseif projet.etat == 'En cours' %}status-in-progress
+                {% else %}status-completed{% endif %}">
+                {{ projet.etat }}
+            </span>
+            {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+            <form method="post" action="{{ path('entrepreneur_changer_statut_projet', {'id': projet.idProjet}) }}" class="d-inline">
+                <select name="statut" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option>Changer le statut...</option>
+                    <option value="En cours">📊 Passer En cours</option>
+                    <option value="Terminé">✅ Marquer Terminé</option>
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progression -->
+    <div class="card-ui mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+                <h5 class="card-title-small">Progression globale</h5>
+                <span class="fw-bold text-primary">{{ projet.progression }}%</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ projet.progression }}%" aria-valuenow="{{ projet.progression }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne gauche : Membres -->
+        <div class="col-lg-5 mb-4">
+            <div class="card-ui h-100">
+                <div class="card-header-ui">
+                    <h3 class="card-title-ui"><i class="bi bi-people-fill"></i> Membres de l'équipe</h3>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                        <i class="bi bi-plus-circle"></i> Ajouter
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if membres|length > 0 %}
+                        <ul class="list-group list-group-flush">
+                            {% for membre in membres %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-3">
+                                        {{ membre.idUtilisateur.nom|slice(0, 1)|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ membre.idUtilisateur.nom }}</div>
+                                        <div class="text-muted small">{{ membre.roleEquipe }}</div>
+                                    </div>
+                                </div>
+                                <a href="{{ path('entrepreneur_supprimer_membre', {'id': membre.idMembre}) }}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce membre ?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people display-4 text-muted"></i>
+                            <p class="text-muted mt-3">Aucun membre dans l'équipe pour le moment.</p>
+                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                                <i class="bi bi-plus-circle"></i> Ajouter un membre
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : Tâches -->
+        <div class="col-lg-7 mb-4">
+            <div class="card-ui h-100">
+                <div class="card-header-ui">
+                    <h3 class="card-title-ui"><i class="bi bi-list-check"></i> Tâches du projet</h3>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                        <i class="bi bi-plus-circle"></i> Ajouter
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if taches|length > 0 %}
+                        <ul class="list-group list-group-flush">
+                            {% for tache in taches %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">{{ tache.titre }}</div>
+                                    <div class="text-muted small">
+                                        {% if tache.id_responsable %}
+                                            Assignée à: {{ tache.id_responsable.nom }}
+                                        {% else %}
+                                            Non assignée
+                                        {% endif %}
+                                        - <span class="badge bg-light text-dark">{{ tache.statut }}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    {# Actions pour les tâches (ex: modifier, supprimer) #}
+                                    <a href="{{ path('entrepreneur_supprimer_tache', {'id': tache.idTache}) }}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-list-check display-4 text-muted"></i>
+                            <p class="text-muted mt-3">Aucune tâche définie pour ce projet.</p>
+                            <button class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                                <i class="bi bi-plus-circle"></i> Ajouter une tâche
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajouter Membre -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addMemberModalLabel">Ajouter un membre à l'équipe</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {{ form_start(membreForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
+            {{ form_widget(membreForm) }}
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">Ajouter le membre</button>
+            </div>
+        {{ form_end(membreForm) }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajouter Tâche -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTaskModalLabel">Ajouter une nouvelle tâche</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {{ form_start(tacheForm, {'action': path('entrepreneur_gestion_projet', {'id': projet.idProjet})}) }}
+            {{ form_widget(tacheForm) }}
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">Créer la tâche</button>
+            </div>
+        {{ form_end(tacheForm) }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .page-content { padding: 2rem; }
+        .page-title-main { font-size: 2rem; font-weight: 700; }
+        .card-ui {
+            background-color: #fff;
+            border: 1px solid #e3e6f0;
+            border-radius: .75rem;
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
+        .card-header-ui {
+            padding: 1rem 1.25rem;
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title-ui {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #5a5c69;
+        }
+        .avatar-sm {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #4e73df;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .status-badge-lg {
+            padding: .5em .75em;
+            font-size: .9rem;
+            font-weight: 700;
+        }
+        .status-pending { background-color: #f6c23e; color: #fff; }
+        .status-accepted { background-color: #1cc88a; color: #fff; }
+        .status-refused { background-color: #e74a3b; color: #fff; }
+        .status-in-progress { background-color: #36b9cc; color: #fff; }
+        .status-completed { background-color: #858796; color: #fff; }
+    </style>
+{% endblock %}

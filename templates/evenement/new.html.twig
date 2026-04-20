@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un Événement{% endblock %}
+
+{% set active = 'admin_events' %}
+
+{% block body %}
+
+<!-- HEADER (matches AjouterEvenement.fxml header) -->
+<div class="page-header" style="gap:14px;">
+    <div style="flex:1">
+        <p class="page-header-title">Ajouter un Événement</p>
+        <p class="page-header-sub">Renseignez les informations de votre événement</p>
+    </div>
+    <a href="{{ path('admin_reservation_index') }}"
+       style="background:rgba(255,255,255,.18); color:white; border:1.5px solid rgba(255,255,255,.4);
+              border-radius:10px; padding:10px 16px; font-size:13px; font-weight:700; text-decoration:none;">
+        Gérer Réservations
+    </a>
+    <a href="{{ path('admin_evenement_index') }}"
+       class="btn-pink" style="text-decoration:none; font-size:13px; padding:10px 16px;">
+        Voir les événements
+    </a>
+</div>
+
+<!-- FORM CARD (matches AjouterEvenement.fxml form card) -->
+<div style="background:white; border-radius:16px; padding:30px;
+            border:1px solid #ead5f0; box-shadow:0 6px 14px rgba(161,85,185,.08);
+            max-width:680px; margin:0 auto;">
+
+    <!-- Section title -->
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:22px; color:#A155B9; font-weight:800;">|</span>
+        <span style="font-size:17px; font-weight:800; color:#2d0a3e;">Nouvel Événement</span>
+    </div>
+
+    <!-- Purple gradient divider -->
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    <!-- Error summary (mimics Java errorLabel at top) -->
+    {% set hasErrors = false %}
+    {% for field in form %}
+        {% if field.vars.errors|length > 0 %}{% set hasErrors = true %}{% endif %}
+    {% endfor %}
+    {% if hasErrors %}
+    <div style="color:#F765A3; font-size:13px; font-weight:600;
+                background:#fff0f6; border-radius:8px; padding:10px 14px;
+                border:1px solid #f5c6e0; margin-bottom:16px;">
+        ⚠ Veuillez corriger les erreurs ci-dessous.
+    </div>
+    {% endif %}
+
+    <!-- FIELDS GRID (2 columns: label | field) -->
+    <div style="display:grid; grid-template-columns:140px 1fr; row-gap:16px; column-gap:20px; align-items:start;">
+
+        <!-- Titre -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Titre *
+        </label>
+        <div>
+            {{ form_widget(form.titre, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;', 'placeholder': 'Ex: Conférence Innovation 2026'}}) }}
+            {{ form_errors(form.titre) }}
+        </div>
+
+        <!-- Date -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Date *
+        </label>
+        <div>
+            {{ form_widget(form.dateEvenement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+            {{ form_errors(form.dateEvenement) }}
+        </div>
+
+        <!-- Lieu -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Lieu *
+        </label>
+        <div>
+            {{ form_widget(form.lieu, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;', 'placeholder': 'Ex: Salle des conférences, Tunis'}}) }}
+            {{ form_errors(form.lieu) }}
+        </div>
+
+        <!-- Capacité -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Capacité *
+        </label>
+        <div>
+            {{ form_widget(form.capacite, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;', 'placeholder': 'Nombre de places', 'min': '1'}}) }}
+            {{ form_errors(form.capacite) }}
+        </div>
+
+        <!-- Prix -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Prix (DT) *
+        </label>
+        <div style="display:flex; align-items:center; gap:8px;">
+            {{ form_widget(form.prix, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; flex:1;', 'placeholder': 'Ex: 50.00', 'min': '0', 'step': '0.01'}}) }}
+            <span style="font-size:13px; font-weight:700; color:#A155B9;">DT</span>
+            <div>{{ form_errors(form.prix) }}</div>
+        </div>
+
+        <!-- Description -->
+        <label style="font-size:12px; font-weight:700; color:#A155B9; padding-top:10px; text-align:right;">
+            Description *
+        </label>
+        <div>
+            {{ form_widget(form.description, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;', 'placeholder': 'Décrivez votre événement en détail...', 'rows': '5'}}) }}
+            {{ form_errors(form.description) }}
+        </div>
+
+    </div>
+
+    <!-- Divider -->
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin:22px 0 18px;"></div>
+
+    <!-- ACTION BUTTONS (matches AjouterEvenement.fxml button row) -->
+    <div style="display:flex; align-items:center; gap:14px;">
+        <a href="{{ path('admin_evenement_index') }}"
+           style="background:white; color:#A155B9; border:2px solid #A155B9; border-radius:10px;
+                  padding:10px 24px; font-size:13px; font-weight:700; text-decoration:none;
+                  min-width:120px; text-align:center;">
+            Annuler
+        </a>
+        <button type="submit"
+                style="background:#A155B9; color:white; border:none; border-radius:10px;
+                       padding:10px 26px; font-size:13px; font-weight:800; cursor:pointer;
+                       box-shadow:0 4px 12px rgba(161,85,185,.35); min-width:190px;">
+            Ajouter l'événement
+        </button>
+        <div style="flex:1;"></div>
+        <span style="background:#f3e8f9; border-radius:20px; padding:6px 18px;
+                     font-size:11px; color:#A155B9; font-weight:600;">
+            Tous les champs marqués * sont obligatoires
+        </span>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .form-error { color: #F765A3; font-size: 12px; font-weight: 600; margin-top: 4px; display: block; }
+</style>
+{% endblock %}

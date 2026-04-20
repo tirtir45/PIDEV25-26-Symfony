@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier une Ressource{% endblock %}
+
+{% block body %}
+{{ include('ressources/_form.html.twig', {
+    form_title: 'Modifier une Ressource',
+    form_subtitle: 'Ajustez les informations de cette ressource',
+    submit_label: '✓ Enregistrer les modifications',
+    cancel_path: 'app_fournisseur_ressources'
+}) }}
+{% endblock %}
