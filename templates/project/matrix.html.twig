@@ -1,0 +1,312 @@
+{# templates/project/eisenhower.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Matrice Eisenhower — {{ projet.titre }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="{{ asset('styles/project.css') }}">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+    }
+
+    .matrix-container {
+        background: #fff;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,.04);
+    }
+
+    .matrix-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .matrix-axis-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 0.75rem;
+    }
+
+    .matrix-quadrant {
+        border-radius: 20px;
+        padding: 1.25rem;
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(0,0,0,.06);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+
+    .matrix-quadrant:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0,0,0,.1);
+    }
+
+    .matrix-quadrant::after {
+        content: attr(data-action);
+        position: absolute;
+        bottom: 1rem;
+        right: 1.25rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.2;
+        font-style: italic;
+    }
+
+    .matrix-q1 { background: #fef2f0; border-top: 4px solid #ef4444; }
+    .matrix-q2 { background: #eef2ff; border-top: 4px solid #6366f1; }
+    .matrix-q3 { background: #fffbeb; border-top: 4px solid #f59e0b; }
+    .matrix-q4 { background: #f8fafc; border-top: 4px solid #94a3b8; }
+
+    .matrix-quadrant-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .matrix-quadrant-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .matrix-q1 .matrix-quadrant-label { color: #ef4444; }
+    .matrix-q2 .matrix-quadrant-label { color: #6366f1; }
+    .matrix-q3 .matrix-quadrant-label { color: #f59e0b; }
+    .matrix-q4 .matrix-quadrant-label { color: #94a3b8; }
+
+    .matrix-hint {
+        font-size: 0.65rem;
+        margin-top: 0.25rem;
+        opacity: 0.5;
+        font-style: italic;
+    }
+
+    .matrix-task-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 280px;
+        padding-right: 4px;
+    }
+
+    .matrix-task-card {
+        background: rgba(255,255,255,0.9);
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        margin-bottom: 0.6rem;
+        border-left: 3px solid transparent;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .matrix-task-card:hover {
+        transform: translateX(5px);
+        background: rgba(255,255,255,1);
+        box-shadow: 0 4px 12px rgba(99,102,241,.12);
+    }
+
+    .matrix-q1 .matrix-task-card { border-left-color: #ef4444; }
+    .matrix-q2 .matrix-task-card { border-left-color: #6366f1; }
+    .matrix-q3 .matrix-task-card { border-left-color: #f59e0b; }
+    .matrix-q4 .matrix-task-card { border-left-color: #94a3b8; }
+
+    .matrix-task-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #1e1b4b;
+        line-height: 1.35;
+        margin-bottom: 0.25rem;
+    }
+
+    .matrix-task-date {
+        font-size: 0.65rem;
+        margin-top: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .matrix-q1 .matrix-task-date { color: #ef4444; }
+    .matrix-q2 .matrix-task-date { color: #6366f1; }
+    .matrix-q3 .matrix-task-date { color: #f59e0b; }
+    .matrix-q4 .matrix-task-date { color: #94a3b8; }
+
+    .matrix-empty {
+        font-size: 0.75rem;
+        opacity: 0.5;
+        text-align: center;
+        padding: 2rem 1rem;
+        font-style: italic;
+    }
+
+    .matrix-count-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    }
+
+    .matrix-q1 .matrix-count-badge { background: #ef4444; }
+    .matrix-q2 .matrix-count-badge { background: #6366f1; }
+    .matrix-q3 .matrix-count-badge { background: #f59e0b; }
+    .matrix-q4 .matrix-count-badge { background: #94a3b8; }
+
+    @media (max-width: 768px) {
+        .matrix-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .matrix-container {
+            padding: 1rem;
+        }
+        
+        .matrix-quadrant {
+            min-height: auto;
+        }
+        
+        .matrix-task-list {
+            max-height: 240px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="h4 mb-1 fw-bold" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Matrice Eisenhower <span class="text-muted fw-normal" style="-webkit-text-fill-color: #94a3b8;">— {{ projet.titre }}</span></h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ path('entrepreneur_projets_liste') }}">Projets</a></li>
+                <li class="breadcrumb-item active">Matrice</li>
+            </ol>
+        </nav>
+    </div>
+    {% include 'project/_project_nav.html.twig' %}
+</div>
+
+<div class="matrix-container">
+    <div class="d-flex mb-3 px-2">
+        <div style="flex: 1; text-align: center;">
+            <span class="matrix-axis-label">⚡ URGENT</span>
+        </div>
+        <div style="flex: 1; text-align: center;">
+            <span class="matrix-axis-label">📅 NON URGENT</span>
+        </div>
+    </div>
+
+    <div class="matrix-grid">
+        <div class="matrix-quadrant matrix-q1" data-action="FAIRE MAINTENANT">
+            <div class="matrix-quadrant-header">
+                <div>
+                    <div class="matrix-quadrant-label">🔥 Urgent & Important</div>
+                    <div class="matrix-hint">À traiter immédiatement</div>
+                </div>
+                <span class="matrix-count-badge">{{ matrice.urgent_important|length }}</span>
+            </div>
+            <div class="matrix-task-list">
+                {% for tache in matrice.urgent_important %}
+                    <div class="matrix-task-card">
+                        <div class="matrix-task-title">{{ tache.titre }}</div>
+                        {% if tache.dateLimite %}
+                        <div class="matrix-task-date">⏰ {{ tache.dateLimite|date('d/m/Y') }}</div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="matrix-empty">✨ Aucune tâche urgente</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="matrix-quadrant matrix-q2" data-action="PLANIFIER">
+            <div class="matrix-quadrant-header">
+                <div>
+                    <div class="matrix-quadrant-label">📌 Non urgent & Important</div>
+                    <div class="matrix-hint">À planifier dans l'agenda</div>
+                </div>
+                <span class="matrix-count-badge">{{ matrice.non_urgent_important|length }}</span>
+            </div>
+            <div class="matrix-task-list">
+                {% for tache in matrice.non_urgent_important %}
+                    <div class="matrix-task-card">
+                        <div class="matrix-task-title">{{ tache.titre }}</div>
+                        {% if tache.dateLimite %}
+                        <div class="matrix-task-date">📅 {{ tache.dateLimite|date('d/m/Y') }}</div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="matrix-empty">📋 Aucune tâche à planifier</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="matrix-quadrant matrix-q3" data-action="DÉLÉGUER">
+            <div class="matrix-quadrant-header">
+                <div>
+                    <div class="matrix-quadrant-label">🤝 Urgent & Non important</div>
+                    <div class="matrix-hint">Déléguer si possible</div>
+                </div>
+                <span class="matrix-count-badge">{{ matrice.urgent_non_important|length }}</span>
+            </div>
+            <div class="matrix-task-list">
+                {% for tache in matrice.urgent_non_important %}
+                    <div class="matrix-task-card">
+                        <div class="matrix-task-title">{{ tache.titre }}</div>
+                        {% if tache.dateLimite %}
+                        <div class="matrix-task-date">⏰ {{ tache.dateLimite|date('d/m/Y') }}</div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="matrix-empty">👥 Rien à déléguer</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="matrix-quadrant matrix-q4" data-action="ÉLIMINER">
+            <div class="matrix-quadrant-header">
+                <div>
+                    <div class="matrix-quadrant-label">🗑️ Non urgent & Non important</div>
+                    <div class="matrix-hint">Supprimer ou reporter</div>
+                </div>
+                <span class="matrix-count-badge">{{ matrice.non_urgent_non_important|length }}</span>
+            </div>
+            <div class="matrix-task-list">
+                {% for tache in matrice.non_urgent_non_important %}
+                    <div class="matrix-task-card">
+                        <div class="matrix-task-title">{{ tache.titre }}</div>
+                        {% if tache.dateLimite %}
+                        <div class="matrix-task-date">📅 {{ tache.dateLimite|date('d/m/Y') }}</div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="matrix-empty">✅ Zone de confort vide</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

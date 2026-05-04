@@ -1,0 +1,175 @@
+{# templates/demande_emploi/mes_candidatures.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Candidatures — StartHub{% endblock %}
+
+{% block body %}
+<div class="mc-root">
+
+    <!-- HEADER -->
+    <div class="mc-header">
+        <div style="flex:1">
+            <p class="mc-header-title">📂 Mes candidatures</p>
+            <p class="mc-header-sub">
+                {% if app.session.get('user_nom') %}Bonjour {{ app.session.get('user_nom') }} — {% endif %}
+                {{ candidatures|length }} candidature(s)
+            </p>
+        </div>
+        <a href="{{ path('app_user_publication_index') }}" class="mc-btn-outline">
+            ← Retour aux offres
+        </a>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="mc-flash mc-flash--{{ type }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if candidatures is empty %}
+        <div class="mc-empty">
+            <div style="font-size:56px;">📄</div>
+            <p style="font-size:16px; font-weight:600; margin-top:16px;">Vous n'avez aucune candidature pour le moment.</p>
+            <p style="font-size:13px; color:#c4a3d8; margin-bottom:20px;">Parcourez les offres d'emploi et trouvez votre prochain défi !</p>
+            <a href="{{ path('app_user_publication_index') }}" class="mc-btn-pink" style="text-decoration:none; display:inline-block;">
+                Voir les offres d'emploi
+            </a>
+        </div>
+    {% else %}
+        <div class="mc-grid">
+            {% for demande in candidatures %}
+                <div class="mc-card">
+                    <div class="mc-card-head {% if demande.getPublication() and demande.getPublication().getDate_expiration() < "now"|date("Y-m-d") %}mc-card-head--expired{% endif %}">
+                        <p class="mc-card-title">
+                            {% if demande.getPublication() %}{{ demande.getPublication().titre }}{% else %}Offre inconnue{% endif %}
+                        </p>
+                        <p class="mc-card-subtitle">
+                            {% if demande.getPublication() %}📍 {{ demande.getPublication().getLocalisation() }} — {{ demande.getPublication().getType_contrat() }}{% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mc-card-body">
+                        <div class="mc-card-meta">
+                            <span>🗓️</span>
+                            Postulé le {{ demande.getDateDemande()|date('d/m/Y') }}
+                        </div>
+
+                        <div style="margin: 12px 0;">
+                            <span class="mc-badge mc-badge--{{ demande.getStatutDemande()|lower|replace({' ': '-'}) }}">
+                                {{ demande.getStatutDemande() }}
+                            </span>
+                        </div>
+
+                        {% if demande.getLettreMotivation() %}
+                        <p class="mc-motivation">
+                           Votre lettre de motivation : <br>
+                           <em>"{{ demande.getLettreMotivation()|slice(0, 100) }}{% if demande.getLettreMotivation()|length > 100 %}...{% endif %}"</em>
+                        </p>
+                        {% endif %}
+
+                        <div class="mc-card-actions">
+                            {# View the offer #}
+                            {% if demande.getPublication() %}
+                            <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().publication_id}) }}" class="mc-action mc-action--view">
+                                👁️ Voir l'offre
+                            </a>
+                            {% endif %}
+
+                            {# Edit: only if status is "En attente" #}
+                            {% if demande.getStatutDemande() == 'En attente' %}
+                                <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" class="mc-action mc-action--edit">
+                                    ✏️ Modifier
+                                </a>
+
+                                {# Cancel: only if status is "En attente" #}
+                                <form method="post" action="{{ path('app_demande_emploi_cancel', {'id': demande.getDemande_id()}) }}" style="flex:1; display:flex;" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette candidature ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ demande.getDemande_id()) }}">
+                                    <button type="submit" class="mc-action mc-action--cancel" style="width:100%; cursor:pointer; border:none;">
+                                        ❌ Annuler
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="mc-action mc-action--locked">
+                                    🔒 Verrouillée
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.mc-root { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+.mc-header {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #A155B9, #c472d4);
+    border-radius: 14px; padding: 22px 28px; margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(161, 85, 185, 0.35);
+}
+.mc-header-title { font-size: 24px; font-weight: 800; color: white; margin: 0; }
+.mc-header-sub { font-size: 13px; color: rgba(255,255,255,.75); margin: 4px 0 0; }
+.mc-btn-outline {
+    background: rgba(255,255,255,.18); color: white; font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; border: 1.5px solid rgba(255,255,255,.4); text-decoration: none; font-size: 13px;
+}
+.mc-btn-pink {
+    background: #F765A3; color: white; font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; box-shadow: 0 3px 10px rgba(247,101,163,.45); font-size: 13px;
+}
+
+.mc-flash { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .82rem; font-weight: 500; }
+.mc-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.mc-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+
+.mc-empty {
+    text-align: center; padding: 80px 20px; background: white; border-radius: 14px;
+    border: 1px solid rgba(161,85,185,.12); color: #a78bca;
+}
+
+.mc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+
+.mc-card {
+    background: white; border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(161,85,185,.12); box-shadow: 0 4px 12px rgba(161,85,185,.08);
+    transition: transform .2s, box-shadow .2s;
+}
+.mc-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(161,85,185,.12); }
+
+.mc-card-head { padding: 20px; background: linear-gradient(135deg, #a155b9, #c472d4); color: white; }
+.mc-card-head--expired { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+.mc-card-title { font-size: 17px; font-weight: 700; margin: 0; }
+.mc-card-subtitle { font-size: 13px; margin: 4px 0 0; opacity: 0.8; }
+
+.mc-card-body { padding: 20px; }
+.mc-card-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #A155B9; font-weight: 600; margin-bottom: 8px; }
+
+.mc-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.mc-badge--en-attente { background: #fffbeb; color: #b45309; }
+.mc-badge--acceptée, .mc-badge--acceptee { background: #dcfce7; color: #166534; }
+.mc-badge--refusée, .mc-badge--refusee { background: #fee2e2; color: #991b1b; }
+.mc-badge--en-entretien { background: #f3e8ff; color: #7c3aed; }
+
+.mc-motivation {
+    font-size: 13px; color: #4b5563; line-height: 1.6; margin-top: 16px;
+    border-left: 3px solid #f3e8f9; padding-left: 12px;
+}
+
+.mc-card-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.mc-action {
+    flex: 1; border-radius: 10px; padding: 9px; font-size: 12px; font-weight: 700;
+    text-decoration: none; text-align: center; transition: background .15s;
+}
+.mc-action--view { background: #f3e8ff; color: #A155B9; border: 1px solid rgba(161,85,185,.15); }
+.mc-action--view:hover { background: #e8d5ff; }
+.mc-action--edit { background: #eef2ff; color: #4338ca; }
+.mc-action--edit:hover { background: #e0e7ff; }
+.mc-action--cancel { background: #fee2e2; color: #dc2626; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 9px; }
+.mc-action--cancel:hover { background: #fecaca; }
+.mc-action--locked { background: #f1f5f9; color: #9ca3af; cursor: not-allowed; }
+</style>
+{% endblock %}

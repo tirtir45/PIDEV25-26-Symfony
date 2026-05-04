@@ -1,0 +1,230 @@
+{# templates/entrepreneur/modifier_membre.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="mm-root">
+  <div class="mm-card">
+
+    <div class="mm-accent"></div>
+
+    <div class="mm-header">
+      <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="mm-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Gestion du projet
+      </a>
+      <div class="mm-header-row">
+        <div class="mm-avatar-lg">{{ (membre.idUtilisateur.nom ?? 'M')|slice(0,1)|upper }}</div>
+        <div>
+          <h1 class="mm-title">Modifier le membre</h1>
+          <p class="mm-subtitle">{{ membre.idUtilisateur.nom ?? 'Membre' }} — {{ projet.titre }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mm-body">
+      {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+        {% for type, messages in app.flashes %}
+          {% for message in messages %}
+            <div class="mm-flash mm-flash--{{ type }}">{{ message }}</div>
+          {% endfor %}
+        {% endfor %}
+
+        <div class="mm-field">
+          {{ form_label(form.role_equipe) }}
+          {{ form_widget(form.role_equipe, {'attr': {'class': 'mm-input', 'placeholder': 'Ex: Développeur, Chef de projet…'}}) }}
+          {{ form_errors(form.role_equipe) }}
+        </div>
+
+        {# Custom fields section #}
+        <div class="mm-section">
+          <div class="mm-section-head">
+            <span class="mm-section-title">Champs personnalisés</span>
+            <button type="button" class="mm-btn-text" onclick="addCustomField()" id="addFieldBtn">
+              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Ajouter un champ
+            </button>
+          </div>
+          <div id="customFieldsList" class="mm-custom-list">
+            {# Existing custom fields from entity if any #}
+            {% if membre.champsPersonnalises is defined and membre.champsPersonnalises %}
+              {% for key, val in membre.champsPersonnalises %}
+                <div class="mm-cf-row">
+                  <input type="text" name="custom_key[]" value="{{ key }}" placeholder="Nom" class="mm-input mm-input-sm">
+                  <input type="text" name="custom_val[]" value="{{ val }}" placeholder="Valeur" class="mm-input mm-input-sm">
+                  <button type="button" class="mm-cf-remove" onclick="this.parentNode.remove()">
+                    <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <p class="mm-hint">Les champs personnalisés vous permettent d'ajouter des informations spécifiques à ce membre.</p>
+        </div>
+
+        <div class="mm-actions">
+          <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="mm-btn-ghost">Annuler</a>
+          <button type="submit" class="mm-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Enregistrer
+          </button>
+        </div>
+
+      {{ form_end(form) }}
+    </div>
+  </div>
+</div>
+
+<style>
+:root {
+  --v50: #f3f0ff; --v100: #e9e3ff; --v200: #d4c8ff;
+  --v600: #7c3aed; --v700: #6d28d9;
+  --ink: #1a1523; --ink2: #4c4566; --ink3: #8b7fa8;
+  --border: rgba(124,58,237,.15); --border2: rgba(124,58,237,.3);
+  --radius: 10px; --radius-lg: 18px;
+}
+
+.mm-root {
+  min-height: 100vh; display: flex; align-items: flex-start;
+  justify-content: center; padding: 2.5rem 1rem;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, var(--v100), transparent),
+              linear-gradient(160deg, #faf9ff 0%, #f8f5ff 100%);
+}
+
+.mm-card {
+  width: 100%; max-width: 520px; background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
+  border: 1px solid var(--border); overflow: hidden;
+}
+
+.mm-accent {
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, var(--v600), #a78bfa);
+}
+
+.mm-header {
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--border); background: #faf9ff;
+}
+
+.mm-back {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .75rem; color: var(--v600); text-decoration: none; font-weight: 500;
+  padding: .25rem .5rem; border-radius: 6px; margin-bottom: .9rem;
+  transition: background .15s;
+}
+.mm-back:hover { background: var(--v50); }
+
+.mm-header-row { display: flex; align-items: center; gap: 1rem; }
+
+.mm-avatar-lg {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--v600), #a78bfa);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1.2rem; font-weight: 700;
+}
+
+.mm-title { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+.mm-subtitle { margin: .15rem 0 0; font-size: .78rem; color: var(--ink3); }
+
+.mm-body { padding: 1.5rem 1.75rem; }
+
+.mm-flash {
+  padding: .65rem .9rem; border-radius: 8px;
+  margin-bottom: 1rem; font-size: .8rem; font-weight: 500;
+}
+.mm-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.mm-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+.mm-flash--warning { background: #fef9c3; color: #854d0e; border-left: 3px solid #ca8a04; }
+
+.mm-field { margin-bottom: 1.1rem; }
+.mm-field label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink2); margin-bottom: .35rem; }
+.mm-input {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--border2); border-radius: 9px;
+  padding: .6rem .85rem; font-size: .875rem; color: var(--ink);
+  background: white; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.mm-input:focus {
+  outline: none; border-color: var(--v600);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.1);
+}
+.mm-input-sm { padding: .45rem .65rem; font-size: .8rem; }
+
+/* Custom fields section */
+.mm-section {
+  margin-top: 1.25rem; padding-top: 1.25rem;
+  border-top: 1px dashed var(--border2);
+}
+.mm-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .75rem;
+}
+.mm-section-title { font-size: .8rem; font-weight: 600; color: var(--ink2); }
+.mm-btn-text {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: none; border: none; color: var(--v600);
+  font-size: .75rem; font-weight: 600; cursor: pointer; padding: 0;
+}
+.mm-btn-text:hover { text-decoration: underline; }
+.mm-hint { font-size: .7rem; color: var(--ink3); margin-top: .6rem; }
+
+.mm-custom-list { display: flex; flex-direction: column; gap: .5rem; }
+.mm-cf-row { display: flex; gap: .5rem; align-items: center; }
+.mm-cf-row .mm-input { flex: 1; }
+.mm-cf-remove {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border-radius: 7px; border: 1px solid #fca5a5;
+  background: #fee2e2; color: #dc2626; display: flex;
+  align-items: center; justify-content: center; cursor: pointer;
+}
+.mm-cf-remove:hover { background: #fecaca; }
+
+/* Actions */
+.mm-actions {
+  display: flex; gap: .75rem; margin-top: 1.75rem;
+  padding-top: 1.25rem; border-top: 1px solid var(--border);
+}
+.mm-btn-primary {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: .45rem;
+  background: var(--v600); color: white; border: none;
+  padding: .7rem 1.25rem; border-radius: 10px; font-size: .875rem;
+  font-weight: 600; cursor: pointer; transition: background .15s, transform .15s;
+}
+.mm-btn-primary:hover { background: var(--v700); transform: translateY(-1px); }
+.mm-btn-ghost {
+  padding: .7rem 1.25rem; border: 1.5px solid var(--border2); border-radius: 10px;
+  background: transparent; color: var(--ink2); font-size: .875rem;
+  font-weight: 500; cursor: pointer; text-decoration: none;
+  display: flex; align-items: center; transition: background .15s;
+}
+.mm-btn-ghost:hover { background: var(--v50); }
+
+@media (max-width: 480px) {
+  .mm-actions { flex-direction: column; }
+  .mm-cf-row { flex-wrap: wrap; }
+}
+</style>
+
+<script>
+let cfCount = {{ membre.champsPersonnalises is defined and membre.champsPersonnalises ? membre.champsPersonnalises|length : 0 }};
+
+function addCustomField() {
+  cfCount++;
+  const list = document.getElementById('customFieldsList');
+  const row = document.createElement('div');
+  row.className = 'mm-cf-row';
+  row.innerHTML = `
+    <input type="text" name="custom_key[]" placeholder="Nom du champ" class="mm-input mm-input-sm">
+    <input type="text" name="custom_val[]" placeholder="Valeur" class="mm-input mm-input-sm">
+    <button type="button" class="mm-cf-remove" onclick="this.parentNode.remove()">
+      <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  `;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+</script>
+{% endblock %}

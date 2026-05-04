@@ -1,0 +1,133 @@
+/* ============================================================
+   PROJECT.CSS — Kanban, Sprint, Calendrier, Matrice, Ressources
+   ============================================================ */
+
+/* ---- Kanban Board ---- */
+.kanban-board {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    min-height: 60vh;
+}
+
+.kanban-column {
+    flex: 0 0 300px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.kanban-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.kanban-column-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.kanban-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 80px;
+    transition: background 0.2s;
+}
+
+.kanban-cards.drag-over {
+    background: rgba(13, 110, 253, 0.06);
+    border-radius: 8px;
+}
+
+.kanban-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    cursor: grab;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.kanban-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    transform: translateY(-1px);
+}
+
+.kanban-card-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.kanban-card-desc {
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.kanban-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ---- Matrice Eisenhower ---- */
+.matrix-grid {
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.matrix-quadrant {
+    padding: 1.25rem;
+    min-height: 280px;
+    border: 1px solid #dee2e6;
+}
+
+.matrix-q1 { background: #fff5f5; }
+.matrix-q2 { background: #f0f7ff; }
+.matrix-q3 { background: #fffbf0; }
+.matrix-q4 { background: #f8f9fa; }
+
+.matrix-quadrant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.matrix-quadrant-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.matrix-task-card {
+    background: #fff;
+    border-left: 3px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.matrix-task-card.border-danger  { border-left-color: #dc3545; }
+.matrix-task-card.border-primary { border-left-color: #0d6efd; }
+.matrix-task-card.border-warning { border-left-color: #ffc107; }
+
+/* ---- Page header ---- */
+.page-header h1 { font-size: 1.4rem; font-weight: 700; }

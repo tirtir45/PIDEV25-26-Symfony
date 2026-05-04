@@ -1,0 +1,288 @@
+{# templates/entrepreneur/modifier_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="card-modern" style="max-width: 1200px; margin: 0 auto;">
+        <div class="card-header-modern">
+            <h3><i class="bi bi-pencil"></i> Modifier le projet: {{ projet.titre }}</h3>
+            <p class="text-muted mt-2">Modifiez les informations de votre projet. Tous les champs marqués d'un <span class="text-danger">*</span> sont obligatoires.</p>
+        </div>
+        <div class="card-body-modern">
+            {{ form_start(form, {'attr': {'id': 'projectForm', 'novalidate': 'novalidate'}})}}
+                
+                <!-- Section 1: Informations générales -->
+                <div class="section-form mb-4">
+                    <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations générales</h5>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            {{ form_label(form.titre, 'Titre du projet <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.titre, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="titreError"></div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            {{ form_label(form.description, 'Description <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 5}})}}
+                            <div class="invalid-feedback" id="descriptionError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.secteur, 'Secteur <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.secteur, {'attr': {'class': 'form-select'}})}}
+                            <div class="invalid-feedback" id="secteurError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.objectifs, 'Objectifs <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.objectifs, {'attr': {'class': 'form-control', 'rows': 3}})}}
+                            <div class="invalid-feedback" id="objectifsError"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Aspects financiers et ressources -->
+                <div class="section-form mb-4">
+                    <h5 class="mb-3"><i class="bi bi-calculator"></i> Aspects financiers et ressources</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.budget_estime, 'Budget estimé (€) <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.budget_estime, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="budgetError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.duree_estimee, 'Durée estimée (mois) <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.duree_estimee, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="dureeError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.nb_membres_equipe, 'Nombre de membres <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.nb_membres_equipe, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="membresError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.statut_juridique, 'Statut juridique <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.statut_juridique, {'attr': {'class': 'form-select'}})}}
+                            <div class="invalid-feedback" id="statutError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.financement_actuel, 'Financement actuel <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.financement_actuel, {'attr': {'class': 'form-select'}})}}
+                            <div class="invalid-feedback" id="financementError"></div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            {{ form_label(form.partenaires_potentiels, 'Partenaires potentiels', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                            {{ form_widget(form.partenaires_potentiels, {'attr': {'class': 'form-control'}})}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Coordonnées -->
+                <div class="section-form mb-4">
+                    <h5 class="mb-3"><i class="bi bi-envelope"></i> Coordonnées</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.email_contact, 'Email de contact <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.email_contact, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="emailError"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.telephone_contact, 'Téléphone <span class="text-danger">*</span>', {'label_attr': {'class': 'form-label fw-bold'}, 'label_html': true}) }}
+                            {{ form_widget(form.telephone_contact, {'attr': {'class': 'form-control'}})}}
+                            <div class="invalid-feedback" id="telephoneError"></div>
+                        </div>
+                        
+                        <div class="col-md-12 mb-3">
+                            {{ form_label(form.site_web, 'Site web', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                            {{ form_widget(form.site_web, {'attr': {'class': 'form-control'}})}}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            {{ form_label(form.experiences_anterieures, 'Expériences antérieures', {'label_attr': {'class': 'form-label fw-bold'}})}}
+                            {{ form_widget(form.experiences_anterieures, {'attr': {'class': 'form-control'}})}}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Attention:</strong> Seuls les projets en attente peuvent être modifiés.
+                </div>
+                
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                        <i class="bi bi-save"></i> Enregistrer les modifications
+                    </button>
+                    <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+// Validation JavaScript similaire à celle du formulaire de création
+document.getElementById('projectForm').addEventListener('submit', function(e) {
+    let isValid = true;
+    
+    // Récupérer tous les champs
+    const titre = document.querySelector('#projet_titre');
+    const description = document.querySelector('#projet_description');
+    const secteur = document.querySelector('#projet_secteur');
+    const objectifs = document.querySelector('#projet_objectifs');
+    const budget = document.querySelector('#projet_budget_estime');
+    const duree = document.querySelector('#projet_duree_estimee');
+    const membres = document.querySelector('#projet_nb_membres_equipe');
+    const statut = document.querySelector('#projet_statut_juridique');
+    const financement = document.querySelector('#projet_financement_actuel');
+    const email = document.querySelector('#projet_email_contact');
+    const telephone = document.querySelector('#projet_telephone_contact');
+    
+    // Validation du titre
+    if (!titre.value.trim()) {
+        showFieldError(titre, 'titreError', 'Le titre du projet est obligatoire');
+        isValid = false;
+    } else if (titre.value.trim().length < 3) {
+        showFieldError(titre, 'titreError', 'Le titre doit contenir au moins 3 caractères');
+        isValid = false;
+    } else {
+        clearFieldError(titre, 'titreError');
+    }
+    
+    // Validation de la description
+    if (!description.value.trim()) {
+        showFieldError(description, 'descriptionError', 'La description est obligatoire');
+        isValid = false;
+    } else if (description.value.trim().length < 20) {
+        showFieldError(description, 'descriptionError', 'La description doit contenir au moins 20 caractères');
+        isValid = false;
+    } else {
+        clearFieldError(description, 'descriptionError');
+    }
+    
+    // Validation du secteur
+    if (!secteur.value) {
+        showFieldError(secteur, 'secteurError', 'Veuillez sélectionner un secteur');
+        isValid = false;
+    } else {
+        clearFieldError(secteur, 'secteurError');
+    }
+    
+    // Validation des objectifs
+    if (!objectifs.value.trim()) {
+        showFieldError(objectifs, 'objectifsError', 'Les objectifs sont obligatoires');
+        isValid = false;
+    } else if (objectifs.value.trim().length < 10) {
+        showFieldError(objectifs, 'objectifsError', 'Les objectifs doivent contenir au moins 10 caractères');
+        isValid = false;
+    } else {
+        clearFieldError(objectifs, 'objectifsError');
+    }
+    
+    // Validation du budget
+    const budgetValue = parseFloat(budget.value);
+    if (!budget.value || isNaN(budgetValue)) {
+        showFieldError(budget, 'budgetError', 'Le budget estimé est obligatoire');
+        isValid = false;
+    } else if (budgetValue < 1000) {
+        showFieldError(budget, 'budgetError', 'Le budget minimum est de 1 000 €');
+        isValid = false;
+    } else if (budgetValue > 10000000) {
+        showFieldError(budget, 'budgetError', 'Le budget maximum est de 10 000 000 €');
+        isValid = false;
+    } else {
+        clearFieldError(budget, 'budgetError');
+    }
+    
+    // Validation de la durée
+    const dureeValue = parseInt(duree.value);
+    if (!duree.value || isNaN(dureeValue)) {
+        showFieldError(duree, 'dureeError', 'La durée estimée est obligatoire');
+        isValid = false;
+    } else if (dureeValue < 1) {
+        showFieldError(duree, 'dureeError', 'La durée minimale est de 1 mois');
+        isValid = false;
+    } else if (dureeValue > 36) {
+        showFieldError(duree, 'dureeError', 'La durée maximale est de 36 mois');
+        isValid = false;
+    } else {
+        clearFieldError(duree, 'dureeError');
+    }
+    
+    // Validation du nombre de membres
+    const membresValue = parseInt(membres.value);
+    if (!membres.value || isNaN(membresValue)) {
+        showFieldError(membres, 'membresError', 'Le nombre de membres est obligatoire');
+        isValid = false;
+    } else if (membresValue < 1) {
+        showFieldError(membres, 'membresError', 'Minimum 1 membre requis');
+        isValid = false;
+    } else if (membresValue > 50) {
+        showFieldError(membres, 'membresError', 'Maximum 50 membres autorisés');
+        isValid = false;
+    } else {
+        clearFieldError(membres, 'membresError');
+    }
+    
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/;
+    if (!email.value.trim()) {
+        showFieldError(email, 'emailError', 'L\'adresse email est obligatoire');
+        isValid = false;
+    } else if (!emailRegex.test(email.value)) {
+        showFieldError(email, 'emailError', 'Veuillez entrer une adresse email valide');
+        isValid = false;
+    } else {
+        clearFieldError(email, 'emailError');
+    }
+    
+    // Validation du téléphone
+    const phoneRegex = /^[0-9+\-\s]{10,20}$/;
+    if (!telephone.value.trim()) {
+        showFieldError(telephone, 'telephoneError', 'Le numéro de téléphone est obligatoire');
+        isValid = false;
+    } else if (!phoneRegex.test(telephone.value)) {
+        showFieldError(telephone, 'telephoneError', 'Veuillez entrer un numéro de téléphone valide');
+        isValid = false;
+    } else {
+        clearFieldError(telephone, 'telephoneError');
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+        }
+        alert('Veuillez corriger les erreurs dans le formulaire');
+    }
+});
+
+function showFieldError(field, errorId, message) {
+    field.classList.add('is-invalid');
+    const errorDiv = document.getElementById(errorId);
+    if (errorDiv) {
+        errorDiv.textContent = message;
+    }
+}
+
+function clearFieldError(field, errorId) {
+    field.classList.remove('is-invalid');
+    const errorDiv = document.getElementById(errorId);
+    if (errorDiv) {
+        errorDiv.textContent = '';
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

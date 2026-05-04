@@ -1,0 +1,189 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin — Gestion des Réservations{% endblock %}
+
+{% set active = 'admin_res' %}
+
+{% block body %}
+<div class="page-header" style="gap:12px;">
+    <div style="flex:1">
+        <p class="page-header-title">🎫 Gestion des Réservations</p>
+        <p class="page-header-sub">{{ reservations|length }} / {{ total }} réservation(s) affichée(s)</p>
+    </div>
+    <form method="get" style="display:flex; align-items:center;">
+        <input type="text" name="search" value="{{ search }}"
+               placeholder="🔍 Événement, nom, email…"
+               style="background:rgba(255,255,255,.92); border:none; border-radius:10px;
+                      font-size:12px; width:220px; padding:8px 14px; outline:none;"
+               onchange="this.form.submit()">
+        <input type="hidden" name="statut"  value="{{ statut }}">
+        <input type="hidden" name="periode" value="{{ periode }}">
+    </form>
+    <a href="{{ path('admin_evenement_index') }}" class="btn-outline-purple"
+       style="color:white; border-color:rgba(255,255,255,.4); text-decoration:none;">
+        📅 Événements
+    </a>
+    <a href="{{ path('admin_reservation_new') }}" class="btn-pink"
+       style="text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+        ＋ Ajouter
+    </a>
+</div>
+
+<!-- STATS + FILTERS ROW -->
+<div style="display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; align-items:stretch;">
+
+    <!-- KPI cards -->
+    <div class="stat-card" style="border-color:#dbeafe; min-width:130px;">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-value" style="color:#2563eb;">{{ total }}</div>
+        <div class="stat-label">Total Réservations</div>
+    </div>
+    <div class="stat-card" style="border-color:#a7f3d0; min-width:130px;">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" style="color:#059669;">
+            {{ reservations|filter(r => r.statutPaiement == 'paid')|length }}
+        </div>
+        <div class="stat-label">Payées</div>
+    </div>
+    <div class="stat-card" style="border-color:#fef9c3; min-width:130px;">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value" style="color:#d97706;">
+            {{ reservations|filter(r => r.statutPaiement == 'pending')|length }}
+        </div>
+        <div class="stat-label">En attente</div>
+    </div>
+    <div class="stat-card" style="border-color:#ead5f0; min-width:130px;">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" style="color:#A155B9; font-size:18px;">{{ total_revenu|number_format(2) }}<span style="font-size:10px;"> DT</span></div>
+        <div class="stat-label">Revenu Total</div>
+    </div>
+
+    <!-- Filter bar -->
+    <form method="get" style="background:white; border:1px solid #ead5f0; border-radius:12px;
+                               padding:12px 16px; display:flex; gap:10px; align-items:center;
+                               flex-wrap:wrap; flex:1; min-width:280px;">
+        <label style="font-size:11px; font-weight:700; color:#6b4d8a;">Statut :</label>
+        <select name="statut" class="form-select" style="width:auto; font-size:12px;" onchange="this.form.submit()">
+            <option value=""       {% if statut == ''        %}selected{% endif %}>Tous</option>
+            <option value="paid"   {% if statut == 'paid'    %}selected{% endif %}>✅ Payé</option>
+            <option value="free"   {% if statut == 'free'    %}selected{% endif %}>🆓 Gratuit</option>
+            <option value="pending"{% if statut == 'pending' %}selected{% endif %}>⏳ En attente</option>
+        </select>
+        <label style="font-size:11px; font-weight:700; color:#6b4d8a;">Période :</label>
+        <select name="periode" class="form-select" style="width:auto; font-size:12px;" onchange="this.form.submit()">
+            <option value=""      {% if periode == ''      %}selected{% endif %}>Toutes</option>
+            <option value="futur" {% if periode == 'futur' %}selected{% endif %}>🟢 À venir</option>
+            <option value="passe" {% if periode == 'passe' %}selected{% endif %}>🏁 Passés</option>
+        </select>
+        <input type="hidden" name="search" value="{{ search }}">
+        {% if statut or periode or search %}
+        <a href="{{ path('admin_reservation_index') }}"
+           style="color:#9b77b5; font-size:11px; text-decoration:none;
+                  padding:5px 10px; border:1px solid #ead5f0; border-radius:8px;">
+            ✕ Réinitialiser
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+{% if reservations is empty %}
+<div style="text-align:center; padding:60px 0; color:#a78bca; background:white;
+            border-radius:14px; border:1px solid #ead5f0;">
+    <div style="font-size:48px;">📭</div>
+    <p style="font-size:15px; font-weight:600; margin-top:12px;">Aucune réservation trouvée</p>
+    <a href="{{ path('admin_reservation_new') }}" class="btn-pink"
+       style="text-decoration:none; display:inline-block; margin-top:12px;">
+        ＋ Créer une réservation
+    </a>
+</div>
+{% else %}
+<div class="table-card">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Événement</th>
+                <th>Utilisateur</th>
+                <th>Date réservation</th>
+                <th>Prix</th>
+                <th>Paiement</th>
+                <th>Statut événement</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            {% set evFutur = r.evenement and r.evenement.dateEvenement > date() %}
+            <tr style="{% if not evFutur %}opacity:.75;{% endif %}">
+                <td style="color:#94a3b8; font-weight:600; font-size:12px;">#{{ r.idReservation }}</td>
+                <td>
+                    {% if r.evenement %}
+                    <strong style="font-size:13px;">{{ r.evenement.titre }}</strong>
+                    <div style="font-size:11px; color:#94a3b8;">
+                        📅 {{ r.evenement.dateEvenement|date('d/m/Y') }} &nbsp;·&nbsp;
+                        📍 {{ r.evenement.lieu }}
+                    </div>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if r.utilisateur %}
+                    <strong style="font-size:13px;">{{ r.utilisateur.nom ?? '(sans nom)' }}</strong>
+                    <div style="font-size:11px; color:#94a3b8;">{{ r.utilisateur.email }}</div>
+                    {% else %}—{% endif %}
+                </td>
+                <td style="font-size:12px; color:#64748b;">{{ r.dateReservation|date('d/m/Y H:i') }}</td>
+                <td>
+                    {% if r.evenement %}
+                        <span class="event-prix-badge {% if r.evenement.prix == 0 %}event-price-free{% endif %}"
+                              style="font-size:11px;">
+                            {% if r.evenement.prix == 0 %}Gratuit{% else %}{{ r.evenement.prix|number_format(2) }} DT{% endif %}
+                        </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if r.statutPaiement == 'paid' %}
+                        <span style="background:#d1fae5; color:#065f46; font-size:11px; font-weight:700;
+                                     padding:3px 10px; border-radius:20px;">✅ Payé</span>
+                    {% elseif r.statutPaiement == 'free' %}
+                        <span style="background:#dbeafe; color:#1e40af; font-size:11px; font-weight:700;
+                                     padding:3px 10px; border-radius:20px;">🆓 Gratuit</span>
+                    {% else %}
+                        <span style="background:#fef9c3; color:#854d0e; font-size:11px; font-weight:700;
+                                     padding:3px 10px; border-radius:20px;">⏳ En attente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if evFutur %}
+                        <span class="badge-futur" style="font-size:11px;">À venir</span>
+                    {% else %}
+                        <span style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:600;
+                                     padding:2px 8px; border-radius:20px;">🏁 Passé</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display:flex; gap:5px;">
+                        <a href="{{ path('admin_reservation_edit', {id: r.idReservation}) }}"
+                           class="btn-purple" style="text-decoration:none; font-size:11px; padding:5px 10px; border-radius:7px;">
+                            ✏️
+                        </a>
+                        <form method="post" action="{{ path('admin_reservation_delete', {id: r.idReservation}) }}"
+                              onsubmit="return confirm('Supprimer cette réservation ?')" style="margin:0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ r.idReservation) }}">
+                            <button type="submit" style="background:#fee2e2; color:#dc2626; border:none;
+                                    border-radius:7px; padding:5px 10px; font-size:11px; cursor:pointer;">
+                                🗑
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="footer-pill" style="margin-top:16px;">
+    <span>🎫 {{ reservations|length }} / {{ total }} réservation(s)</span>
+</div>
+{% endblock %}

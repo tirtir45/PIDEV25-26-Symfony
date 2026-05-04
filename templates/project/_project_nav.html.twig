@@ -1,0 +1,23 @@
+{% set currentRoute = app.request.attributes.get('_route')|default('') %}
+<div class="btn-group" role="group">
+    <a href="{{ path('entrepreneur_kanban', {id: projet.idProjet}) }}"
+       class="btn btn-sm {{ currentRoute == 'entrepreneur_kanban' ? 'btn-dark' : 'btn-outline-secondary' }}">
+        <i class="bi bi-kanban me-1"></i>Kanban
+    </a>
+    <a href="{{ path('entrepreneur_sprints', {id: projet.idProjet}) }}"
+       class="btn btn-sm {{ currentRoute == 'entrepreneur_sprints' ? 'btn-dark' : 'btn-outline-secondary' }}">
+        <i class="bi bi-lightning me-1"></i>Sprints
+    </a>
+    <a href="{{ path('entrepreneur_calendrier', {id: projet.idProjet}) }}"
+       class="btn btn-sm {{ currentRoute == 'entrepreneur_calendrier' ? 'btn-dark' : 'btn-outline-secondary' }}">
+        <i class="bi bi-calendar3 me-1"></i>Calendrier
+    </a>
+    <a href="{{ path('entrepreneur_matrice', {id: projet.idProjet}) }}"
+       class="btn btn-sm {{ currentRoute == 'entrepreneur_matrice' ? 'btn-dark' : 'btn-outline-secondary' }}">
+        <i class="bi bi-grid-3x3 me-1"></i>Matrice
+    </a>
+    <a href="{{ path('entrepreneur_ressources_projet', {id: projet.idProjet}) }}"
+       class="btn btn-sm {{ currentRoute == 'entrepreneur_ressources_projet' ? 'btn-dark' : 'btn-outline-secondary' }}">
+        <i class="bi bi-folder2 me-1"></i>Ressources
+    </a>
+</div>

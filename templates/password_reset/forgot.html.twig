@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mot de passe oublié{% endblock %}
+{% block layout %}
+<div class="auth-layout">
+    <div class="auth-container">
+        <div class="auth-left">
+            <h1 class="auth-brand">StartHub</h1>
+            <p class="auth-tagline">Réinitialisation sécurisée</p>
+            <ul class="auth-features">
+                <li><i class="bi bi-shield-lock"></i> Code OTP sécurisé</li>
+                <li><i class="bi bi-clock"></i> Valide 10 minutes</li>
+                <li><i class="bi bi-lock"></i> Chiffrement bcrypt</li>
+            </ul>
+        </div>
+        <div class="auth-right">
+            <h2 class="auth-title">Mot de passe oublié</h2>
+
+            <p class="auth-subtitle">Saisissez votre adresse email pour recevoir un code par SMS.</p>
+ 
+             {% for message in app.flashes('success') %}
+                 <div style="background:#f0fdf4;border:1.5px solid #10b981;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#047857;font-size:13px;font-weight:600;">✅ {{ message }}</div>
+             {% endfor %}
+ 
+             {% if error %}
+                 <div style="background:#fef2f2;border:1.5px solid #ef4444;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#dc2626;font-size:13px;font-weight:600;">⚠️ {{ error }}</div>
+             {% endif %}
+ 
+             <form method="POST" action="{{ path('password_forgot') }}" class="auth-form">
+                 <div class="auth-field">
+                     <label class="auth-label">Adresse email</label>
+                     <input type="email" name="email" class="auth-input" placeholder="votre@email.com" required autofocus>
+                 </div>
+                 <button type="submit" class="btn-auth">Recevoir mon code par SMS</button>
+             </form>
+ 
+             <div class="auth-footer">
+                 <p><a href="{{ path('app_login') }}">← Retour à la connexion</a></p>
+             </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,263 @@
+{# templates/publication/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail de l'offre : {{ publication.titre }}{% endblock %}
+
+{% block body %}
+{% set is_admin = app.session.get('user_role') == 'Administrateur' %}
+{% set user_id = app.session.get('user_id') %}
+
+{# Check if the current user has already applied #}
+{% set has_applied = false %}
+{% for demande in publication.demande_emplois %}
+    {% if demande.getCandidat() and demande.getCandidat().getId() == user_id %}
+        {% set has_applied = true %}
+    {% endif %}
+{% endfor %}
+
+<div class="ps-root">
+
+    <!-- HEADER -->
+    <div class="ps-header">
+        <div style="flex: 1;">
+            <p class="ps-header-title">📄 {{ publication.titre }}</p>
+            <p class="ps-header-sub">📍 {{ publication.localisation }} — {{ publication.type_contrat }}</p>
+        </div>
+        {% if not is_admin %}
+            {% if not has_applied %}
+                <a href="{{ path('app_publication_postuler', {'publication_id': publication.getPublication_id()}) }}" class="ps-btn-primary"
+                   style="text-decoration: none;">
+                    ✅ Postuler
+                </a>
+            {% else %}
+                <span class="ps-btn-disabled">✓ Déjà postulé</span>
+            {% endif %}
+        {% endif %}
+        {% if is_admin %}
+            <a href="{{ path('app_admin_publication_edit', {'publication_id': publication.getPublication_id()}) }}" class="ps-btn-pink"
+               style="text-decoration: none;">
+                ✏️ Modifier
+            </a>
+        {% endif %}
+        <a href="{{ path(is_admin ? 'app_admin_publication_index' : 'app_user_publication_index') }}" class="ps-btn-outline" style="text-decoration: none;">
+            ← Retour aux offres
+        </a>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="ps-flash ps-flash--{{ type }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <!-- MAIN CONTENT -->
+    <div class="ps-content">
+
+        <!-- DÉTAILS DE L'OFFRE (Left Card) -->
+        <div class="ps-detail-card">
+            <h6 class="ps-section-title">ℹ️ Détails de l'offre</h6>
+
+            <div class="ps-detail-list">
+                <div class="ps-detail-row">
+                    <span class="ps-detail-label">Département</span>
+                    <span class="ps-detail-val">{{ publication.departement }}</span>
+                </div>
+                <div class="ps-detail-row">
+                    <span class="ps-detail-label">Expire le</span>
+                    <span class="ps-detail-val" style="color: {% if publication.date_expiration < "now"|date("Y-m-d") %}#dc2626{% else %}#333{% endif %};">
+                        {{ publication.date_expiration|date('d/m/Y') }}
+                    </span>
+                </div>
+                <div class="ps-detail-row">
+                    <span class="ps-detail-label">Statut</span>
+                    <span class="ps-badge ps-badge--{{ publication.statut|lower }}">{{ publication.statut }}</span>
+                </div>
+            </div>
+
+            {% if publication.description %}
+                <hr class="ps-hr">
+                <h6 class="ps-section-title">📝 Description du poste</h6>
+                <p class="ps-description">{{ publication.description }}</p>
+            {% endif %}
+        </div>
+
+        <!-- LISTE DES CANDIDATURES (Right Card) — Admin only -->
+        {% if is_admin %}
+        <div class="ps-candidates-area">
+            <div class="ps-candidates-head">
+                <h6 class="ps-section-title" style="margin: 0;">👥 Candidatures reçues ({{ publication.demande_emplois|length }})</h6>
+                <a href="{{ path('app_demande_emploi_new', {'publication_id': publication.getPublication_id()}) }}" class="ps-btn-pink" style="font-size:11px; padding:6px 14px; text-decoration:none;">
+                    ＋ Ajouter
+                </a>
+            </div>
+
+            {% if publication.demande_emplois is empty %}
+                <div class="ps-empty-candidates">
+                    <div style="font-size: 48px;">📭</div>
+                    <p>Aucune candidature pour cette offre pour le moment.</p>
+                </div>
+            {% else %}
+                <div class="ps-table-card">
+                    <table class="ps-table">
+                        <thead>
+                            <tr>
+                                <th>Candidat</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demande in publication.demande_emplois %}
+                                <tr>
+                                
+                                    <td>
+                                        <div style="font-weight: 600;">{{ demande.getCandidat().nom ?? 'N/A' }}</div>
+                                        <div style="font-size: 12px; color: #94a3b8;">{{ demande.getCandidat().email ?? 'email inconnu' }}</div>
+                                    </td>
+                                    <td>{{ demande.getDateDemande()|date('d/m/Y') }}</td>
+                                    <td>
+                                        <span class="ps-badge ps-badge--{{ demande.getStatutDemande()|lower|replace({' ': '-'}) }}">{{ demande.getStatutDemande() }}</span>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:12px; font-size: 13px;">
+                                            {% if demande.getCvUrl() %}
+                                                <a href="/uploads/cvs/{{ demande.getCvUrl() }}" target="_blank" style="color: #A155B9; font-weight: 600; text-decoration: none;">Voir CV</a>
+                                            {% else %}
+                                                <span style="color:#9ca3af;">Pas de CV</span>
+                                            {% endif %}
+                                            <a href="{{ path('app_demande_emploi_edit', {'id': demande.getDemande_id()}) }}" style="color: #4338ca; font-weight: 600; text-decoration: none;">Modifier</a>
+                                            <a href="{{ path('app_entretien_planifier', {'id': demande.getDemande_id()}) }}" style="color: #047857; font-weight: 600; text-decoration: none;">Planifier entretien</a>
+                                        </div>
+                                    </td>
+                                    <td>
+    {% set score = matchingScores[demande.getDemande_id()] ?? null %}
+
+    {% if score is not null %}
+        <div class="ps-score">
+            <div class="ps-score-bar">
+                <div class="ps-score-fill" style="width: {{ score }}%;"></div>
+            </div>
+            <span class="ps-score-text">{{ score }}%</span>
+        </div>
+    {% else %}
+        <span style="color:#9ca3af;">N/A</span>
+    {% endif %}
+</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.ps-root { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+.ps-header {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #A155B9, #c472d4);
+    border-radius: 14px; padding: 22px 28px; margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(161, 85, 185, 0.35);
+}
+.ps-header-title { font-size: 22px; font-weight: 800; color: white; margin: 0; }
+.ps-header-sub { font-size: 13px; color: rgba(255,255,255,.75); margin: 4px 0 0; }
+
+.ps-btn-primary {
+    background: white; color: #A155B9; font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;
+    transition: background .15s;
+}
+.ps-btn-primary:hover { background: #f3e8ff; }
+
+.ps-btn-disabled {
+    background: rgba(255,255,255,.25); color: rgba(255,255,255,.8); font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; cursor: not-allowed;
+}
+
+.ps-btn-pink {
+    background: #F765A3; color: white; font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; box-shadow: 0 3px 10px rgba(247,101,163,.45);
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.ps-btn-outline {
+    background: rgba(255,255,255,.18); color: white; font-weight: 700; border-radius: 10px;
+    padding: 10px 18px; border: 1.5px solid rgba(255,255,255,.4); font-size: 13px;
+}
+
+.ps-flash { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .82rem; font-weight: 500; }
+.ps-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.ps-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+
+.ps-content { display: flex; gap: 20px; flex-wrap: wrap; }
+
+.ps-detail-card {
+    flex: 1; min-width: 300px; background: white; border-radius: 14px; padding: 24px;
+    border: 1px solid rgba(161,85,185,.12); box-shadow: 0 4px 14px rgba(161,85,185,.08);
+}
+.ps-section-title { color: #A155B9; font-weight: 700; margin-bottom: 16px; font-size: 15px; }
+.ps-detail-list { display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.ps-detail-row { display: flex; justify-content: space-between; }
+.ps-detail-label { color: #64748b; font-weight: 600; }
+.ps-detail-val { font-weight: 700; }
+.ps-hr { border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0; }
+.ps-description { font-size: 14px; color: #4b5563; line-height: 1.6; white-space: pre-wrap; }
+
+.ps-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.ps-badge--active { background: #dcfce7; color: #166534; }
+.ps-badge--inactive { background: #f1f5f9; color: #475569; }
+.ps-badge--expired { background: #fee2e2; color: #991b1b; }
+.ps-badge--en-attente { background: #fffbeb; color: #b45309; }
+.ps-badge--acceptée, .ps-badge--acceptee { background: #dcfce7; color: #166534; }
+.ps-badge--refusée, .ps-badge--refusee { background: #fee2e2; color: #991b1b; }
+.ps-badge--en-entretien { background: #f3e8ff; color: #7c3aed; }
+
+.ps-candidates-area { flex: 2; min-width: 400px; }
+.ps-candidates-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+.ps-empty-candidates {
+    text-align: center; padding: 50px; background: white; border-radius: 14px;
+    border: 1px solid rgba(161,85,185,.12); color: #a78bca;
+}
+.ps-empty-candidates p { margin-top: 10px; font-size: 14px; font-weight: 600; }
+
+.ps-table-card {
+    background: white; border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(161,85,185,.12); box-shadow: 0 4px 14px rgba(161,85,185,.08);
+}
+.ps-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ps-table th { background: #faf5ff; color: #A155B9; font-weight: 700; padding: 12px 16px; text-align: left; font-size: 13px; }
+.ps-table td { padding: 12px 16px; border-top: 1px solid #f3e8ff; }
+.ps-table tr:hover { background: #fdf8ff; }
+.ps-score {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ps-score-bar {
+    width: 100%;
+    height: 6px;
+    background: #eee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ps-score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.ps-score-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #16a34a;
+}
+</style>
+{% endblock %}

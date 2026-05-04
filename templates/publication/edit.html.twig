@@ -1,0 +1,179 @@
+{# templates/publication/edit.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'Offre — {{ publication.titre }}{% endblock %}
+
+{% block body %}
+
+<div style="padding: 28px; background-color: #fdf4fb; display: flex; flex-direction: column; gap: 18px;">
+
+    <!-- HEADER (matches modifierPublication.fxml header) -->
+    <header style="display: flex; align-items: center; justify-content: space-between; gap: 15px;
+                   background: linear-gradient(to right, #A155B9, #c472d4);
+                   border-radius: 16px; padding: 22px 28px;
+                   box-shadow: 0 6px 18px rgba(161, 85, 185, 0.35);">
+        
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+            <p style="font-size: 26px; font-weight: 800; color: white; margin: 0;">Modifier l'Offre d'Emploi</p>
+            <p style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin: 0;">Modifiez les informations de la publication</p>
+        </div>
+
+        <a href="{{ path('app_admin_publication_index') }}"
+           style="background-color: rgba(255, 255, 255, 0.18); color: white; font-size: 13px; font-weight: 700;
+                  border-radius: 10px; cursor: pointer; padding: 10px 18px;
+                  border: 1.5px solid rgba(255, 255, 255, 0.4); text-decoration: none;">
+            ← Retour aux offres
+        </a>
+    </header>
+
+    <!-- FORM CARD (matches modifierPublication.fxml form card) -->
+    <main style="background: white; border-radius: 16px; padding: 30px;
+                 border: 1px solid #ead5f0; box-shadow: 0 6px 14px rgba(161, 85, 185, 0.08);
+                 display: flex; flex-direction: column; gap: 20px; flex-grow: 1;">
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 22px; color: #A155B9; font-weight: 800;">▎</span>
+            <span style="font-size: 17px; font-weight: 800; color: #2d0a3e;">Modifier la Publication</span>
+        </div>
+
+        <div style="height: 1px; background: linear-gradient(to right, #D08EC1, #f5c6e0, transparent);"></div>
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+        <!-- Error summary (mimics errorLabel) -->
+        {% if not form.vars.valid %}
+            <div style="color: #F765A3; font-size: 13px; font-weight: 600;
+                        background: #fff0f6; border-radius: 8px; padding: 10px 14px;
+                        border: 1px solid #f5c6e0;">
+                ⚠ Veuillez corriger les erreurs ci-dessous.
+            </div>
+        {% endif %}
+
+        <!-- FIELDS GRID (mimics GridPane with 4 columns total) -->
+        <div style="display: grid; grid-template-columns: 130px 1fr 130px 1fr; row-gap: 16px; column-gap: 24px; align-items: start;">
+
+            {# --- Row 0 --- #}
+            <label class="form-label-style">Titre *</label>
+            <div>
+                {{ form_widget(form.titre) }}
+                {{ form_errors(form.titre) }}
+            </div>
+            
+            <label class="form-label-style">Département *</label>
+            <div>
+                {{ form_widget(form.departement) }}
+                {{ form_errors(form.departement) }}
+            </div>
+
+            {# --- Row 1 --- #}
+            <label class="form-label-style">Description *</label>
+            {# Votre FXML utilise un TextField ici (tfType), j'assume que c'est une coquille et que c'est pour la description #}
+            <div style="grid-column: span 3;">
+                {{ form_widget(form.description, {'attr': {'rows': 4}}) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            {# --- Row 2 --- #}
+            <label class="form-label-style">Type contrat *</label>
+            <div>
+                {{ form_widget(form.type_contrat) }}
+                {{ form_errors(form.type_contrat) }}
+            </div>
+
+            <label class="form-label-style">Localisation *</label>
+            <div>
+                {{ form_widget(form.localisation) }}
+                {{ form_errors(form.localisation) }}
+            </div>
+            
+            {# --- Row 3 --- #}
+
+
+            <label class="form-label-style">Date expiration *</label>
+            <div>
+                {{ form_widget(form.date_expiration) }}
+                {{ form_errors(form.date_expiration) }}
+            </div>
+
+            {# --- Row 4 --- #}
+            <label class="form-label-style">Statut *</label>
+            <div>
+                {{ form_widget(form.statut) }}
+                {{ form_errors(form.statut) }}
+            </div>
+        </div>
+
+        <div style="height: 1px; background: linear-gradient(to right, #D08EC1, #f5c6e0, transparent);"></div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="{{ path('app_admin_publication_index') }}"
+               style="background: white; color: #A155B9; font-size: 13px; font-weight: 700;
+                      border-radius: 10px; cursor: pointer; height: 44px; width: 130px;
+                      border: 2px solid #A155B9; text-decoration: none;
+                      display: flex; justify-content: center; align-items: center;">
+                Annuler
+            </a>
+            <button type="submit"
+                    style="background-color: #A155B9; color: white; font-size: 13px; font-weight: 800;
+                           border-radius: 10px; cursor: pointer; height: 44px; width: 250px; border: none;
+                           box-shadow: 0 4px 12px rgba(161, 85, 185, 0.35);">
+                ✓ Enregistrer les modifications
+            </button>
+        </div>
+
+        {{ form_end(form) }}
+    </main>
+
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Styles globaux pour tous les champs et labels du formulaire pour la cohérence #}
+    <style>
+        .form-label-style {
+            font-size: 12px;
+            font-weight: 700;
+            color: #A155B9;
+            padding-top: 11px;
+            text-align: right;
+            text-transform: uppercase;
+        }
+
+        form input, form textarea, form select {
+            width: 100%;
+            border-radius: 9px !important;
+            padding: 11px 14px !important;
+            font-size: 13px !important;
+            background-color: #f8fafc !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: none !important;
+            transition: border-color 0.2s;
+        }
+
+        form input:focus, form textarea:focus, form select:focus {
+            border-color: #A155B9 !important;
+            outline: none;
+        }
+
+        form select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem !important;
+        }
+        
+        .form-error-message { 
+            color: #F765A3; 
+            font-size: 12px; 
+            font-weight: 600; 
+            margin-top: 6px; 
+            display: block; 
+        }
+    </style>
+{% endblock %}

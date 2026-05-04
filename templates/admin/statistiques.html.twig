@@ -1,0 +1,929 @@
+﻿{% extends 'base.html.twig' %}
+{% block title %}Statistiques — StartHub{% endblock %}
+{% block page_title %}Statistiques{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ── Tokens ── */
+:root {
+    --s-primary: #a855f7;
+    --s-dark:    #7c3aed;
+    --s-pink:    #ec4899;
+    --s-green:   #10b981;
+    --s-amber:   #f59e0b;
+    --s-blue:    #3b82f6;
+    --s-red:     #ef4444;
+    --s-gray:    #6b7280;
+    --s-surface: #ffffff;
+    --s-bg:      #f5f7fb;
+    --s-border:  rgba(226,232,240,0.9);
+    --s-radius:  16px;
+    --s-shadow:  0 2px 16px rgba(0,0,0,0.06);
+}
+
+/* ── KPI Cards ── */
+.kpi-card {
+    border-radius: var(--s-radius);
+    border: none;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.14); }
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    transform: translate(20px, 20px);
+}
+.kpi-value { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.kpi-label { font-size: .78rem; opacity: .85; margin-top: 5px; }
+.kpi-icon  { font-size: 2rem; opacity: .7; }
+.kpi-trend { font-size: .72rem; margin-top: 6px; }
+.kpi-trend.up   { color: #d1fae5; }
+.kpi-trend.down { color: #fecaca; }
+
+/* ── Chart cards ── */
+.chart-card {
+    background: var(--s-surface);
+    border-radius: var(--s-radius);
+    padding: 22px;
+    box-shadow: var(--s-shadow);
+    border: 1px solid var(--s-border);
+    height: 100%;
+}
+.chart-card-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.chart-card-title i { color: var(--s-primary); }
+.chart-badge {
+    font-size: .68rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(168,85,247,0.1);
+    color: var(--s-primary);
+    font-weight: 600;
+}
+
+/* ── Funnel ── */
+.funnel-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--s-border);
+}
+.funnel-step:last-child { border-bottom: none; }
+.funnel-bar-wrap { flex: 1; }
+.funnel-bar {
+    height: 10px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--s-primary), var(--s-dark));
+    transition: width .6s ease;
+}
+.funnel-label { font-size: .8rem; font-weight: 600; color: #1e293b; min-width: 90px; }
+.funnel-count { font-size: .8rem; font-weight: 700; color: var(--s-primary); min-width: 30px; text-align: right; }
+
+/* ── Table ── */
+.stats-table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--s-gray); font-weight: 600; }
+.stats-table td { vertical-align: middle; font-size: .85rem; }
+.sector-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+/* ── Activity feed ── */
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--s-border);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+.activity-badge {
+    font-size: .68rem; padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+}
+
+/* ── Entrepreneur list ── */
+.entrepreneur-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--s-border);
+}
+.entrepreneur-item:last-child { border-bottom: none; }
+.entrepreneur-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--s-dark), var(--s-primary));
+    color: #fff; font-size: .8rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+
+    {# ── Header ── #}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0 fw-bold" style="color:#1e293b">
+                <i class="bi bi-graph-up me-2" style="color:var(--s-primary)"></i>Tableau de bord statistique
+            </h2>
+            <small class="text-muted">Données en temps réel — StartHub</small>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm" onclick="openCustomize()"
+                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-radius:10px">
+                <i class="bi bi-sliders me-1"></i>Personnaliser
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle"
+                        style="background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;border-radius:10px"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        id="exportDropdown">
+                    <i class="bi bi-download me-1"></i>Exporter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="exportDropdown">
+                    <li><h6 class="dropdown-header">Données</h6></li>
+                    <li><a class="dropdown-item" href="{{ path('admin_statistiques_export') }}" target="_blank">
+                        <i class="bi bi-filetype-csv me-2 text-success"></i>CSV complet
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header">Graphiques</h6></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportAllPNG(); return false">
+                        <i class="bi bi-images me-2 text-primary"></i>Tous en PNG
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportPDF(); return false">
+                        <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>Rapport PDF
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header">Graphique individuel</h6></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportChart('chartEvolution','evolution'); return false">
+                        <i class="bi bi-bar-chart me-2"></i>Évolution
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportChart('chartStatus','statuts'); return false">
+                        <i class="bi bi-pie-chart me-2"></i>Statuts
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportChart('chartSecteur','secteurs'); return false">
+                        <i class="bi bi-grid me-2"></i>Secteurs
+                    </a></li>
+                    {% if avgScores.labels|length > 0 %}
+                    <li><a class="dropdown-item" href="#" onclick="exportChart('chartScores','scores'); return false">
+                        <i class="bi bi-award me-2"></i>Scores
+                    </a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# ── Panneau personnalisation ── #}
+    <div id="customizePanel" style="display:none" class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-sliders me-2" style="color:var(--s-primary)"></i>Personnalisation des graphiques</h6>
+                <button class="btn btn-sm btn-light" onclick="closeCustomize()"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Couleur principale</label>
+                    <input type="color" id="colorPrimary" value="#a855f7" class="form-control form-control-color w-100" onchange="applyCustomization()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Couleur secondaire</label>
+                    <input type="color" id="colorSecondary" value="#10b981" class="form-control form-control-color w-100" onchange="applyCustomization()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Police</label>
+                    <select id="chartFont" class="form-select form-select-sm" onchange="applyCustomization()">
+                        <option value="Inter">Inter</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Taille police</label>
+                    <input type="range" id="chartFontSize" min="10" max="16" value="12" class="form-range" oninput="document.getElementById('fontSizeVal').textContent=this.value+'px'; applyCustomization()">
+                    <small class="text-muted" id="fontSizeVal">12px</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Afficher légendes</label>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" id="showLegend" checked onchange="applyCustomization()">
+                        <label class="form-check-label small">Activé</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Afficher tooltips</label>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" id="showTooltips" checked onchange="applyCustomization()">
+                        <label class="form-check-label small">Activé</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Grille</label>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" id="showGrid" checked onchange="applyCustomization()">
+                        <label class="form-check-label small">Activé</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Animation</label>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" id="enableAnim" checked onchange="applyCustomization()">
+                        <label class="form-check-label small">Activé</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Titre du rapport PDF</label>
+                    <input type="text" id="pdfTitle" class="form-control form-control-sm" value="Rapport Statistiques StartHub — {{ 'now'|date('d/m/Y') }}" placeholder="Titre du rapport">
+                </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-sm btn-primary" onclick="applyCustomization()">
+                    <i class="bi bi-check2 me-1"></i>Appliquer
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetCustomization()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ── KPI Row 1 ── #}
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_projets }}</div>
+                            <div class="kpi-label">Projets soumis</div>
+                            {% if globalStats.croissance_mensuelle is not null %}
+                            <div class="kpi-trend {{ globalStats.croissance_mensuelle >= 0 ? 'up' : 'down' }}">
+                                {{ globalStats.croissance_mensuelle >= 0 ? '↑' : '↓' }} {{ globalStats.croissance_mensuelle|abs }}% vs mois dernier
+                            </div>
+                            {% endif %}
+                        </div>
+                        <i class="bi bi-folder2-open kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#059669,#10b981)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_projets_acceptes }}</div>
+                            <div class="kpi-label">Acceptés</div>
+                            <div class="kpi-trend up">{{ globalStats.taux_acceptation }}% du total</div>
+                        </div>
+                        <i class="bi bi-check-circle kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#d97706,#f59e0b)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_projets_attente }}</div>
+                            <div class="kpi-label">En attente</div>
+                            <div class="kpi-trend up">À traiter</div>
+                        </div>
+                        <i class="bi bi-clock-history kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#be185d,#ec4899)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_entrepreneurs }}</div>
+                            <div class="kpi-label">Entrepreneurs</div>
+                            <div class="kpi-trend up">Inscrits</div>
+                        </div>
+                        <i class="bi bi-people kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#0284c7,#38bdf8)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.taux_acceptation }}%</div>
+                            <div class="kpi-label">Taux d'acceptation</div>
+                            <div class="kpi-trend {{ globalStats.taux_refus < 30 ? 'up' : 'down' }}">{{ globalStats.taux_refus }}% refusés</div>
+                        </div>
+                        <i class="bi bi-percent kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#0f766e,#14b8a6)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_en_cours }}</div>
+                            <div class="kpi-label">En cours</div>
+                            <div class="kpi-trend up">Actifs</div>
+                        </div>
+                        <i class="bi bi-play-circle kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#374151,#6b7280)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.total_termines }}</div>
+                            <div class="kpi-label">Terminés</div>
+                            <div class="kpi-trend up">Complétés</div>
+                        </div>
+                        <i class="bi bi-trophy kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-xl-3">
+            <div class="kpi-card card text-white" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="kpi-value">{{ globalStats.score_moyen_global ?? '—' }}{% if globalStats.score_moyen_global %}<span style="font-size:1.1rem">%</span>{% endif %}</div>
+                            <div class="kpi-label">Score moyen</div>
+                            <div class="kpi-trend {{ (globalStats.score_moyen_global ?? 0) >= 60 ? 'up' : 'down' }}">Évaluation auto</div>
+                        </div>
+                        <i class="bi bi-star kpi-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Ligne 1 : Évolution + Statuts ── #}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-bar-chart me-2"></i>Évolution des dépôts {{ evolution.year }}</span>
+                    <span class="chart-badge">{{ evolution.data|reduce((c,v) => c+v, 0) }} projets</span>
+                </div>
+                <canvas id="chartEvolution" height="90"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-pie-chart me-2"></i>Répartition par statut</span>
+                </div>
+                <canvas id="chartStatus" height="180"></canvas>
+                <div class="mt-3">
+                    {% for i, label in byStatus.labels %}
+                    <div class="d-flex justify-content-between align-items-center small py-1">
+                        <span><span class="sector-dot" style="background:{{ byStatus.colors[i] }}"></span>{{ label }}</span>
+                        <strong>{{ byStatus.data[i] }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Ligne 2 : Secteurs + Scores ── #}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-grid me-2"></i>Projets par secteur</span>
+                    <span class="chart-badge">{{ bySecteur.labels|length }} secteurs</span>
+                </div>
+                <canvas id="chartSecteur" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-award me-2"></i>Score d'évaluation moyen</span>
+                    <span class="chart-badge">Seuil 70%</span>
+                </div>
+                {% if avgScores.labels|length > 0 %}
+                <canvas id="chartScores" height="150"></canvas>
+                {% else %}
+                <div class="text-center text-muted py-5"><i class="bi bi-bar-chart fs-2 d-block mb-2 opacity-25"></i>Aucune évaluation disponible</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ── Ligne 3 : Funnel + Top entrepreneurs ── #}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-funnel me-2"></i>Entonnoir de conversion</span>
+                </div>
+                {% set funnelSteps = [
+                    {'label': 'Soumis',   'val': funnel.total,    'color': '#a855f7'},
+                    {'label': 'Évalués',  'val': funnel.evalues,  'color': '#7c3aed'},
+                    {'label': 'Acceptés', 'val': funnel.acceptes, 'color': '#10b981'},
+                    {'label': 'En cours', 'val': funnel.enCours,  'color': '#3b82f6'},
+                    {'label': 'Terminés', 'val': funnel.termines, 'color': '#6b7280'},
+                ] %}
+                {% for step in funnelSteps %}
+                <div class="funnel-step">
+                    <span class="funnel-label">{{ step.label }}</span>
+                    <div class="funnel-bar-wrap">
+                        <div class="funnel-bar" style="width:{{ funnel.total > 0 ? (step.val / funnel.total * 100)|round : 0 }}%;background:{{ step.color }}"></div>
+                    </div>
+                    <span class="funnel-count" style="color:{{ step.color }}">{{ step.val }}</span>
+                    <span class="text-muted" style="font-size:.7rem;min-width:35px;text-align:right">
+                        {{ funnel.total > 0 ? (step.val / funnel.total * 100)|round : 0 }}%
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-person-badge me-2"></i>Top entrepreneurs</span>
+                    <span class="chart-badge">{{ topEntrepreneurs.labels|length }} actifs</span>
+                </div>
+                {% if topEntrepreneurs.labels|length > 0 %}
+                {% for i, nom in topEntrepreneurs.labels %}
+                <div class="entrepreneur-item">
+                    <div class="entrepreneur-avatar">{{ nom|slice(0,1)|upper }}</div>
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold small text-truncate">{{ nom }}</span>
+                            <span class="small text-muted ms-2">{{ topEntrepreneurs.data[i] }} projet(s)</span>
+                        </div>
+                        <div class="progress" style="height:5px">
+                            <div class="progress-bar" style="width:{{ topEntrepreneurs.data[0] > 0 ? (topEntrepreneurs.data[i] / topEntrepreneurs.data[0] * 100)|round : 0 }}%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div>
+                        </div>
+                    </div>
+                    <div class="text-end ms-2" style="min-width:50px">
+                        {% if topEntrepreneurs.taux[i] is defined %}
+                        <span class="badge {{ topEntrepreneurs.taux[i] >= 50 ? 'bg-success' : 'bg-warning text-dark' }}" style="font-size:.65rem">
+                            {{ topEntrepreneurs.taux[i] }}% acc.
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-4">Aucun entrepreneur avec des projets.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ── Ligne 4 : Tableau secteurs + Activité récente ── #}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-table me-2"></i>Analyse par secteur</span>
+                </div>
+                <table class="table table-sm stats-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Secteur</th>
+                            <th class="text-center">Projets</th>
+                            <th>Répartition</th>
+                            <th class="text-center">Taux acc.</th>
+                            <th class="text-center">Score moy.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set totalP = bySecteur.data|reduce((c,v) => c+v, 0) %}
+                        {% for i, label in bySecteur.labels %}
+                        {% set cnt = bySecteur.data[i] %}
+                        {% set pct = totalP > 0 ? (cnt / totalP * 100)|round : 0 %}
+                        <tr>
+                            <td>
+                                <span class="sector-dot" style="background:{{ bySecteur.colors[i] }}"></span>
+                                <strong>{{ label }}</strong>
+                            </td>
+                            <td class="text-center fw-bold">{{ cnt }}</td>
+                            <td style="min-width:100px">
+                                <div class="d-flex align-items-center gap-1">
+                                    <div class="progress flex-grow-1" style="height:6px">
+                                        <div class="progress-bar" style="width:{{ pct }}%;background:{{ bySecteur.colors[i] }}"></div>
+                                    </div>
+                                    <small class="text-muted">{{ pct }}%</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if bySecteur.taux[i] is defined %}
+                                <span class="badge {{ bySecteur.taux[i] >= 60 ? 'bg-success' : (bySecteur.taux[i] >= 30 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                                    {{ bySecteur.taux[i] }}%
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if bySecteur.scores[i] is defined and bySecteur.scores[i] %}
+                                <span class="badge {{ bySecteur.scores[i] >= 70 ? 'bg-success' : (bySecteur.scores[i] >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                                    {{ bySecteur.scores[i] }}%
+                                </span>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold table-light">
+                            <td>Total</td><td class="text-center">{{ totalP }}</td><td>100%</td><td></td><td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-clock-history me-2"></i>Activité récente</span>
+                    <span class="chart-badge">{{ recentActivity|length }} derniers</span>
+                </div>
+                <div style="max-height:380px;overflow-y:auto">
+                {% for p in recentActivity %}
+                <div class="activity-item">
+                    <div class="activity-dot" style="background:
+                        {% if p.etat == 'Accepté' %}#10b981
+                        {% elseif p.etat == 'Refusé' %}#ef4444
+                        {% elseif p.etat == 'En cours' %}#a855f7
+                        {% elseif p.etat == 'Terminé' %}#6b7280
+                        {% else %}#f59e0b{% endif %}"></div>
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="fw-semibold text-truncate" style="font-size:.82rem">{{ p.titre }}</div>
+                        <div class="text-muted" style="font-size:.7rem">
+                            {{ p.entrepreneur }}
+                            {% if p.secteur %} · <span style="color:var(--s-primary)">{{ p.secteur }}</span>{% endif %}
+                            · {{ p.date_soumission|date('d/m/Y') }}
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column align-items-end gap-1">
+                        <span class="activity-badge
+                            {% if p.etat == 'Accepté' %}bg-success text-white
+                            {% elseif p.etat == 'Refusé' %}bg-danger text-white
+                            {% elseif p.etat == 'En cours' %}bg-primary text-white
+                            {% elseif p.etat == 'Terminé' %}bg-secondary text-white
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ p.etat }}
+                        </span>
+                        {% if p.note_moyenne %}
+                        <span style="font-size:.65rem;color:var(--s-gray)">{{ p.note_moyenne }}%</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">Aucune activité récente.</p>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Score marché ── #}
+    {% if marketScores.labels|length > 0 %}
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-card-title">
+                    <span><i class="bi bi-bar-chart-line me-2"></i>Score marché moyen par secteur (Marketstack)</span>
+                    <span class="chart-badge">{{ marketScores.labels|length }} secteurs analysés</span>
+                </div>
+                <canvas id="chartMarket" height="60"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// ── Registre des instances Chart ──────────────────────────
+const charts = {};
+
+// ── Config par défaut personnalisable ─────────────────────
+let cfg = {
+    primary:   '#a855f7',
+    secondary: '#10b981',
+    font:      'Inter',
+    fontSize:  12,
+    legend:    true,
+    tooltips:  true,
+    grid:      true,
+    anim:      true,
+};
+
+function baseOpts(extra = {}) {
+    return {
+        responsive: true,
+        animation: cfg.anim ? { duration: 600 } : false,
+        plugins: {
+            legend: { display: cfg.legend, labels: { font: { family: cfg.font, size: cfg.fontSize }, boxWidth: 12, padding: 14 } },
+            tooltip: { enabled: cfg.tooltips, padding: 10, cornerRadius: 8, titleFont: { family: cfg.font }, bodyFont: { family: cfg.font } },
+        },
+        ...extra
+    };
+}
+
+function scaleOpts(axis = 'y') {
+    const grid = { color: cfg.grid ? 'rgba(0,0,0,0.05)' : 'transparent' };
+    return axis === 'y'
+        ? { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: cfg.font, size: cfg.fontSize } }, grid } }
+        : { x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: cfg.font, size: cfg.fontSize } }, grid } };
+}
+
+Chart.defaults.font.family = cfg.font;
+Chart.defaults.color = '#64748b';
+
+// ── Création des graphiques ───────────────────────────────
+function buildCharts() {
+    // Détruire les graphiques existants
+    Object.values(charts).forEach(c => {
+        if (c && typeof c.destroy === 'function') {
+            c.destroy();
+        }
+    });
+
+    // Évolution
+    const evolutionCanvas = document.getElementById('chartEvolution');
+    if (!evolutionCanvas) {
+        console.error('Canvas chartEvolution non trouvé');
+        return;
+    }
+    charts.evolution = new Chart(evolutionCanvas, {
+        type: 'bar',
+        data: {
+            labels: {{ evolution.labels|json_encode|raw }},
+            datasets: [
+                { label: 'Total déposés', data: {{ evolution.data|json_encode|raw }}, backgroundColor: cfg.primary + '33', borderColor: cfg.primary, borderWidth: 2, borderRadius: 6, type: 'bar' },
+                { label: 'Acceptés',      data: {{ evolution.acceptes|json_encode|raw }}, borderColor: cfg.secondary, backgroundColor: 'transparent', borderWidth: 2, pointBackgroundColor: cfg.secondary, pointRadius: 3, fill: false, tension: 0.4, type: 'line' },
+                { label: 'Refusés',       data: {{ evolution.refuses|json_encode|raw }}, borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, pointBackgroundColor: '#ef4444', pointRadius: 3, fill: false, tension: 0.4, type: 'line' }
+            ]
+        },
+        options: baseOpts({ interaction: { mode: 'index', intersect: false }, scales: scaleOpts('y') })
+    });
+
+    // Statuts
+    const statusCanvas = document.getElementById('chartStatus');
+    if (statusCanvas) {
+        charts.status = new Chart(statusCanvas, {
+            type: 'doughnut',
+            data: { labels: {{ byStatus.labels|json_encode|raw }}, datasets: [{ data: {{ byStatus.data|json_encode|raw }}, backgroundColor: {{ byStatus.colors|json_encode|raw }}, borderWidth: 3, borderColor: '#fff', hoverOffset: 6 }] },
+            options: baseOpts({ cutout: '65%' })
+        });
+    }
+
+    // Secteurs
+    const secteurCanvas = document.getElementById('chartSecteur');
+    if (secteurCanvas) {
+        charts.secteur = new Chart(secteurCanvas, {
+            type: 'bar',
+            data: { labels: {{ bySecteur.labels|json_encode|raw }}, datasets: [{ label: 'Projets', data: {{ bySecteur.data|json_encode|raw }}, backgroundColor: {{ bySecteur.colors|json_encode|raw }}, borderRadius: 6 }] },
+            options: baseOpts({ indexAxis: 'y', scales: scaleOpts('x') })
+        });
+    }
+
+    // Scores évaluation
+    {% if avgScores.labels|length > 0 %}
+    const sd = {{ avgScores.data|json_encode|raw }};
+    const scoresCanvas = document.getElementById('chartScores');
+    if (scoresCanvas) {
+        charts.scores = new Chart(scoresCanvas, {
+            type: 'bar',
+            data: { labels: {{ avgScores.labels|json_encode|raw }}, datasets: [{ label: 'Score (%)', data: sd, backgroundColor: sd.map(v => v >= 70 ? cfg.secondary + 'bf' : v >= 50 ? '#f59e0bbf' : '#ef4444bf'), borderRadius: 6 }] },
+            options: baseOpts({ scales: { y: { beginAtZero: true, max: 100, grid: { color: cfg.grid ? 'rgba(0,0,0,0.05)' : 'transparent' } } } })
+        });
+    }
+    {% endif %}
+
+    // Score marché
+    {% if marketScores.labels|length > 0 %}
+    const md = {{ marketScores.data|json_encode|raw }};
+    const marketCanvas = document.getElementById('chartMarket');
+    if (marketCanvas) {
+        charts.market = new Chart(marketCanvas, {
+            type: 'bar',
+            data: { labels: {{ marketScores.labels|json_encode|raw }}, datasets: [{ label: 'Score marché', data: md, backgroundColor: md.map(v => v >= 70 ? cfg.secondary + 'bf' : v >= 40 ? '#0ea5e9bf' : '#ef4444bf'), borderRadius: 6 }] },
+            options: baseOpts({ scales: { y: { beginAtZero: true, max: 100, grid: { color: cfg.grid ? 'rgba(0,0,0,0.05)' : 'transparent' } } } })
+        });
+    }
+    {% endif %}
+}
+
+// Initialiser les graphiques au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    buildCharts();
+});
+
+// ── Personnalisation ──────────────────────────────────────
+function openCustomize() {
+    const panel = document.getElementById('customizePanel');
+    if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+}
+function closeCustomize() {
+    const panel = document.getElementById('customizePanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+}
+
+function applyCustomization() {
+    const primaryEl = document.getElementById('colorPrimary');
+    const secondaryEl = document.getElementById('colorSecondary');
+    const fontEl = document.getElementById('chartFont');
+    const fontSizeEl = document.getElementById('chartFontSize');
+    const legendEl = document.getElementById('showLegend');
+    const tooltipsEl = document.getElementById('showTooltips');
+    const gridEl = document.getElementById('showGrid');
+    const animEl = document.getElementById('enableAnim');
+    
+    if (primaryEl) cfg.primary = primaryEl.value;
+    if (secondaryEl) cfg.secondary = secondaryEl.value;
+    if (fontEl) cfg.font = fontEl.value;
+    if (fontSizeEl) cfg.fontSize = parseInt(fontSizeEl.value);
+    if (legendEl) cfg.legend = legendEl.checked;
+    if (tooltipsEl) cfg.tooltips = tooltipsEl.checked;
+    if (gridEl) cfg.grid = gridEl.checked;
+    if (animEl) cfg.anim = animEl.checked;
+    
+    Chart.defaults.font.family = cfg.font;
+    buildCharts();
+}
+
+function resetCustomization() {
+    cfg = { primary: '#a855f7', secondary: '#10b981', font: 'Inter', fontSize: 12, legend: true, tooltips: true, grid: true, anim: true };
+    document.getElementById('colorPrimary').value   = cfg.primary;
+    document.getElementById('colorSecondary').value = cfg.secondary;
+    document.getElementById('chartFont').value      = cfg.font;
+    document.getElementById('chartFontSize').value  = cfg.fontSize;
+    document.getElementById('showLegend').checked   = true;
+    document.getElementById('showTooltips').checked = true;
+    document.getElementById('showGrid').checked     = true;
+    document.getElementById('enableAnim').checked   = true;
+    document.getElementById('fontSizeVal').textContent = '12px';
+    buildCharts();
+};
+
+// ── Export PNG individuel ─────────────────────────────────
+function exportChart(canvasId, name) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    // Fond blanc
+    const tmp = document.createElement('canvas');
+    tmp.width  = canvas.width;
+    tmp.height = canvas.height;
+    const ctx = tmp.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tmp.width, tmp.height);
+    ctx.drawImage(canvas, 0, 0);
+    const a = document.createElement('a');
+    a.download = `starthub_${name}_${new Date().toISOString().slice(0,10)}.png`;
+    a.href = tmp.toDataURL('image/png');
+    a.click();
+};
+
+// ── Export tous les graphiques en PNG (zip simulé = séquentiel) ──
+function exportAllPNG() {
+    const list = [
+        ['chartEvolution','evolution'],
+        ['chartStatus','statuts'],
+        ['chartSecteur','secteurs'],
+        {% if avgScores.labels|length > 0 %}['chartScores','scores'],{% endif %}
+        {% if marketScores.labels|length > 0 %}['chartMarket','marche'],{% endif %}
+    ];
+    list.forEach(([id, name], i) => setTimeout(() => exportChart(id, name), i * 300));
+};
+
+// ── Export PDF ────────────────────────────────────────────
+async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const title = document.getElementById('pdfTitle')?.value || 'Rapport Statistiques StartHub';
+    const date  = new Date().toLocaleDateString('fr-FR');
+    const W = doc.internal.pageSize.getWidth();
+
+    // Page 1 — KPIs texte
+    doc.setFillColor(124, 58, 237);
+    doc.rect(0, 0, W, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, 10, 13);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(date, W - 10, 13, { align: 'right' });
+
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Indicateurs clés', 10, 30);
+
+    const kpis = [
+        ['Total projets',      '{{ globalStats.total_projets }}'],
+        ['Acceptés',           '{{ globalStats.total_projets_acceptes }}'],
+        ['En attente',         '{{ globalStats.total_projets_attente }}'],
+        ['Refusés',            '{{ globalStats.total_projets_refuses }}'],
+        ['Entrepreneurs',      '{{ globalStats.total_entrepreneurs }}'],
+        ['Taux acceptation',   '{{ globalStats.taux_acceptation }}%'],
+        ['Score moyen',        '{{ globalStats.score_moyen_global ?? "N/A" }}%'],
+        ['Ce mois',            '{{ globalStats.projets_ce_mois }}'],
+    ];
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    kpis.forEach(([label, val], i) => {
+        const x = 10 + (i % 4) * 70;
+        const y = 40 + Math.floor(i / 4) * 18;
+        doc.setFillColor(245, 247, 251);
+        doc.roundedRect(x, y - 5, 65, 14, 2, 2, 'F');
+        doc.setTextColor(100, 116, 139);
+        doc.text(label, x + 3, y + 1);
+        doc.setTextColor(124, 58, 237);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text(val, x + 3, y + 8);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+    });
+
+    // Pages graphiques
+    const chartList = [
+        ['chartEvolution', 'Évolution des dépôts'],
+        ['chartStatus',    'Répartition par statut'],
+        ['chartSecteur',   'Projets par secteur'],
+        {% if avgScores.labels|length > 0 %}['chartScores', 'Scores d\'évaluation'],{% endif %}
+        {% if marketScores.labels|length > 0 %}['chartMarket', 'Scores marché'],{% endif %}
+    ];
+
+    for (const [id, label] of chartList) {
+        const canvas = document.getElementById(id);
+        if (!canvas) continue;
+        const tmp = document.createElement('canvas');
+        tmp.width  = canvas.width;
+        tmp.height = canvas.height;
+        const ctx2 = tmp.getContext('2d');
+        ctx2.fillStyle = '#ffffff';
+        ctx2.fillRect(0, 0, tmp.width, tmp.height);
+        ctx2.drawImage(canvas, 0, 0);
+        const img = tmp.toDataURL('image/png');
+        doc.addPage();
+        doc.setFillColor(124, 58, 237);
+        doc.rect(0, 0, W, 14, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, 10, 10);
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(8);
+        doc.text(date, W - 10, 10, { align: 'right' });
+        const H = doc.internal.pageSize.getHeight();
+        const ratio = canvas.height / canvas.width;
+        const imgW = W - 20;
+        const imgH = Math.min(imgW * ratio, H - 25);
+        doc.addImage(img, 'PNG', 10, 18, imgW, imgH);
+    }
+
+    doc.save(`starthub_rapport_${new Date().toISOString().slice(0,10)}.pdf`);
+};
+</script>
+
+{% endblock %}
+
+{% block javascripts %}{{ parent() }}{% endblock %}
+

@@ -1,0 +1,981 @@
+{# templates/entrepreneur/projet_detail.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>{{ projet.titre }}</h1>
+            <div class="page-subtitle">
+                Soumis le {{ projet.dateSoumission|date('d/m/Y H:i') }} - 
+                Entrepreneur: {{ projet.id_entrepreneur.nom ?? 'N/A' }}
+            </div>
+        </div>
+        <div>
+            <span class="status-badge 
+                {% if projet.etat == 'En attente' %}status-pending
+                {% elseif projet.etat == 'Accepté' %}status-accepted
+                {% elseif projet.etat == 'Refusé' %}status-refused
+                {% elseif projet.etat == 'En cours' %}status-in-progress
+                {% else %}status-completed{% endif %}"
+                style="font-size: 1rem; padding: 0.5rem 1.25rem;">
+                {{ projet.etat }}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Progression -->
+    <div class="card-modern mb-4">
+        <div class="card-body-modern">
+            <div class="d-flex justify-content-between mb-2">
+                <strong>Progression du projet</strong>
+                <strong class="text-primary">{{ progression }}%</strong>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div class="progress-bar" style="width: {{ progression }}%"></div>
+            </div>
+            
+            {% if projet.etat == 'Refusé' and projet.commentaireAdmin %}
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Commentaire de l'administrateur:</strong> {{ projet.commentaireAdmin }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Description du projet -->
+        <div class="col-lg-7 mb-4">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-info-circle"></i> Détails du projet</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="detail-item">
+                        <label>Secteur</label>
+                        <p><span class="badge" style="background: var(--color-primary);">{{ projet.secteur }}</span></p>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <label>Description</label>
+                        <p>{{ projet.description }}</p>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <label>Objectifs</label>
+                        <p>{{ projet.objectifs }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nouvelle section: Informations financières -->
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <h3><i class="bi bi-calculator"></i> Informations financières</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Budget estimé</label>
+                                <p class="fs-4 fw-bold text-success">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Durée estimée</label>
+                                <p><i class="bi bi-calendar"></i> {{ projet.dureeEstimee }} mois</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Nombre de membres</label>
+                                <p><i class="bi bi-people"></i> {{ projet.nbMembresEquipe }} personnes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Statut juridique</label>
+                                <p>{{ projet.statutJuridique }}</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Financement actuel</label>
+                                <p><span class="badge bg-info">{{ projet.financementActuel }}</span></p>
+                            </div>
+                        </div>
+                        {% if projet.partenairesPotentiels %}
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Partenaires potentiels</label>
+                                <p>{{ projet.partenairesPotentiels }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ═══ ANALYSE IA STARTHUB ═══ -->
+            {% if aiAnalysis %}
+            <div class="ai-dashboard mt-4">
+                <div class="ai-dashboard-header">
+                    <div class="ai-header-left">
+                        <div class="ai-icon-wrap"><i class="bi bi-robot"></i></div>
+                        <div>
+                            <h3 class="ai-title">Analyse IA StartHub</h3>
+                            <p class="ai-subtitle">Analyse complète générée automatiquement</p>
+                        </div>
+                    </div>
+                    <div class="ai-score-ring">
+                        <svg viewBox="0 0 80 80" class="ring-svg">
+                            <circle cx="40" cy="40" r="34" class="ring-bg"/>
+                            <circle cx="40" cy="40" r="34" class="ring-fill {% if aiAnalysis.score_global >= 70 %}ring-success{% elseif aiAnalysis.score_global >= 40 %}ring-warning{% else %}ring-danger{% endif %}"
+                                style="stroke-dasharray: {{ (aiAnalysis.score_global / 100 * 213.6)|round }} 213.6"/>
+                        </svg>
+                        <div class="ring-label">
+                            <span class="ring-num {% if aiAnalysis.score_global >= 70 %}text-success{% elseif aiAnalysis.score_global >= 40 %}text-warning{% else %}text-danger{% endif %}">{{ aiAnalysis.score_global }}</span>
+                            <span class="ring-sub">/100</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-scores-grid">
+                    {% set scores = [
+                        {label: 'Innovation', val: aiAnalysis.score_innovation, icon: 'bi-lightbulb'},
+                        {label: 'Faisabilité', val: aiAnalysis.score_faisabilite, icon: 'bi-tools'},
+                        {label: 'Marché', val: aiAnalysis.score_marche, icon: 'bi-graph-up'},
+                        {label: 'Équipe', val: aiAnalysis.score_equipe, icon: 'bi-people'},
+                    ] %}
+                    {% for s in scores %}{% if s.val %}
+                    <div class="ai-score-card">
+                        <i class="bi {{ s.icon }} ai-score-icon"></i>
+                        <div class="ai-score-label">{{ s.label }}</div>
+                        <div class="ai-score-bar-wrap">
+                            <div class="ai-score-bar {% if s.val >= 70 %}bar-success{% elseif s.val >= 40 %}bar-warning{% else %}bar-danger{% endif %}" style="width:{{ s.val }}%"></div>
+                        </div>
+                        <div class="ai-score-val {% if s.val >= 70 %}text-success{% elseif s.val >= 40 %}text-warning{% else %}text-danger{% endif %}">{{ s.val }}/100</div>
+                    </div>
+                    {% endif %}{% endfor %}
+                </div>
+                {% if projet.aiAnalyzedAt %}
+                <div class="ai-analyzed-at"><i class="bi bi-clock me-1"></i>Analysé le {{ projet.aiAnalyzedAt|date('d/m/Y à H:i') }}</div>
+                {% endif %}
+            </div>
+
+            {# ── SWOT ── #}
+            {% if (aiAnalysis.forces and aiAnalysis.forces|length > 0) or (aiAnalysis.faiblesses and aiAnalysis.faiblesses|length > 0) or (aiAnalysis.opportunites and aiAnalysis.opportunites|length > 0) or (aiAnalysis.menaces and aiAnalysis.menaces|length > 0) %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+                    <h3><i class="bi bi-grid-3x3-gap"></i> Analyse SWOT</h3>
+                </div>
+                <div class="card-body-modern p-0">
+                    <div class="swot-grid">
+                        <div class="swot-cell swot-forces">
+                            <div class="swot-cell-header"><i class="bi bi-shield-check"></i> Forces</div>
+                            <ul>{% for f in aiAnalysis.forces %}<li>{{ f }}</li>{% endfor %}</ul>
+                        </div>
+                        <div class="swot-cell swot-faiblesses">
+                            <div class="swot-cell-header"><i class="bi bi-shield-x"></i> Faiblesses</div>
+                            <ul>{% for f in aiAnalysis.faiblesses %}<li>{{ f }}</li>{% endfor %}</ul>
+                        </div>
+                        <div class="swot-cell swot-opportunites">
+                            <div class="swot-cell-header"><i class="bi bi-arrow-up-right-circle"></i> Opportunités</div>
+                            <ul>{% for o in aiAnalysis.opportunites %}<li>{{ o }}</li>{% endfor %}</ul>
+                        </div>
+                        <div class="swot-cell swot-menaces">
+                            <div class="swot-cell-header"><i class="bi bi-exclamation-octagon"></i> Menaces</div>
+                            <ul>{% for m in aiAnalysis.menaces %}<li>{{ m }}</li>{% endfor %}</ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Pitch ── #}
+            {% if aiAnalysis.pitch %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #7c3aed, #a855f7);">
+                    <h3><i class="bi bi-megaphone"></i> Pitch Investisseur</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="pitch-block">
+                        <div class="pitch-quote-icon"><i class="bi bi-quote"></i></div>
+                        <div class="pitch-text" style="white-space: pre-line;">{{ aiAnalysis.pitch }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Taille du marché ── #}
+            {% if aiAnalysis['market_size'] is defined and aiAnalysis['market_size'] %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                    <h3><i class="bi bi-globe2"></i> Taille du marché</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="market-grid">
+                        {% if aiAnalysis.market_size['tam'] is defined and aiAnalysis.market_size['tam'] %}
+                        <div class="market-card market-tam">
+                            <div class="market-label">TAM</div>
+                            <div class="market-sublabel">Total Addressable Market</div>
+                            <div class="market-value">{{ aiAnalysis.market_size.tam }}</div>
+                        </div>
+                        {% endif %}
+                        {% if aiAnalysis.market_size['sam'] is defined and aiAnalysis.market_size['sam'] %}
+                        <div class="market-card market-sam">
+                            <div class="market-label">SAM</div>
+                            <div class="market-sublabel">Serviceable Addressable Market</div>
+                            <div class="market-value">{{ aiAnalysis.market_size.sam }}</div>
+                        </div>
+                        {% endif %}
+                        {% if aiAnalysis.market_size['som'] is defined and aiAnalysis.market_size['som'] %}
+                        <div class="market-card market-som">
+                            <div class="market-label">SOM</div>
+                            <div class="market-sublabel">Serviceable Obtainable Market</div>
+                            <div class="market-value">{{ aiAnalysis.market_size.som }}</div>
+                        </div>
+                        {% endif %}
+                        {% if aiAnalysis.market_size['croissance'] is defined and aiAnalysis.market_size['croissance'] %}
+                        <div class="market-card market-growth">
+                            <div class="market-label"><i class="bi bi-graph-up-arrow"></i></div>
+                            <div class="market-sublabel">Croissance annuelle</div>
+                            <div class="market-value text-success">{{ aiAnalysis.market_size.croissance }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Améliorations ── #}
+            {% if aiAnalysis['ameliorations'] is defined and aiAnalysis.ameliorations and aiAnalysis.ameliorations|length > 0 %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #b45309, #f59e0b);">
+                    <h3><i class="bi bi-stars"></i> Améliorations suggérées</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="amelio-list">
+                        {% for a in aiAnalysis.ameliorations %}
+                        <div class="amelio-item">
+                            <div class="amelio-priority priority-{{ a.priorite ?? 'moyenne' }}">{{ (a.priorite ?? 'moyenne')|upper }}</div>
+                            <div class="amelio-content">
+                                <div class="amelio-suggestion">{{ a.suggestion ?? a }}</div>
+                                {% if a.impact is defined %}
+                                <div class="amelio-meta">
+                                    <span class="amelio-impact"><i class="bi bi-lightning me-1"></i>{{ a.impact }}</span>
+                                    {% if a.effort is defined %}<span class="amelio-effort"><i class="bi bi-clock me-1"></i>{{ a.effort }}</span>{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── KPIs ── #}
+            {% if aiAnalysis['kpis'] is defined and aiAnalysis.kpis and aiAnalysis.kpis|length > 0 %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #0369a1, #0ea5e9);">
+                    <h3><i class="bi bi-speedometer2"></i> KPIs recommandés</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="kpi-grid">
+                        {% for kpi in aiAnalysis.kpis %}
+                        <div class="kpi-card">
+                            <div class="kpi-name">{{ kpi.kpi }}</div>
+                            <div class="kpi-target">{{ kpi.cible }}</div>
+                            <div class="kpi-freq"><i class="bi bi-arrow-repeat me-1"></i>{{ kpi.frequence }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Projets similaires ── #}
+            {% if aiAnalysis['projets_similaires'] is defined and aiAnalysis.projets_similaires and aiAnalysis.projets_similaires|length > 0 %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #92400e, #d97706);">
+                    <h3><i class="bi bi-diagram-3"></i> Projets similaires</h3>
+                </div>
+                <div class="card-body-modern">
+                    {% for ps in aiAnalysis.projets_similaires %}
+                    <div class="similar-card mb-3">
+                        <div class="similar-header">
+                            <span class="similar-name">{{ ps.nom }}</span>
+                            <span class="similar-badge">{{ ps.similitude }}% similaire</span>
+                        </div>
+                        <div class="row g-2 mt-2 small">
+                            {% if ps.forces is defined and ps.forces|length > 0 %}
+                            <div class="col-md-6">
+                                <div class="similar-section-label text-success"><i class="bi bi-plus-circle me-1"></i>Forces</div>
+                                <ul class="similar-list">{% for f in ps.forces %}<li>{{ f }}</li>{% endfor %}</ul>
+                            </div>
+                            {% endif %}
+                            {% if ps.faiblesses is defined and ps.faiblesses|length > 0 %}
+                            <div class="col-md-6">
+                                <div class="similar-section-label text-danger"><i class="bi bi-dash-circle me-1"></i>Faiblesses</div>
+                                <ul class="similar-list">{% for f in ps.faiblesses %}<li>{{ f }}</li>{% endfor %}</ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if ps.lecon is defined and ps.lecon %}
+                        <div class="similar-lecon"><i class="bi bi-bookmark-star me-1"></i>{{ ps.lecon }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Site web généré ── #}
+            {% if aiAnalysis['site_web_html'] is defined and aiAnalysis['site_web_html'] %}
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #166534, #22c55e);">
+                    <h3><i class="bi bi-globe"></i> Site web généré</h3>
+                </div>
+                <div class="card-body-modern">
+                    <p class="small text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Aperçu du site web généré automatiquement pour votre projet</p>
+                    <div class="site-preview-wrap">
+                        <iframe srcdoc="{{ aiAnalysis.site_web_html|e('html_attr') }}" class="site-preview-iframe"></iframe>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <button class="btn btn-success btn-sm px-4" onclick="downloadSiteHTML()">
+                            <i class="bi bi-download me-1"></i> Télécharger le site
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <script>
+            function downloadSiteHTML() {
+                const html = {{ aiAnalysis.site_web_html|json_encode|raw }};
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '{{ projet.titre|lower|replace({' ': '-'}) }}.html';
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            </script>
+            {% endif %}
+
+            {% endif %}{# end aiAnalysis #}
+            
+            <!-- Nouvelle section: Coordonnées -->
+            <div class="card-modern mt-4">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <h3><i class="bi bi-envelope"></i> Coordonnées</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Email de contact</label>
+                                <p><i class="bi bi-envelope"></i> <a href="mailto:{{ projet.emailContact }}">{{ projet.emailContact }}</a></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <label>Téléphone</label>
+                                <p><i class="bi bi-telephone"></i> <a href="tel:{{ projet.telephoneContact }}">{{ projet.telephoneContact }}</a></p>
+                            </div>
+                        </div>
+                        {% if projet.siteWeb %}
+                        <div class="col-md-12">
+                            <div class="detail-item">
+                                <label>Site web</label>
+                                <p><i class="bi bi-globe"></i> <a href="{{ projet.siteWeb }}" target="_blank">{{ projet.siteWeb }}</a></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if projet.experiencesAnterieures %}
+                        <div class="col-12">
+                            <div class="detail-item">
+                                <label>Expériences antérieures</label>
+                                <p>{{ projet.experiencesAnterieures }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="col-lg-5 mb-4">
+            <div class="card-modern mb-4">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-graph-up"></i> Statistiques</h3>
+                </div>
+                <div class="card-body-modern">
+                    <div class="stat-item">
+                        <span>Membres dans l'équipe</span>
+                        <strong>{{ membres|length }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tâches totales</span>
+                        <strong>{{ taches|length }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tâches terminées</span>
+                        <strong>{{ taches|filter(t => t.statut == 'Terminée')|length }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tâches en cours</span>
+                        <strong>{{ taches|filter(t => t.statut == 'En cours')|length }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Budget par mois</span>
+                        <strong>{{ projet.dureeEstimee ? (projet.budgetEstime / projet.dureeEstimee)|number_format(0, ',', ' ') ~ ' €/mois' : '—' }}</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Coût par membre</span>
+                        <strong>{{ projet.nbMembresEquipe ? (projet.budgetEstime / projet.nbMembresEquipe)|number_format(0, ',', ' ') ~ ' €/pers' : '—' }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Commentaire Admin si refusé -->
+            {% if projet.etat == 'Refusé' and projet.commentaireAdmin %}
+            <div class="card-modern">
+                <div class="card-header-modern" style="background: linear-gradient(135deg, var(--color-warning), #fbbf24);">
+                    <h3><i class="bi bi-chat-dots"></i> Commentaire de l'admin</h3>
+                </div>
+                <div class="card-body-modern">
+                    <p>{{ projet.commentaireAdmin }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Boutons d'action -->
+            <div class="mt-4">
+                <div class="d-grid gap-2">
+                    {% if projet.etat == 'En attente' %}
+                        <a href="{{ path('entrepreneur_projet_modifier', {'id': projet.idProjet}) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Modifier le projet
+                        </a>
+                    {% endif %}
+                    
+                    {# DEBUG - À retirer après test #}
+                    <div class="alert alert-info mt-2">
+                        <strong>DEBUG:</strong> État du projet = "{{ projet.etat }}"
+                    </div>
+                    
+                    {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+                        <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="btn btn-success">
+                            <i class="bi bi-gear"></i> Gérer le projet
+                        </a>
+                    {% endif %}
+                    <a href="{{ path('entrepreneur_projets_liste') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour à la liste
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Membres et Tâches -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-people"></i> Membres de l'équipe</h3>
+                </div>
+                <div class="card-body-modern">
+                    {% if membres|length > 0 %}
+                        <div class="members-list">
+                            {% for membre in membres %}
+                            <div class="member-item">
+                                <div class="member-avatar">
+                                    <i class="bi bi-person-circle fs-3"></i>
+                                </div>
+                                <div class="member-info">
+                                    <div class="member-name">{{ membre.idUtilisateur.nom ?? 'Membre' }}</div>
+                                    <div class="member-role">{{ membre.roleEquipe }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Aucun membre assigné pour le moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="bi bi-check2-square"></i> Tâches du projet</h3>
+                </div>
+                <div class="card-body-modern">
+                    {% if taches|length > 0 %}
+                        <div class="tasks-list">
+                            {% for tache in taches %}
+                            <div class="task-item">
+                                <div class="task-status-indicator 
+                                    {% if tache.statut == 'Terminée' %}status-completed
+                                    {% elseif tache.statut == 'En cours' %}status-in-progress
+                                    {% else %}status-pending{% endif %}">
+                                </div>
+                                <div class="task-content">
+                                    <div class="task-title">{{ tache.titre }}</div>
+                                    <div class="task-meta">
+                                        <span><i class="bi bi-person"></i> {{ tache.idUtilisateur.nom ?? 'Non assigné' }}</span>
+                                        {% if tache.dateLimite %}
+                                        <span><i class="bi bi-calendar"></i> {{ tache.dateLimite|date('d/m/Y') }}</span>
+                                        {% endif %}
+                                        <span class="status-badge 
+                                            {% if tache.statut == 'Terminée' %}status-completed
+                                            {% elseif tache.statut == 'En cours' %}status-in-progress
+                                            {% else %}status-pending{% endif %}"
+                                            style="font-size: 0.7rem;">
+                                            {{ tache.statut }}
+                                        </span>
+                                    </div>
+                                    {% if tache.description %}
+                                    <div class="task-description-small">{{ tache.description|slice(0, 100) }}{% if tache.description|length > 100 %}...{% endif %}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check2-square fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Aucune tâche créée pour le moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-item {
+    margin-bottom: 1.5rem;
+}
+
+.detail-item label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-gray);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.detail-item p {
+    margin: 0;
+    color: var(--color-dark);
+    line-height: 1.6;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-item span {
+    color: var(--color-gray);
+}
+
+.stat-item strong {
+    font-size: 1.25rem;
+    color: var(--color-primary);
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.member-item:hover {
+    background: #f1f5f9;
+}
+
+.member-avatar {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 50%;
+    color: white;
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-name {
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.member-role {
+    font-size: 0.85rem;
+    color: var(--color-gray);
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.task-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.task-item:hover {
+    background: #f1f5f9;
+}
+
+.task-status-indicator {
+    width: 4px;
+    border-radius: 4px;
+}
+
+.task-status-indicator.status-pending { background: var(--color-warning); }
+.task-status-indicator.status-in-progress { background: var(--color-info); }
+.task-status-indicator.status-completed { background: var(--color-success); }
+
+.task-content {
+    flex: 1;
+}
+
+.task-title {
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 0.5rem;
+}
+
+.task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--color-gray);
+    margin-bottom: 0.5rem;
+}
+
+.task-meta i {
+    margin-right: 0.25rem;
+}
+
+.task-description-small {
+    font-size: 0.85rem;
+    color: var(--color-gray);
+    line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════
+   ANALYSE IA — DESIGN MODERNE
+═══════════════════════════════════════════ */
+
+/* Dashboard principal */
+.ai-dashboard {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    border-radius: 20px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+}
+.ai-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.ai-header-left { display: flex; align-items: center; gap: 16px; }
+.ai-icon-wrap {
+    width: 56px; height: 56px;
+    background: rgba(168, 85, 247, 0.3);
+    border: 2px solid rgba(168, 85, 247, 0.5);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+}
+.ai-title { font-size: 1.3rem; font-weight: 700; margin: 0; color: white; }
+.ai-subtitle { font-size: 0.82rem; color: rgba(255,255,255,0.6); margin: 0; }
+
+/* Ring SVG */
+.ai-score-ring { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+.ring-svg { width: 80px; height: 80px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
+.ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray 1s ease; }
+.ring-success { stroke: #22c55e; }
+.ring-warning { stroke: #f59e0b; }
+.ring-danger  { stroke: #ef4444; }
+.ring-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; line-height: 1;
+}
+.ring-num { font-size: 1.3rem; font-weight: 800; display: block; }
+.ring-sub { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+
+/* Scores grid */
+.ai-scores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+.ai-score-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    transition: background 0.2s;
+}
+.ai-score-card:hover { background: rgba(255,255,255,0.12); }
+.ai-score-icon { font-size: 1.4rem; color: rgba(255,255,255,0.7); margin-bottom: 6px; display: block; }
+.ai-score-label { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+.ai-score-bar-wrap { background: rgba(255,255,255,0.1); border-radius: 4px; height: 5px; margin-bottom: 6px; overflow: hidden; }
+.ai-score-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.bar-success { background: #22c55e; }
+.bar-warning { background: #f59e0b; }
+.bar-danger  { background: #ef4444; }
+.ai-score-val { font-size: 0.85rem; font-weight: 700; }
+.ai-analyzed-at { margin-top: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: right; }
+
+/* SWOT */
+.swot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+.swot-cell { padding: 20px; }
+.swot-cell ul { margin: 0; padding-left: 18px; font-size: 0.88rem; line-height: 1.7; }
+.swot-cell-header { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.swot-forces      { background: #f0fdf4; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+.swot-faiblesses  { background: #fff1f2; border-bottom: 1px solid #e2e8f0; }
+.swot-opportunites{ background: #eff6ff; border-right: 1px solid #e2e8f0; }
+.swot-menaces     { background: #fffbeb; }
+.swot-forces .swot-cell-header      { color: #16a34a; }
+.swot-faiblesses .swot-cell-header  { color: #dc2626; }
+.swot-opportunites .swot-cell-header{ color: #2563eb; }
+.swot-menaces .swot-cell-header     { color: #d97706; }
+
+/* Pitch */
+.pitch-block {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border-left: 4px solid #7c3aed;
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    position: relative;
+}
+.pitch-quote-icon { font-size: 2.5rem; color: #a855f7; opacity: 0.3; line-height: 1; margin-bottom: 8px; }
+.pitch-text { font-size: 0.92rem; line-height: 1.8; color: #374151; }
+
+/* Marché */
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+}
+.market-card {
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: transform 0.2s;
+}
+.market-card:hover { transform: translateY(-3px); }
+.market-tam   { background: #eff6ff; border-color: #bfdbfe; }
+.market-sam   { background: #f0fdf4; border-color: #bbf7d0; }
+.market-som   { background: #fdf4ff; border-color: #e9d5ff; }
+.market-growth{ background: #f0fdf4; border-color: #86efac; }
+.market-label { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
+.market-sublabel { font-size: 0.7rem; color: #64748b; margin: 4px 0 8px; }
+.market-value { font-size: 1rem; font-weight: 700; color: #0f172a; }
+
+/* Améliorations */
+.amelio-list { display: flex; flex-direction: column; gap: 12px; }
+.amelio-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #f8fafc; border-radius: 12px; padding: 14px;
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s;
+}
+.amelio-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+.amelio-priority {
+    flex-shrink: 0; font-size: 0.65rem; font-weight: 700;
+    padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;
+}
+.priority-haute   { background: #fee2e2; color: #dc2626; }
+.priority-moyenne { background: #fef3c7; color: #d97706; }
+.priority-faible  { background: #dcfce7; color: #16a34a; }
+.amelio-suggestion { font-size: 0.9rem; font-weight: 500; color: #1e293b; margin-bottom: 6px; }
+.amelio-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+.amelio-impact, .amelio-effort { font-size: 0.78rem; color: #64748b; }
+
+/* KPIs */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+}
+.kpi-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1px solid #bae6fd;
+    border-radius: 14px;
+    padding: 16px;
+    transition: transform 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-name   { font-size: 0.85rem; font-weight: 600; color: #0c4a6e; margin-bottom: 6px; }
+.kpi-target { font-size: 1rem; font-weight: 800; color: #0369a1; margin-bottom: 6px; }
+.kpi-freq   { font-size: 0.75rem; color: #64748b; }
+
+/* Projets similaires */
+.similar-card {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+.similar-card:hover { box-shadow: 0 4px 20px rgba(217, 119, 6, 0.15); }
+.similar-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.similar-name { font-weight: 700; font-size: 1rem; color: #1e293b; }
+.similar-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white; font-size: 0.75rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px;
+}
+.similar-section-label { font-weight: 600; font-size: 0.8rem; margin-bottom: 4px; }
+.similar-list { margin: 0; padding-left: 16px; font-size: 0.83rem; color: #374151; }
+.similar-lecon {
+    margin-top: 10px; padding: 10px 14px;
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.83rem; color: #92400e; font-style: italic;
+}
+
+/* Site web preview */
+.site-preview-wrap {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+.site-preview-iframe {
+    width: 100%; height: 420px; border: none; display: block;
+}
+
+@media (max-width: 768px) {
+    .swot-grid { grid-template-columns: 1fr; }
+    .ai-scores-grid { grid-template-columns: repeat(2, 1fr); }
+    .market-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: 1fr; }
+}
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .stat-item strong {
+        font-size: 1rem;
+    }
+    
+    .task-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card-modern {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Style pour les badges */
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Style pour les liens */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+}
+
+/* Style pour les boutons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Commande #{{ order_number ?? commande.id_commande }}{% endblock %}
+
+{% block body %}
+<div class="orders-page">
+    <section class="orders-hero">
+        <div>
+            <h1>Commande #{{ order_number ?? commande.id_commande }}</h1>
+            <p>Créée le {{ commande.date_creation|date('d/m/Y H:i') }}</p>
+        </div>
+        <div class="orders-hero-icon">🧾</div>
+    </section>
+
+    <article class="order-card">
+        <header class="order-card-header">
+            <div>
+                {% set status = commande.statut|upper %}
+                {% set badge_class = '' %}
+                {% if status == 'SUBMITTED' %}
+                    {% set badge_class = 'order-badge-blue' %}
+                {% elseif status == 'CANCELLED' %}
+                    {% set badge_class = 'order-badge-red' %}
+                {% elseif status == 'PANIER' %}
+                    {% set badge_class = 'order-badge-gray' %}
+                {% endif %}
+                
+                <h2 style="display: flex; align-items: center; gap: 12px;">
+                    {{ status }}
+                    <span class="order-badge {{ badge_class }}">Commande {{ status|lower }}</span>
+                </h2>
+                
+                {% if status == 'SUBMITTED' %}
+                    <form method="post" action="{{ path('app_commandes_cancel', {'idCommande': commande.id_commande}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette commande ?');" style="margin-top: 10px;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ commande.id_commande) }}">
+                        <button type="submit" class="btn btn-secondary">Annuler la commande</button>
+                    </form>
+                {% endif %}
+            </div>
+        <div class="order-total">Total TTC: {{ commande.total_global }} DT</div>
+        </header>
+
+        {% if commande.adresse_livraison %}
+        <div style="padding: 20px; border-bottom: 1px solid #eee; background: #fafafa;">
+            <h3 style="margin-top: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                🚚 Informations de Livraison
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 12px;">
+                <div>
+                    <span style="display: block; font-size: 12px; color: #666; text-transform: uppercase;">Adresse</span>
+                    <strong>{{ commande.adresse_livraison }}</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 12px; color: #666; text-transform: uppercase;">Ville & Code Postal</span>
+                    <strong>{{ commande.ville_livraison }} ({{ commande.code_postal }})</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 12px; color: #666; text-transform: uppercase;">Téléphone</span>
+                    <strong>{{ commande.telephone_livraison }}</strong>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="order-lines">
+            {% for line in lines %}
+                {% set dateDeb = line.date_deb %}
+                {% set dateFin = line.date_fin %}
+                <div class="order-line">
+                    <div class="order-line-name">{{ resource_names[line.id_ressource.id_ressource]|default('Ressource #' ~ line.id_ressource.id_ressource) }}</div>
+                    <div class="order-line-meta">Qty: {{ line.quantite }} | {{ dateDeb ? dateDeb|date('d/m/Y') : 'N/A' }} → {{ dateFin ? dateFin|date('d/m/Y') : 'N/A' }}</div>
+                    <div class="order-line-price">{{ line.prix_ligne }} DT</div>
+                </div>
+            {% else %}
+                <div class="order-empty-lines">Aucune ligne enregistrée.</div>
+            {% endfor %}
+        </div>
+    </article>
+</div>
+{% endblock %}

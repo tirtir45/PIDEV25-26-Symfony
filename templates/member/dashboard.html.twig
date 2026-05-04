@@ -1,0 +1,264 @@
+{# templates/member/dashboard.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Mes Tâches</h1>
+            <div class="page-subtitle">Gérez vos tâches assignées et suivez votre progression</div>
+        </div>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stats-card">
+            <i class="bi bi-list-check stats-icon" style="color: var(--color-primary);"></i>
+            <h6>Total Tâches</h6>
+            <h3>{{ stats.total_taches }}</h3>
+        </div>
+        <div class="stats-card">
+            <i class="bi bi-clock stats-icon" style="color: var(--color-warning);"></i>
+            <h6>À faire</h6>
+            <h3>{{ stats.a_faire }}</h3>
+        </div>
+        <div class="stats-card">
+            <i class="bi bi-play-circle stats-icon" style="color: var(--color-info);"></i>
+            <h6>En cours</h6>
+            <h3>{{ stats.en_cours }}</h3>
+        </div>
+        <div class="stats-card">
+            <i class="bi bi-check2-circle stats-icon" style="color: var(--color-success);"></i>
+            <h6>Terminées</h6>
+            <h3>{{ stats.terminees }}</h3>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="search-filters">
+        <form method="get" class="row g-3 dynamic-filter">
+            <div class="col-md-4">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {{ currentStatus == 'all' or currentStatus is null ? 'selected' : '' }}>Toutes les tâches</option>
+                    <option value="À faire" {{ currentStatus == 'À faire' ? 'selected' : '' }}>À faire</option>
+                    <option value="En cours" {{ currentStatus == 'En cours' ? 'selected' : '' }}>En cours</option>
+                    <option value="Terminée" {{ currentStatus == 'Terminée' ? 'selected' : '' }}>Terminées</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="date_limite" {{ sort == 'date_limite' ? 'selected' : '' }}>Date limite</option>
+                    <option value="titre" {{ sort == 'titre' ? 'selected' : '' }}>Titre</option>
+                    <option value="statut" {{ sort == 'statut' ? 'selected' : '' }}>Statut</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="order" class="form-select" onchange="this.form.submit()">
+                    <option value="ASC" {{ order == 'ASC' ? 'selected' : '' }}>Croissant</option>
+                    <option value="DESC" {{ order == 'DESC' ? 'selected' : '' }}>Décroissant</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Tasks List -->
+    <div class="card-modern">
+        <div class="card-header-modern">
+            <h3><i class="bi bi-check2-square"></i> Tâches assignées</h3>
+            <span class="badge" style="background: rgba(255,255,255,0.2);">{{ taches|length }} tâche(s)</span>
+        </div>
+        <div class="card-body-modern">
+            {% if taches|length > 0 %}
+                <div class="tasks-container">
+                    {% for tache in taches %}
+                    <div class="task-card" data-status="{{ tache.statut }}">
+                        <div class="task-header">
+                            <div class="task-info">
+                                <h4>{{ tache.titre }}</h4>
+                                <span class="status-badge 
+                                    {% if tache.statut == 'À faire' %}status-pending
+                                    {% elseif tache.statut == 'En cours' %}status-in-progress
+                                    {% else %}status-completed{% endif %}">
+                                    {{ tache.statut }}
+                                </span>
+                            </div>
+                            <div class="task-project">
+                                <i class="bi bi-folder2"></i> {{ tache.id_projet.titre }}
+                            </div>
+                        </div>
+                        
+                        <div class="task-description">
+                            {{ tache.description }}
+                        </div>
+                        
+                        <div class="task-footer">
+                            <div class="task-deadline">
+                                <i class="bi bi-calendar"></i>
+                                {% if tache.dateLimite %}
+                                    Date limite: {{ tache.dateLimite|date('d/m/Y') }}
+                                    {% if tache.dateLimite < date() and tache.statut != 'Terminée' %}
+                                        <span class="text-danger ms-2">(En retard!)</span>
+                                    {% endif %}
+                                {% else %}
+                                    Pas de date limite
+                                {% endif %}
+                            </div>
+                            
+                            <form method="post" action="{{ path('member_modifier_statut_tache', {'id': tache.idTache}) }}" class="status-form">
+                                <div class="status-update">
+                                    <select name="statut" class="form-select form-select-sm" onchange="confirmStatusChange(this, '{{ tache.titre|escape('js') }}')">
+                                        <option value="À faire" {% if tache.statut == 'À faire' %}selected{% endif %}>📋 À faire</option>
+                                        <option value="En cours" {% if tache.statut == 'En cours' %}selected{% endif %}>⚡ En cours</option>
+                                        <option value="Terminée" {% if tache.statut == 'Terminée' %}selected{% endif %}>✅ Terminée</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-check2-square display-1 text-muted"></i>
+                    <p class="text-muted mt-3">Aucune tâche assignée pour le moment</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.task-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.25rem;
+    border-left: 4px solid;
+    transition: var(--transition);
+}
+
+.task-card[data-status="À faire"] { border-left-color: var(--color-warning); }
+.task-card[data-status="En cours"] { border-left-color: var(--color-info); }
+.task-card[data-status="Terminée"] { border-left-color: var(--color-success); background: #f0fdf4; }
+
+.task-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-md);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.task-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.task-info h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.task-project {
+    font-size: 0.85rem;
+    color: var(--color-primary);
+    background: rgba(161, 85, 185, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.task-description {
+    color: var(--color-gray);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.task-deadline {
+    font-size: 0.85rem;
+    color: var(--color-gray);
+}
+
+.task-deadline i {
+    margin-right: 0.25rem;
+}
+
+.status-update {
+    min-width: 150px;
+}
+
+.status-update select {
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .task-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .status-update {
+        width: 100%;
+    }
+}
+</style>
+
+{% block javascripts %}
+<script>
+function confirmStatusChange(select, taskTitle) {
+    const newStatus = select.value;
+    const statusText = newStatus === 'À faire' ? 'À faire' : newStatus === 'En cours' ? 'En cours' : 'Terminée';
+    
+    if (confirm(`Voulez-vous vraiment marquer "${taskTitle}" comme "${statusText}" ?`)) {
+        select.closest('form').submit();
+    } else {
+        // Reset to previous value
+        const previousValue = select.querySelector('option:checked')?.value || select.value;
+        select.value = previousValue;
+    }
+}
+
+// Auto-submit on change if no confirmation needed for certain transitions
+document.querySelectorAll('.status-form select').forEach(select => {
+    select.addEventListener('change', function(e) {
+        // For "À faire" to "En cours" or "En cours" to "Terminée", no confirmation needed
+        const fromValue = this.getAttribute('data-previous') || this.value;
+        const toValue = this.value;
+        
+        if ((fromValue === 'À faire' && toValue === 'En cours') ||
+            (fromValue === 'En cours' && toValue === 'Terminée')) {
+            this.closest('form').submit();
+        }
+        
+        this.setAttribute('data-previous', toValue);
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

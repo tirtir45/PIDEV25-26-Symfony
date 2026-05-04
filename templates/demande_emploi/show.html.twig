@@ -1,0 +1,87 @@
+{# templates/demande_emploi/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la Candidature #{{ demande_emploi.getDemande_id() }}{% endblock %}
+
+{% block body %}
+    <div class="page-container">
+        <header class="page-header">
+            <div>
+                <h1>Détails de la Candidature</h1>
+                <p>Candidature de <strong>{{ demande_emploi.getCandidat().nom }}</strong> pour l'offre <strong>"{{ demande_emploi.getPublication().titre }}"</strong></p>
+            </div>
+            <div>
+                <a href="{{ path('app_demande_emploi_edit', {'id': demande_emploi.getDemande_id()}) }}" class="btn-pink" style="text-decoration: none;">
+                    ✏️ Modifier
+                </a>
+                <a href="{{ path('app_demande_emploi_index') }}" class="btn-outline" style="text-decoration: none;">
+                    ← Retour à la liste
+                </a>
+            </div>
+        </header>
+
+        <div class="table-card">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>ID Candidature</th>
+                        <td>#{{ demande_emploi.getDemande_id() }}</td>
+                    </tr>
+                    <tr>
+                        <th>Candidat</th>
+                        <td>{{ demande_emploi.getCandidat() ? (demande_emploi.getCandidat().nom ~ ' ' ~ demande_emploi.getCandidat().prenom) : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Offre d'emploi</th>
+                        <td>{{ demande_emploi.getPublication() ? demande_emploi.getPublication().titre : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de candidature</th>
+                        <td>{{ demande_emploi.getDateDemande() ? demande_emploi.getDateDemande()|date('d/m/Y') : '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td>
+                            <span class="badge badge-{{ demande_emploi.getStatutDemande()|lower|replace({' ': '-'}) }}">
+                                {{ demande_emploi.getStatutDemande() }}
+                            </span>
+                        </td>
+                    </tr>
+                    
+                    {# --- BLOC CORRIGÉ POUR LE CV --- #}
+                    <tr>
+                        <th>CV</th>
+                        <td>
+                            {% if demande_emploi.getCvUrl() %}
+                                <a href="{{ demande_emploi.getCvUrl() }}" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+                                    📄 Télécharger le CV
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Aucun CV fourni</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {# ------------------------------- #}
+                    
+                    <tr>
+                        <th>Lettre de Motivation</th>
+                        {# Le filtre |nl2br respecte les sauts de ligne saisis par l'utilisateur #}
+                        <td style="white-space: pre-wrap;">{{ demande_emploi.getLettreMotivation() }}</td>
+                    </tr>
+                    
+                    {% if demande_emploi.getMotivationCiblee() %}
+                        <tr>
+                            <th>Motivation Ciblée</th>
+                            <td style="white-space: pre-wrap;">{{ demande_emploi.getMotivationCiblee() }}</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px;">
+            {{ include('demande_emploi/_delete_form.html.twig') }}
+        </div>
+
+    </div>
+{% endblock %}

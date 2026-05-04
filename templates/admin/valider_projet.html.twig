@@ -1,0 +1,1132 @@
+{# templates/admin/valider_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container fade-in">
+    <div class="validation-card">
+        <div class="validation-header">
+            <div class="header-title">
+                <h2><i class="bi bi-clipboard-check"></i> Validation du projet</h2>
+                <p class="text-muted mb-0">Révision détaillée et décision finale</p>
+            </div>
+            <div class="status-group">
+                {% if evaluation.accepte %}
+                    <span class="status-badge status-success">
+                        <i class="bi bi-check-circle-fill"></i> Pré-accepté ({{ evaluation.pourcentage }}%)
+                    </span>
+                {% else %}
+                    <span class="status-badge status-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> À risque ({{ evaluation.pourcentage }}%)
+                    </span>
+                {% endif %}
+                <span class="status-badge status-pending">
+                    <i class="bi bi-clock-history"></i> En attente de validation
+                </span>
+            </div>
+        </div>
+        
+        {# SECTION PROJET DÉTAILS - EN PREMIER #}
+        <div class="project-details">
+            <div class="section-header">
+                <h3><i class="bi bi-info-circle"></i> Détails du projet</h3>
+                <span class="badge bg-light text-dark">ID: #{{ projet.id_projet }}</span>
+            </div>
+            <div class="project-content">
+                <h4 class="project-title">{{ projet.titre }}</h4>
+                <div class="project-meta">
+                    <span><i class="bi bi-person"></i> {{ projet.id_entrepreneur.nom }}</span>
+                    <span><i class="bi bi-calendar"></i> Soumis le {{ projet.dateSoumission|date('d/m/Y') }}</span>
+                    <span><i class="bi bi-tag"></i> {{ projet.secteur }}</span>
+                </div>
+                <div class="project-description">
+                    <strong>Description :</strong>
+                    <p>{{ projet.description }}</p>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <strong>Budget estimé :</strong>
+                        <span class="budget-amount">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Durée estimée :</strong> {{ projet.dureeEstimee }} mois
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Membres prévus :</strong> {{ projet.nbMembresEquipe }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Statut juridique :</strong> {{ projet.statutJuridique }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {# SECTION ÉVALUATION AUTOMATIQUE - EN DEUXIÈME #}
+        <div class="evaluation-section">
+            <div class="section-header">
+                <h3><i class="bi bi-graph-up"></i> Évaluation automatique</h3>
+                <span class="badge bg-light text-dark">Analyse IA</span>
+            </div>
+            
+            <div class="score-global">
+                <div class="score-circle">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring-bg" stroke="#e5e7eb" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                        <circle class="progress-ring-circle" stroke="#10b981" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"
+                                stroke-dasharray="326.73" stroke-dashoffset="{{ 326.73 * (1 - evaluation.pourcentage / 100) }}"
+                                stroke-linecap="round"/>
+                    </svg>
+                    <div class="score-value">
+                        {{ evaluation.pourcentage }}%
+                        <div class="score-label">Score global</div>
+                    </div>
+                </div>
+                <div class="score-seuil">
+                    <div class="seuil-info">
+                        <span class="fw-bold">Seuil d'acceptation: 70%</span>
+                        {% if evaluation.accepte %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill"></i> Projet éligible</span>
+                        {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Projet non éligible</span>
+                        {% endif %}
+                    </div>
+                    <div class="seuil-bar">
+                        <div class="seuil-fill" style="width: {{ evaluation.pourcentage }}%">
+                            <span class="seuil-percent">{{ evaluation.pourcentage }}%</span>
+                        </div>
+                    </div>
+                    <div class="seuil-marks">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>70%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="criteres-list">
+                <h4><i class="bi bi-list-check"></i> Détail des critères</h4>
+                <div class="criteres-grid">
+                    {% for critere, detail in evaluation.details %}
+                        <div class="critere-item">
+                            <div class="critere-header">
+                                <div class="critere-info">
+                                    <i class="bi bi-{{ critere == 'viabilite_financiere' ? 'cash-stack' : 
+                                                     critere == 'impact_social' ? 'people' : 
+                                                     critere == 'innovation' ? 'lightbulb' : 
+                                                     critere == 'faisabilite' ? 'check-circle' : 'graph-up' }}"></i>
+                                    <span class="critere-nom">{{ critere|replace({'_': ' '})|title }}</span>
+                                </div>
+                                <span class="critere-score">{{ detail.score }}/{{ detail.max_score }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {% if detail.niveau == 'excellent' %}bg-success{% elseif detail.niveau == 'bon' %}bg-info{% elseif detail.niveau == 'correct' %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ (detail.score / detail.max_score * 100)|round }}%"></div>
+                            </div>
+                            <div class="critere-commentaire">
+                                <i class="bi bi-chat-quote"></i> {{ detail.commentaire }}
+                            </div>
+                            {% if detail.niveau == 'insuffisant' %}
+                                <div class="critere-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Point d'attention
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if evaluation.recommandations|length > 0 %}
+                <div class="recommandations">
+                    <div class="recommandations-header">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        <h4 class="mb-0">Recommandations pour amélioration</h4>
+                    </div>
+                    <ul>
+                        {% for reco in evaluation.recommandations %}
+                            <li><i class="bi bi-arrow-right-circle-fill"></i> {{ reco }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+        
+        {# SECTION ANALYSE MARCHÉ - DÉTAILLÉE #}
+        {% if marketAnalysis %}
+        <div class="analysis-section market-section">
+            <div class="section-header">
+                <h3><i class="bi bi-bar-chart"></i> Analyse marché</h3>
+                <a href="{{ path('admin_analyser_marche', {'id': projet.idProjet}) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Relancer l'analyse
+                </a>
+            </div>
+            <div class="analysis-content">
+                {% set md = marketAnalysis %}
+                
+                {# Score composite #}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Score composite</span>
+                    <span class="fs-4 fw-bold {% if md.score >= 70 %}text-success{% elseif md.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ md.score }}/100
+                    </span>
+                </div>
+                <div class="progress mb-3" style="height:12px">
+                    <div class="progress-bar {% if md.score >= 70 %}bg-success{% elseif md.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                        style="width:{{ md.score }}%"></div>
+                </div>
+
+                {# Scores partiels #}
+                <div class="row g-2 mb-3 text-center small">
+                    {% set scoreLabels = {'score_momentum': 'Dynamique', 'score_volatility': 'Stabilité', 'score_commodity': 'Matières 1ères', 'score_macro': 'Économie mondiale'} %}
+                    {% for key, label in scoreLabels %}
+                    {% set val = md[key] ?? 50 %}
+                    <div class="col-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted" style="font-size:.75rem">{{ label }}</div>
+                            <strong class="{{ val >= 70 ? 'text-success' : (val >= 40 ? 'text-warning' : 'text-danger') }}">{{ val }}/100</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {# Tendance + indicateurs #}
+                <div class="row g-2 mb-3 small text-center">
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Tendance</div>
+                            {% if md.trend == 'bullish' %}
+                                <span class="badge bg-success">📈 En hausse</span>
+                            {% elseif md.trend == 'bearish' %}
+                                <span class="badge bg-danger">📉 En baisse</span>
+                            {% else %}
+                                <span class="badge bg-secondary">➡️ Stable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Pression achat/vente</div>
+                            {% set rsi = md.rsi ?? 50 %}
+                            <strong class="{{ rsi > 70 ? 'text-danger' : (rsi < 30 ? 'text-success' : 'text-secondary') }}">
+                                {% if rsi > 70 %}Surachat{% elseif rsi < 30 %}Survente{% else %}Équilibré{% endif %}
+                            </strong>
+                            <div style="font-size:.7rem" class="text-muted">(indice {{ rsi|round(0) }})</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Stabilité du marché</div>
+                            {% set vol = md.volatility ?? 0 %}
+                            <strong class="{{ vol > 35 ? 'text-danger' : (vol < 15 ? 'text-success' : 'text-warning') }}">
+                                {% if vol > 35 %}Instable{% elseif vol < 15 %}Très stable{% else %}Modérée{% endif %}
+                            </strong>
+                            <div style="font-size:.7rem" class="text-muted">({{ vol|round(1) }}% annualisé)</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Performances ETF #}
+                <div class="row g-2 mb-3 small text-center">
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Prix actuel ETF</div>
+                            <strong>{{ md.current_price ? '$' ~ md.current_price : '—' }}</strong>
+                            {% if md.symbol %}<div class="text-muted" style="font-size:.7rem">{{ md.symbol }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Cette semaine</div>
+                            {% set g1w = md.growth_1w ?? 0 %}
+                            <strong class="{{ g1w >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ g1w >= 0 ? '+' : '' }}{{ g1w|round(2) }}%
+                            </strong>
+                            <div style="font-size:.7rem" class="text-muted">{{ g1w > 2 ? 'Bonne semaine' : (g1w < -2 ? 'Semaine difficile' : 'Semaine stable') }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Ce mois</div>
+                            {% set g1m = md.growth_1m ?? 0 %}
+                            <strong class="{{ g1m >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ g1m >= 0 ? '+' : '' }}{{ g1m|round(2) }}%
+                            </strong>
+                            <div style="font-size:.7rem" class="text-muted">{{ g1m > 3 ? 'Bon mois' : (g1m < -3 ? 'Mois difficile' : 'Mois stable') }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Alertes #}
+                {% if md.alerts and md.alerts|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2"><i class="bi bi-bell me-1"></i>Alertes automatiques</div>
+                    {% for alert in md.alerts %}
+                    <div class="alert alert-{{ alert.type }} py-2 px-3 small mb-1">{{ alert.msg }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Recommandation #}
+                {% if md.recommendation %}
+                <div class="alert alert-info py-2 small mb-0">
+                    <i class="bi bi-lightbulb-fill me-1"></i>
+                    <strong>Recommandation:</strong> {{ md.recommendation }}
+                </div>
+                {% endif %}
+
+                <div class="text-end mt-2">
+                    <small class="text-muted">
+                        {% if md.analyzed_at %}
+                            Analysé le {{ md.analyzed_at is iterable ? 'récemment' : md.analyzed_at|date('d/m/Y H:i') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {# SECTION ANALYSE BREVETS - DÉTAILLÉE #}
+        {% if patentAnalysis %}
+        <div class="analysis-section patent-section">
+            <div class="section-header">
+                <h3><i class="bi bi-file-earmark-text"></i> Analyse brevets</h3>
+                <a href="{{ path('admin_analyser_patents', {'id': projet.idProjet}) }}" class="btn btn-sm btn-dark">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Relancer l'analyse
+                </a>
+            </div>
+            <div class="analysis-content">
+                {% set pd = patentAnalysis %}
+                
+                {# Score + métriques #}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold">Score de nouveauté</span>
+                    <span class="fs-4 fw-bold {% if pd.novelty_score >= 70 %}text-success{% elseif pd.novelty_score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ pd.novelty_score }}/100
+                    </span>
+                </div>
+                <div class="progress mb-3" style="height:12px">
+                    <div class="progress-bar {% if pd.novelty_score >= 70 %}bg-success{% elseif pd.novelty_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                        style="width:{{ pd.novelty_score }}%"></div>
+                </div>
+
+                {# Métriques clés #}
+                <div class="row g-2 mb-3 text-center small">
+                    <div class="col-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Total brevets</div>
+                            <strong class="fs-6">{{ pd.total_results ?? 0 }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Récents (5 ans)</div>
+                            <strong class="{{ (pd.recent_5y ?? 0) > 30 ? 'text-danger' : 'text-success' }}">{{ pd.recent_5y ?? 0 }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Actifs</div>
+                            <strong class="text-warning">{{ pd.active_count ?? 0 }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted">Concurrents</div>
+                            <strong class="{{ (pd.competitors ? pd.competitors|length : 0) > 0 ? 'text-danger' : 'text-success' }}">{{ pd.competitors ? pd.competitors|length : 0 }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                {# Requête #}
+                {% if pd.query %}
+                <div class="small text-muted mb-3 p-2 bg-light rounded">
+                    <i class="bi bi-search me-1"></i><strong>Requête :</strong>
+                    <code class="text-dark">{{ pd.query|slice(0, 150) }}{% if pd.query|length > 150 %}...{% endif %}</code>
+                </div>
+                {% endif %}
+
+                {# Top déposants #}
+                {% if pd.top_assignees and pd.top_assignees|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2"><i class="bi bi-building me-1"></i>Top déposants</div>
+                    {% for a in pd.top_assignees|slice(0,5) %}
+                    {% set val = a.percentage ?? a.count %}
+                    <div class="d-flex align-items-center gap-2 mb-1 small">
+                        <div class="text-truncate flex-grow-1" style="max-width:60%">{{ a.name }}</div>
+                        <div class="progress flex-grow-1" style="height:6px">
+                            <div class="progress-bar bg-primary" style="width:{{ val }}%"></div>
+                        </div>
+                        <span class="text-muted" style="min-width:40px;text-align:right">{{ val|round(1) }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Codes CPC #}
+                {% if pd.top_cpc and pd.top_cpc|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2"><i class="bi bi-tags me-1"></i>Codes CPC dominants</div>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for c in pd.top_cpc|slice(0,8) %}
+                        {% set cLabel = c.name ?? c.code ?? '?' %}
+                        {% set cVal = c.percentage ?? c.count ?? '' %}
+                        <span class="badge bg-secondary">{{ cLabel }} {% if cVal %}<small>{{ cVal|round(1) }}%</small>{% endif %}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Concurrents #}
+                {% if pd.competitors and pd.competitors|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Concurrents détectés</div>
+                    {% for c in pd.competitors|slice(0,6) %}
+                    <span class="badge bg-danger me-1 mb-1">{{ c.name }} ({{ c.count ?? 0 }})</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Présence géographique #}
+                {% if pd.countries and pd.countries|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2"><i class="bi bi-globe me-1"></i>Présence géographique</div>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for code, stats in pd.countries %}
+                        <span class="badge {{ stats.active > 0 ? 'bg-success' : 'bg-light text-dark border' }}"
+                              title="Actifs: {{ stats.active }} | Inactifs: {{ stats.inactive }}">
+                            {{ code }} {% if stats.active > 0 %}✓{{ stats.active }}{% endif %}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Alertes #}
+                {% if pd.alerts and pd.alerts|length > 0 %}
+                <div class="mb-3">
+                    <div class="fw-bold small mb-2"><i class="bi bi-bell me-1"></i>Alertes</div>
+                    {% for alert in pd.alerts %}
+                    <div class="alert alert-{{ alert.type }} py-2 px-3 small mb-1">{{ alert.msg }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Recommandation #}
+                {% if pd.recommendation %}
+                <div class="alert alert-info py-2 small mb-0">
+                    <i class="bi bi-lightbulb-fill me-1"></i>
+                    <strong>Recommandation:</strong> {{ pd.recommendation }}
+                </div>
+                {% endif %}
+
+                <div class="text-end mt-2">
+                    <small class="text-muted">
+                        {% if pd.analyzed_at %}
+                            Analysé le {{ pd.analyzed_at is iterable ? 'récemment' : pd.analyzed_at|date('d/m/Y H:i') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form method="post" id="validationForm" class="validation-form">
+            <input type="hidden" name="action" id="hidden_action" value="">            <div class="form-group">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-chat-text"></i> Commentaire pour l'entrepreneur
+                    <span class="text-muted">(optionnel pour acceptation, recommandé pour refus)</span>
+                </label>
+                <textarea name="commentaire_admin" class="form-control" rows="4" 
+                          placeholder="Ajoutez un commentaire constructif pour l'entrepreneur...">{{ projet.commentaire_admin }}</textarea>
+                <small class="text-muted">Ce commentaire sera visible par l'entrepreneur</small>
+            </div>
+            
+            <div class="decision-group">
+                <label class="fw-bold mb-3"><i class="bi bi-check2-circle"></i> Décision finale</label>
+                <div class="decision-buttons">
+                    <button type="submit" name="action" value="accepter" 
+                            class="decision-btn accept-btn {% if not evaluation.accepte %}btn-warning{% endif %}">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div class="btn-content">
+                            <span>Accepter le projet</span>
+                            {% if not evaluation.accepte %}
+                                <small>(Dérogation requise - score {{ evaluation.pourcentage }}%)</small>
+                            {% endif %}
+                        </div>
+                    </button>
+                    <button type="submit" name="action" value="refuser" class="decision-btn refuse-btn">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <div class="btn-content">
+                            <span>Refuser le projet</span>
+                            <small>Motif obligatoire</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Variables pour les couleurs */
+:root {
+    --success: #10b981;
+    --success-dark: #059669;
+    --danger: #ef4444;
+    --danger-dark: #dc2626;
+    --warning: #f59e0b;
+    --warning-dark: #d97706;
+    --info: #3b82f6;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-600: #6b7280;
+    --gray-800: #1f2937;
+}
+
+/* Animations améliorées */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.validation-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 2rem 0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.validation-card:hover {
+    box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+}
+
+.validation-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-title h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.header-title p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.status-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #d1fae5;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fed7aa;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Section commune */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Section évaluation */
+.evaluation-section {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    padding: 2rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.score-global {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.score-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.8s ease-in-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--gray-800);
+}
+
+.score-label {
+    font-size: 0.7rem;
+    font-weight: normal;
+    color: var(--gray-600);
+}
+
+.score-seuil {
+    flex: 1;
+    min-width: 250px;
+}
+
+.seuil-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.seuil-bar {
+    background: var(--gray-200);
+    border-radius: 10px;
+    height: 30px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.seuil-fill {
+    background: linear-gradient(90deg, var(--success), var(--success-dark));
+    height: 100%;
+    transition: width 0.8s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.seuil-percent {
+    background: rgba(0,0,0,0.2);
+    padding: 0 0.25rem;
+    border-radius: 4px;
+}
+
+.seuil-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--gray-600);
+    padding: 0 0.25rem;
+}
+
+.criteres-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.critere-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid var(--gray-200);
+}
+
+.critere-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.critere-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.critere-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.critere-info i {
+    font-size: 1.2rem;
+}
+
+.critere-score {
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--gray-200);
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+.critere-commentaire {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: start;
+    gap: 0.5rem;
+}
+
+.critere-warning {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--warning);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.recommandations {
+    background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+    border-left: 4px solid var(--warning);
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.recommandations-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.recommandations-header i {
+    color: var(--warning);
+    font-size: 1.5rem;
+}
+
+.recommandations ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.recommandations li {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommandations li i {
+    color: var(--warning);
+}
+
+/* Détails projet */
+.project-details {
+    padding: 2rem;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* Sections d'analyse */
+.analysis-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.market-section {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.patent-section {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.analysis-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.score-display {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.score-circle-small {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.progress-ring-small .progress-ring-circle {
+    transition: stroke-dashoffset 0.8s ease-in-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.score-value-small {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--gray-800);
+}
+
+.score-details {
+    flex: 1;
+    min-width: 200px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+}
+
+.alerts-box {
+    margin-bottom: 1rem;
+}
+
+.alerts-box h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.recommendation-box {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--info);
+}
+
+.recommendation-box h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommendation-box p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    line-height: 1.5;
+}
+
+/* Détails projet */
+.project-details {
+    padding: 2rem;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.project-content {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.project-title {
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.project-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.project-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-600);
+}
+
+.project-description {
+    margin-bottom: 1rem;
+}
+
+.project-description p {
+    margin-top: 0.5rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+.budget-amount {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    color: white;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    font-weight: 600;
+}
+
+/* Formulaire de validation */
+.validation-form {
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--info);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.decision-group {
+    text-align: center;
+}
+
+.decision-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.decision-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.decision-btn i {
+    font-size: 1.5rem;
+}
+
+.btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+.btn-content small {
+    font-size: 0.7rem;
+    font-weight: normal;
+    opacity: 0.9;
+}
+
+.accept-btn {
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    color: white;
+}
+
+.accept-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.refuse-btn {
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+    color: white;
+}
+
+.refuse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+}
+
+.btn-warning:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .validation-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .score-global {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .decision-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .project-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .evaluation-section,
+    .project-details,
+    .validation-form {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+document.getElementById('validationForm').addEventListener('submit', function(e) {
+    const commentaire = document.querySelector('textarea[name="commentaire_admin"]').value;
+    const action = e.submitter ? e.submitter.value : null;
+
+    // Stocker l'action dans le champ hidden pour que submit() programmatique l'envoie
+    document.getElementById('hidden_action').value = action || '';
+
+    if (action === 'refuser' && !commentaire.trim()) {
+        e.preventDefault();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Commentaire requis',
+            text: 'Veuillez ajouter un commentaire expliquant pourquoi vous refusez ce projet.',
+            confirmButtonColor: '#ef4444'
+        });
+        document.querySelector('textarea[name="commentaire_admin"]').focus();
+        return;
+    }
+
+    {% if not evaluation.accepte %}
+        if (action === 'accepter') {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Dérogation nécessaire',
+                text: `Ce projet a un score inférieur à 70% ({{ evaluation.pourcentage }}%). Êtes-vous sûr de vouloir l'accepter quand même ?`,
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Oui, accepter quand même',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    e.target.submit();
+                }
+            });
+        }
+    {% endif %}
+});
+</script>
+{% endblock %}

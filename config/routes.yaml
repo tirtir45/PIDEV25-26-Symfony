@@ -1,0 +1,78 @@
+# Auto-discover routes from attributes/annotations
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+# Main
+index:
+    path: /
+    controller: App\Controller\MainController::home
+
+# Routes Admin
+admin_dashboard:
+    path: /admin/dashboard
+    controller: App\Controller\AdminController::dashboard
+
+admin_valider_projet:
+    path: /admin/projet/{id}/valider
+    controller: App\Controller\AdminController::validerProjet
+
+admin_gestion_projet:
+    path: /admin/projet/{id}/gestion
+    controller: App\Controller\AdminController::gestionProjet
+
+admin_supprimer_tache:
+    path: /admin/tache/{id}/supprimer
+    controller: App\Controller\AdminController::supprimerTache
+
+admin_supprimer_membre:
+    path: /admin/membre/{id}/supprimer
+    controller: App\Controller\AdminController::supprimerMembre
+
+admin_changer_statut_projet:
+    path: /admin/projet/{id}/statut
+    controller: App\Controller\AdminController::changerStatutProjet
+
+# Routes Entrepreneur
+entrepreneur_dashboard:
+    path: /entrepreneur/dashboard
+    controller: App\Controller\EntrepreneurController::dashboard
+
+entrepreneur_nouveau_projet:
+    path: /entrepreneur/projet/nouveau
+    controller: App\Controller\EntrepreneurController::nouveauProjet
+
+entrepreneur_gestion_projet:
+    path: /entrepreneur/projet/{id}/gestion
+    controller: App\Controller\EntrepreneurController::gestionProjet
+
+entrepreneur_projet_detail:
+    path: /entrepreneur/projet/{id}
+    controller: App\Controller\EntrepreneurController::projetDetail
+
+entrepreneur_supprimer_tache:
+    path: /entrepreneur/tache/{id}/supprimer
+    controller: App\Controller\EntrepreneurController::supprimerTache
+
+entrepreneur_supprimer_membre:
+    path: /entrepreneur/membre/{id}/supprimer
+    controller: App\Controller\EntrepreneurController::supprimerMembre
+
+entrepreneur_changer_statut_projet:
+    path: /entrepreneur/projet/{id}/statut
+    controller: App\Controller\EntrepreneurController::changerStatutProjet
+
+entrepreneur_membres:
+    path: /entrepreneur/membres
+    controller: App\Controller\EntrepreneurController::membres
+
+# Routes Membre
+member_dashboard:
+    path: /member-demo
+    controller: App\Controller\MemberController::dashboard
+
+member_modifier_statut_tache:
+    path: /member/tache/{id}/modifier-statut
+    controller: App\Controller\MemberController::modifierStatutTache

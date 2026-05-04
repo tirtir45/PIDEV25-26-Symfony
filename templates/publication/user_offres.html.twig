@@ -1,0 +1,203 @@
+{# templates/publication/user_offres.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Offres d'emploi — StartHub{% endblock %}
+
+{% block body %}
+<div class="uo-root">
+
+    <!-- HEADER BANNER -->
+    <header class="uo-header">
+        <div>
+            <p class="uo-header-title">💼 Offres d'emploi</p>
+            <p class="uo-header-sub">Trouvez le poste qui correspond à votre profil</p>
+        </div>
+        <div style="flex-grow: 1;"></div>
+        <a href="{{ path('app_candidat_mes_candidatures') }}" class="uo-btn-outline">
+            📂 Mes Candidatures
+        </a>
+    </header>
+
+    <!-- SEARCH & FILTER BAR -->
+    <form method="get" action="{{ path('app_user_publication_index') }}" class="uo-filter-bar">
+        <div class="uo-search-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bca" stroke-width="2" class="uo-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" name="recherche" placeholder="Rechercher un poste..." value="{{ app.request.query.get('recherche') }}" class="uo-search-input">
+        </div>
+        <select name="contrat" class="uo-select">
+            <option value="">Type de Contrat</option>
+            <option value="CDI" {{ app.request.query.get('contrat') == 'CDI' ? 'selected' : '' }}>CDI</option>
+            <option value="CDD" {{ app.request.query.get('contrat') == 'CDD' ? 'selected' : '' }}>CDD</option>
+            <option value="Stage" {{ app.request.query.get('contrat') == 'Stage' ? 'selected' : '' }}>Stage</option>
+            <option value="Alternance" {{ app.request.query.get('contrat') == 'Alternance' ? 'selected' : '' }}>Alternance</option>
+        </select>
+        <select name="localisation" class="uo-select">
+            <option value="">Localisation</option>
+            {% for loc in localisations %}
+                <option value="{{ loc }}" {{ app.request.query.get('localisation') == loc ? 'selected' : '' }}>{{ loc }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="uo-btn-filter">Filtrer</button>
+    </form>
+
+    <!-- FLASH MESSAGES -->
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="uo-flash uo-flash--{{ type }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <!-- OFFERS GRID -->
+    {% if publications is empty %}
+        <div class="uo-empty">
+            <div style="font-size: 56px; opacity: .6;">📭</div>
+            <h3>Aucune offre disponible</h3>
+            <p>Aucune offre ne correspond à votre recherche pour le moment.</p>
+        </div>
+    {% else %}
+        <div class="uo-grid">
+            {% for publication in publications %}
+                <article class="uo-card">
+                    <div class="uo-card-head">
+                        <div class="uo-card-tags">
+                            <span class="uo-tag uo-tag--contrat">{{ publication.type_contrat }}</span>
+                            <span class="uo-tag uo-tag--statut uo-tag--{{ publication.statut|lower }}">{{ publication.statut }}</span>
+                        </div>
+                        <h3 class="uo-card-title">{{ publication.titre }}</h3>
+                    </div>
+                    <div class="uo-card-body">
+                        <div class="uo-card-info">
+                            <span>🏢 {{ publication.departement }}</span>
+                            <span>📍 {{ publication.localisation }}</span>
+                        </div>
+                        {% if publication.description %}
+                            <p class="uo-card-desc">{{ publication.description|slice(0, 120) }}{% if publication.description|length > 120 %}…{% endif %}</p>
+                        {% endif %}
+                        <div class="uo-card-meta">
+                            <span>📅 Expire le {{ publication.date_expiration|date('d/m/Y') }}</span>
+                        </div>
+                    </div>
+                    <div class="uo-card-actions">
+                        <a href="{{ path('app_publication_show', {'publication_id': publication.getPublication_id()}) }}" class="uo-btn-view">
+                            Voir & Postuler →
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+:root {
+    --uo-primary: #A155B9;
+    --uo-primary-dark: #8B3FA0;
+    --uo-primary-light: #f3e8ff;
+    --uo-pink: #F765A3;
+    --uo-ink: #1a1523;
+    --uo-ink2: #4b5563;
+    --uo-ink3: #94a3b8;
+    --uo-border: rgba(161, 85, 185, 0.15);
+    --uo-radius: 14px;
+}
+.uo-root { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+/* ── Header ── */
+.uo-header {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #A155B9, #c472d4);
+    border-radius: var(--uo-radius); padding: 22px 28px;
+    box-shadow: 0 6px 18px rgba(161, 85, 185, 0.35); margin-bottom: 20px;
+}
+.uo-header-title { font-size: 24px; font-weight: 800; color: white; margin: 0; }
+.uo-header-sub { font-size: 13px; color: rgba(255,255,255,.75); margin: 4px 0 0; }
+.uo-btn-outline {
+    background: rgba(255,255,255,.18); color: white; font-weight: 700;
+    border-radius: 10px; padding: 10px 18px; border: 1.5px solid rgba(255,255,255,.4);
+    text-decoration: none; font-size: 13px; transition: background .15s;
+}
+.uo-btn-outline:hover { background: rgba(255,255,255,.3); }
+
+/* ── Filter bar ── */
+.uo-filter-bar {
+    display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
+    background: white; padding: 14px 18px; border-radius: var(--uo-radius);
+    border: 1px solid var(--uo-border); box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.uo-search-wrap { position: relative; flex: 1; min-width: 200px; }
+.uo-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.uo-search-input {
+    width: 100%; box-sizing: border-box; border: 1.5px solid var(--uo-border);
+    border-radius: 10px; padding: .55rem .75rem .55rem 2.4rem; font-size: .85rem;
+    font-family: inherit; color: var(--uo-ink); transition: border-color .15s;
+}
+.uo-search-input:focus { outline: none; border-color: var(--uo-primary); box-shadow: 0 0 0 3px rgba(161,85,185,.1); }
+.uo-select {
+    border: 1.5px solid var(--uo-border); border-radius: 10px; padding: .55rem .75rem;
+    font-size: .85rem; font-family: inherit; background: white; cursor: pointer;
+}
+.uo-select:focus { outline: none; border-color: var(--uo-primary); }
+.uo-btn-filter {
+    background: var(--uo-primary); color: white; border: none; border-radius: 10px;
+    padding: .6rem 1.2rem; font-size: .85rem; font-weight: 700; cursor: pointer;
+    transition: background .15s;
+}
+.uo-btn-filter:hover { background: var(--uo-primary-dark); }
+
+/* Flash */
+.uo-flash { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .82rem; font-weight: 500; }
+.uo-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.uo-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+
+/* ── Cards grid ── */
+.uo-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.uo-card {
+    background: white; border: 1px solid var(--uo-border); border-radius: var(--uo-radius);
+    box-shadow: 0 2px 10px rgba(0,0,0,.05); display: flex; flex-direction: column;
+    transition: transform .18s, box-shadow .18s;
+}
+.uo-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(161,85,185,.12); }
+
+.uo-card-head { padding: 1.1rem 1.25rem .5rem; }
+.uo-card-tags { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.uo-tag {
+    display: inline-block; padding: .2rem .6rem; border-radius: 6px;
+    font-size: .7rem; font-weight: 700;
+}
+.uo-tag--contrat { background: var(--uo-primary-light); color: var(--uo-primary); }
+.uo-tag--active { background: #dcfce7; color: #166534; }
+.uo-tag--inactive { background: #f1f5f9; color: #475569; }
+.uo-tag--expired { background: #fee2e2; color: #991b1b; }
+.uo-card-title { margin: 0; font-size: 1rem; font-weight: 700; color: var(--uo-ink); line-height: 1.3; }
+
+.uo-card-body { flex: 1; padding: .5rem 1.25rem; }
+.uo-card-info { display: flex; gap: 1rem; font-size: .78rem; color: var(--uo-ink2); margin-bottom: .5rem; flex-wrap: wrap; }
+.uo-card-desc { font-size: .78rem; color: var(--uo-ink3); line-height: 1.6; margin: .5rem 0; }
+.uo-card-meta { font-size: .72rem; color: var(--uo-ink3); margin-top: .5rem; }
+
+.uo-card-actions {
+    padding: .75rem 1.25rem; border-top: 1px solid var(--uo-border); background: #fcf9ff;
+}
+.uo-btn-view {
+    display: block; text-align: center; padding: .55rem; border-radius: 10px;
+    background: var(--uo-primary); color: white; text-decoration: none;
+    font-size: .82rem; font-weight: 700; transition: background .15s;
+}
+.uo-btn-view:hover { background: var(--uo-primary-dark); }
+
+/* ── Empty state ── */
+.uo-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 5rem 2rem; text-align: center; background: white;
+    border: 1px dashed var(--uo-border); border-radius: var(--uo-radius);
+}
+.uo-empty h3 { margin: .5rem 0 .25rem; font-size: 1.1rem; color: var(--uo-ink); }
+.uo-empty p { margin: 0; font-size: .85rem; color: var(--uo-ink3); }
+
+@media (max-width: 600px) {
+    .uo-filter-bar { flex-direction: column; }
+    .uo-search-wrap { min-width: unset; }
+    .uo-select, .uo-btn-filter { width: 100%; }
+}
+</style>
+{% endblock %}

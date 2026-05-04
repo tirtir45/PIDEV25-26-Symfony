@@ -1,0 +1,403 @@
+{# templates/entrepreneur/liste_projets.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="lp-root">
+
+  {# ── Page header ── #}
+  <div class="lp-page-head">
+    <div>
+      <h1 class="lp-page-title">Mes projets</h1>
+      <p class="lp-page-sub">Gérez et suivez vos projets entrepreneuriaux</p>
+    </div>
+    <a href="{{ path('entrepreneur_nouveau_projet') }}" class="lp-btn-new">
+      <svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Nouveau projet
+    </a>
+  </div>
+
+  {# ── Flash messages ── #}
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}
+      <div class="lp-flash lp-flash--{{ type }}">{{ message }}</div>
+    {% endfor %}
+  {% endfor %}
+
+  {# ── Stats strip ── #}
+  <div class="lp-stats">
+    <div class="lp-stat">
+      <span class="lp-stat-num">{{ stats.total }}</span>
+      <span class="lp-stat-label">Total</span>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+      <span class="lp-stat-num lp-stat-num--amber">{{ stats.en_attente }}</span>
+      <span class="lp-stat-label">En attente</span>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+      <span class="lp-stat-num lp-stat-num--green">{{ stats.acceptes }}</span>
+      <span class="lp-stat-label">Acceptés</span>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+      <span class="lp-stat-num lp-stat-num--purple">{{ stats.en_cours }}</span>
+      <span class="lp-stat-label">En cours</span>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+      <span class="lp-stat-num lp-stat-num--gray">{{ stats.termines }}</span>
+      <span class="lp-stat-label">Terminés</span>
+    </div>
+    <div class="lp-stat-div"></div>
+    <div class="lp-stat">
+      <span class="lp-stat-num lp-stat-num--red">{{ stats.refuses ?? 0 }}</span>
+      <span class="lp-stat-label">Refusés</span>
+    </div>
+  </div>
+
+  {# ── Filters ── #}
+  <form method="get" class="lp-filters dynamic-filter">
+    <div class="lp-filter-search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="search" value="{{ search }}" placeholder="Rechercher un projet…" class="lp-search-input">
+    </div>
+    <select name="status" class="lp-select">
+      <option value="">Tous les statuts</option>
+      <option value="En attente" {{ status == 'En attente' ? 'selected' : '' }}>En attente</option>
+      <option value="Accepté"    {{ status == 'Accepté'    ? 'selected' : '' }}>Accepté</option>
+      <option value="En cours"   {{ status == 'En cours'   ? 'selected' : '' }}>En cours</option>
+      <option value="Terminé"    {{ status == 'Terminé'    ? 'selected' : '' }}>Terminé</option>
+      <option value="Refusé"     {{ status == 'Refusé'     ? 'selected' : '' }}>Refusé</option>
+    </select>
+    <select name="sort" class="lp-select">
+      <option value="date_soumission" {{ sort == 'date_soumission' ? 'selected' : '' }}>Date de soumission</option>
+      <option value="titre"           {{ sort == 'titre'           ? 'selected' : '' }}>Titre</option>
+      <option value="etat"            {{ sort == 'etat'            ? 'selected' : '' }}>Statut</option>
+      <option value="budget_estime"   {{ sort == 'budget_estime'   ? 'selected' : '' }}>Budget</option>
+    </select>
+  </form>
+
+  {# ── Project cards ── #}
+  {% if projets|length > 0 %}
+    <div class="lp-grid">
+      {% for projet in projets %}
+      <article class="lp-card">
+
+        <div class="lp-card-head">
+          <div class="lp-card-meta">
+            <span class="lp-sector-tag">{{ projet.secteur }}</span>
+            <span class="lp-badge lp-badge--{{ projet.etat|lower|replace({' ': '-', 'é': 'e', 'è': 'e', 'ê': 'e'}) }}">{{ projet.etat }}</span>
+          </div>
+          <h2 class="lp-card-title">
+            {{ projet.titre|slice(0,55) }}{% if projet.titre|length > 55 %}…{% endif %}
+          </h2>
+          <p class="lp-card-desc">
+            {{ projet.description|slice(0,110) }}{% if projet.description|length > 110 %}…{% endif %}
+          </p>
+        </div>
+
+        <div class="lp-card-stats">
+          <div class="lp-kv">
+            <span class="lp-kv-label">Budget</span>
+            <span class="lp-kv-val lp-kv-val--green">{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</span>
+          </div>
+          <div class="lp-kv">
+            <span class="lp-kv-label">Durée</span>
+            <span class="lp-kv-val">{{ projet.dureeEstimee }} mois</span>
+          </div>
+          <div class="lp-kv">
+            <span class="lp-kv-label">Membres</span>
+            <span class="lp-kv-val">{{ projet.nbMembresEquipe }}</span>
+          </div>
+        </div>
+
+        {# Progress bar #}
+        <div class="lp-prog-wrap">
+          <div class="lp-prog-bar">
+            <div class="lp-prog-fill" style="width:{{ projet.progression }}%"></div>
+          </div>
+          <span class="lp-prog-pct">{{ projet.progression }}%</span>
+        </div>
+
+        <div class="lp-card-date">Soumis le {{ projet.dateSoumission|date('d/m/Y') }}</div>
+
+        <div class="lp-card-actions">
+          <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" class="lp-action lp-action--view">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Voir
+          </a>
+          {% if projet.etat == 'En attente' %}
+            <a href="{{ path('entrepreneur_projet_modifier', {'id': projet.idProjet}) }}" class="lp-action lp-action--edit">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modifier
+            </a>
+            <button class="lp-action lp-action--del" data-id="{{ projet.idProjet }}" data-titre="{{ projet.titre }}" onclick="confirmDelete(this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+              Supprimer
+            </button>
+          {% endif %}
+          {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+            <a href="{{ path('entrepreneur_gestion_projet', {'id': projet.idProjet}) }}" class="lp-action lp-action--manage">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Gérer
+            </a>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    {# Hidden delete forms #}
+    {% for projet in projets %}
+    {% if projet.etat == 'En attente' %}
+    <form id="deleteForm{{ projet.idProjet }}" method="post" action="{{ path('entrepreneur_projet_supprimer', {'id': projet.idProjet}) }}" style="display:none;">
+      <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ projet.idProjet) }}">
+    </form>
+    {% endif %}
+    {% endfor %}
+
+  {% else %}
+    <div class="lp-empty">
+      <div class="lp-empty-art">
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><rect x="8" y="16" width="44" height="36" rx="4" stroke="#d4c8ff" stroke-width="2"/><path d="M20 16V12a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v4" stroke="#d4c8ff" stroke-width="2"/><path d="M24 30h12M24 38h8" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3>Aucun projet trouvé</h3>
+      <p>{% if search or status %}Aucun résultat pour ces filtres.{% else %}Soumettez votre premier projet pour commencer.{% endif %}</p>
+      <a href="{{ path('entrepreneur_nouveau_projet') }}" class="lp-btn-new">Créer un projet</a>
+    </div>
+  {% endif %}
+
+</div>
+
+{# Delete confirmation modal #}
+<div id="deleteModal" class="lp-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="lp-modal">
+    <div class="lp-modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3 class="lp-modal-title">Supprimer le projet</h3>
+    <p class="lp-modal-body">Êtes-vous sûr de vouloir supprimer <strong id="deleteTitre"></strong> ? Cette action est irréversible.</p>
+    <div class="lp-modal-actions">
+      <button class="lp-modal-cancel" onclick="closeDeleteModal()">Annuler</button>
+      <button class="lp-modal-confirm" id="deleteConfirmBtn" onclick="submitDelete()">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<style>
+:root {
+  --v50: #f3f0ff; --v100: #e9e3ff; --v200: #d4c8ff;
+  --v600: #7c3aed; --v700: #6d28d9;
+  --ink: #1a1523; --ink2: #4c4566; --ink3: #8b7fa8;
+  --border: rgba(124,58,237,.12); --border2: rgba(124,58,237,.25);
+  --radius: 10px; --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.06);
+}
+.lp-root { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+/* ─── Page head ─── */
+.lp-page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem; padding: 1.5rem 0 1.25rem; margin-bottom: .5rem;
+}
+.lp-page-title { margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--ink); }
+.lp-page-sub   { margin: .2rem 0 0; font-size: .85rem; color: var(--ink3); }
+.lp-btn-new {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--v600); color: white; text-decoration: none;
+  padding: .6rem 1.1rem; border-radius: 10px; font-size: .85rem;
+  font-weight: 600; border: none; cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+.lp-btn-new:hover { background: var(--v700); transform: translateY(-1px); }
+
+/* Flash */
+.lp-flash { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .8rem; font-weight: 500; }
+.lp-flash--success { background: #dcfce7; color: #166534; border-left: 3px solid #16a34a; }
+.lp-flash--error   { background: #fee2e2; color: #991b1b; border-left: 3px solid #dc2626; }
+.lp-flash--warning { background: #fef9c3; color: #854d0e; border-left: 3px solid #ca8a04; }
+
+/* ─── Stats strip ─── */
+.lp-stats {
+  display: flex; align-items: center; gap: 0;
+  background: white; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+.lp-stat { flex: 1; text-align: center; min-width: 70px; }
+.lp-stat-div { width: 1px; height: 28px; background: var(--border); }
+.lp-stat-num { display: block; font-size: 1.6rem; font-weight: 700; color: var(--ink); line-height: 1; }
+.lp-stat-num--amber  { color: #d97706; }
+.lp-stat-num--green  { color: #16a34a; }
+.lp-stat-num--purple { color: var(--v600); }
+.lp-stat-num--gray   { color: #64748b; }
+.lp-stat-num--red    { color: #dc2626; }
+.lp-stat-label { display: block; font-size: .7rem; color: var(--ink3); margin-top: .2rem; font-weight: 500; }
+
+/* ─── Filters ─── */
+.lp-filters {
+  display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center;
+}
+.lp-filter-search { position: relative; flex: 1; min-width: 220px; }
+.lp-search-icon {
+  position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+  color: var(--ink3); pointer-events: none;
+}
+.lp-search-input {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--border2); border-radius: 9px;
+  padding: .55rem .75rem .55rem 2.25rem; font-size: .85rem;
+  color: var(--ink); background: white; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.lp-search-input:focus { outline: none; border-color: var(--v600); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.lp-select {
+  border: 1.5px solid var(--border2); border-radius: 9px;
+  padding: .55rem .75rem; font-size: .85rem; color: var(--ink);
+  background: white; font-family: inherit; cursor: pointer;
+  transition: border-color .15s;
+}
+.lp-select:focus { outline: none; border-color: var(--v600); }
+.lp-btn-filter {
+  background: white; color: var(--v700); border: 1.5px solid var(--border2);
+  border-radius: 9px; padding: .55rem 1rem; font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+}
+.lp-btn-filter:hover { background: var(--v50); }
+
+/* ─── Project grid ─── */
+.lp-grid {
+  display: grid; gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+.lp-card {
+  background: white; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); display: flex; flex-direction: column;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+  overflow: hidden;
+}
+.lp-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.1); border-color: var(--border2); }
+
+.lp-card-head { padding: 1.1rem 1.25rem .75rem; flex: 1; }
+.lp-card-meta { display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.lp-sector-tag {
+  display: inline-block; background: var(--v100); color: var(--v700);
+  padding: .2rem .6rem; border-radius: 6px; font-size: .68rem; font-weight: 600;
+}
+.lp-badge {
+  display: inline-block; padding: .2rem .6rem; border-radius: 6px;
+  font-size: .68rem; font-weight: 700;
+}
+.lp-badge--en-attente { background: #fef9c3; color: #92400e; }
+.lp-badge--accepte, .lp-badge--accept { background: #dcfce7; color: #166534; }
+.lp-badge--en-cours { background: var(--v100); color: var(--v700); }
+.lp-badge--termine, .lp-badge--termin { background: #f1f5f9; color: #475569; }
+.lp-badge--refuse, .lp-badge--refus { background: #fee2e2; color: #991b1b; }
+
+.lp-card-title { margin: 0 0 .4rem; font-size: .975rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.lp-card-desc  { margin: 0; font-size: .78rem; color: var(--ink3); line-height: 1.5; }
+
+.lp-card-stats {
+  display: flex; gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  margin: .75rem 0 0;
+}
+.lp-kv { flex: 1; padding: .6rem .5rem; text-align: center; }
+.lp-kv + .lp-kv { border-left: 1px solid var(--border); }
+.lp-kv-label { display: block; font-size: .65rem; color: var(--ink3); font-weight: 500; margin-bottom: .15rem; }
+.lp-kv-val { display: block; font-size: .82rem; font-weight: 700; color: var(--ink); }
+.lp-kv-val--green { color: #16a34a; }
+
+.lp-prog-wrap {
+  display: flex; align-items: center; gap: .65rem; padding: .7rem 1.25rem .5rem;
+}
+.lp-prog-bar { flex: 1; height: 5px; background: var(--v100); border-radius: 99px; overflow: hidden; }
+.lp-prog-fill { height: 100%; background: linear-gradient(90deg, var(--v600), #a78bfa); border-radius: 99px; }
+.lp-prog-pct { font-size: .7rem; font-weight: 700; color: var(--v600); min-width: 30px; text-align: right; }
+
+.lp-card-date { padding: 0 1.25rem .5rem; font-size: .68rem; color: var(--ink3); }
+
+.lp-card-actions {
+  display: flex; gap: .4rem; padding: .75rem 1.25rem;
+  border-top: 1px solid var(--border); background: #faf9ff; flex-wrap: wrap;
+}
+.lp-action {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .35rem .7rem; border-radius: 7px; font-size: .75rem; font-weight: 600;
+  text-decoration: none; cursor: pointer; border: 1.5px solid transparent;
+  transition: background .15s, border-color .15s;
+}
+.lp-action--view   { color: var(--v600); border-color: var(--border2); background: white; }
+.lp-action--view:hover { background: var(--v50); }
+.lp-action--edit   { color: #d97706; border-color: #fde68a; background: #fffbeb; }
+.lp-action--edit:hover { background: #fef3c7; }
+.lp-action--del    { color: #dc2626; border-color: #fca5a5; background: #fff5f5; }
+.lp-action--del:hover { background: #fee2e2; }
+.lp-action--manage { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
+.lp-action--manage:hover { background: #dcfce7; }
+
+/* ─── Empty state ─── */
+.lp-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 5rem 2rem; text-align: center;
+  background: white; border: 1px dashed var(--border2); border-radius: var(--radius-lg);
+  gap: 1rem;
+}
+.lp-empty-art { opacity: .6; }
+.lp-empty h3 { margin: 0; font-size: 1.1rem; color: var(--ink); }
+.lp-empty p  { margin: 0; font-size: .875rem; color: var(--ink3); }
+
+/* ─── Delete modal ─── */
+.lp-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.lp-modal {
+  background: white; border-radius: var(--radius-lg); max-width: 420px; width: 100%;
+  padding: 2rem; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.lp-modal-icon { display: flex; justify-content: center; margin-bottom: .75rem; }
+.lp-modal-title { margin: 0 0 .5rem; font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+.lp-modal-body  { margin: 0 0 1.5rem; font-size: .875rem; color: var(--ink3); line-height: 1.5; }
+.lp-modal-actions { display: flex; gap: .75rem; }
+.lp-modal-cancel {
+  flex: 1; padding: .65rem; border: 1.5px solid var(--border2); border-radius: 9px;
+  background: transparent; color: var(--ink2); font-size: .875rem; font-weight: 600; cursor: pointer;
+}
+.lp-modal-cancel:hover { background: var(--v50); }
+.lp-modal-confirm {
+  flex: 1; padding: .65rem; border: none; border-radius: 9px;
+  background: #dc2626; color: white; font-size: .875rem; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.lp-modal-confirm:hover { background: #b91c1c; }
+
+@media (max-width: 600px) {
+  .lp-stats { gap: .5rem; }
+  .lp-stat-div { display: none; }
+  .lp-filters { flex-direction: column; }
+  .lp-filter-search { min-width: unset; }
+  .lp-select, .lp-btn-filter { width: 100%; }
+}
+</style>
+
+<script>
+let pendingDeleteId = null;
+
+function confirmDelete(btn) {
+  pendingDeleteId = btn.dataset.id;
+  document.getElementById('deleteTitre').textContent = '"' + btn.dataset.titre + '"';
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+  pendingDeleteId = null;
+}
+function submitDelete() {
+  if (pendingDeleteId) {
+    document.getElementById('deleteForm' + pendingDeleteId).submit();
+  }
+}
+</script>
+{% endblock %}

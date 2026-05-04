@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestionnaire des entretiens{% endblock %}
+
+{% block body %}
+<div class="form-page-container">
+    <main class="form-card" style="max-width: 760px; width: 100%;">
+        <div class="form-header">
+            <div>
+                <h1>Gestionnaire des entretiens</h1>
+                <p>Planifiez un entretien Zoom et notifiez le candidat par email.</p>
+            </div>
+            {% if demande.getPublication() %}
+                <a href="{{ path('app_publication_show', {'publication_id': demande.getPublication().getPublication_id()}) }}" class="btn-outline">← Retour à l'offre</a>
+            {% endif %}
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div style="margin-bottom: 24px; background: #f9f5ff; padding: 18px; border-radius: 14px; border: 1px solid #ead5f0;">
+            <h2 style="margin:0 0 8px; font-size:18px; color:#4a3068;">Candidat concerné</h2>
+            <p style="margin:0; color:#4b5563; font-size:14px;">{{ demande.getCandidat().nom ?? 'N/A' }} {{ demande.getCandidat().prenom ?? '' }}</p>
+            <p style="margin:4px 0 0; color:#6b7280; font-size:13px;">{{ demande.getCandidat().email ?? 'email inconnu' }}</p>
+            {% if demande.getPublication() %}
+                <p style="margin:8px 0 0; color:#6b7280; font-size:13px;">Offre : {{ demande.getPublication().getTitre() }}</p>
+            {% endif %}
+        </div>
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+            <div class="form-grid">
+                <label class="form-label">Sujet de la réunion</label>
+                <div>{{ form_widget(form.topic) }}{{ form_errors(form.topic) }}</div>
+
+                <label class="form-label">Date et heure</label>
+                <div>{{ form_widget(form.startTime) }}{{ form_errors(form.startTime) }}</div>
+
+                <label class="form-label">Message au candidat</label>
+                <div>{{ form_widget(form.message) }}{{ form_errors(form.message) }}</div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Créer réunion Zoom et envoyer le mail</button>
+            </div>
+        {{ form_end(form) }}
+
+        {% if meetingUrl %}
+            <div style="margin-top:24px; padding:18px; background:#ecfdf5; border:1px solid #bbf7d0; border-radius:14px;">
+                <h3 style="margin:0 0 10px; font-size:16px; color:#166534;">Réunion créée</h3>
+                <p style="margin:0 0 12px; color:#166534;">Le lien Zoom a été généré et envoyé au candidat.</p>
+                <p style="margin:0; font-size:14px;"><a href="{{ meetingUrl }}" target="_blank" style="color:#166534; font-weight:700;">{{ meetingUrl }}</a></p>
+            </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

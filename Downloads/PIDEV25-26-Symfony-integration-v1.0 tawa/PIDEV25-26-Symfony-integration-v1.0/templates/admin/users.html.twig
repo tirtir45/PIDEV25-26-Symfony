@@ -1,0 +1,119 @@
+{# templates/admin/users.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion Utilisateurs - Admin Hub{% endblock %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Gestion des Utilisateurs</h1>
+            <div class="page-subtitle">Visualisez, filtrez et gérez les comptes de la plateforme</div>
+        </div>
+        <div class="header-actions">
+            <span class="badge bg-primary rounded-pill px-3 py-2">{{ users|length }} Utilisateurs</span>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="search-filters">
+        <form method="get" class="row g-3">
+            <div class="col-md-7">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, email ou téléphone..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="role" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les rôles</option>
+                    {% for role in roles %}
+                        <option value="{{ role.id }}" {{ currentRole == role.id ? 'selected' : '' }}>{{ role.nomRole }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- User Table -->
+    <div class="card-modern mt-4">
+        <div class="card-body-modern p-0">
+            {% if users|length > 0 %}
+                <div class="table-responsive">
+                    <table class="custom-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Rôle</th>
+                                <th>Contact</th>
+                                <th>Inscription</th>
+                                <th>Statut</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr {% if not user.actif %}style="opacity: 0.7; background: #f9fafb;"{% endif %}>
+                                    <td data-label="Utilisateur">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-circle" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700;">
+                                                {{ user.nom|slice(0, 1)|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-main">{{ user.nom }}</div>
+                                                <div class="small text-muted">{{ user.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Rôle">
+                                        <span class="badge border text-dark" style="background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.2) !important;">
+                                            {{ user.role.nomRole ?? 'Utilisateur' }}
+                                        </span>
+                                    </td>
+                                    <td data-label="Contact">
+                                        <div class="small">{{ user.telephone ?? '—' }}</div>
+                                    </td>
+                                    <td data-label="Inscription">
+                                        <div class="small">{{ user.dateInscription|date('d/m/Y') }}</div>
+                                    </td>
+                                    <td data-label="Statut">
+                                        {% if user.actif %}
+                                            <span class="status-badge status-accepted">Actif</span>
+                                        {% else %}
+                                            <span class="status-badge status-refused">Désactivé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Actions" class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <form method="post" action="{{ path('admin_user_toggle_status', {'id': user.id}) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm {% if user.actif %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if user.actif %}Désactiver{% else %}Activer{% endif %}">
+                                                    {% if user.actif %}<i class="bi bi-person-x"></i>{% else %}<i class="bi bi-person-check"></i>{% endif %}
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{{ path('admin_user_delete', {'id': user.id}) }}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people display-1 text-muted opacity-25"></i>
+                    <p class="text-muted mt-3">Aucun utilisateur ne correspond à votre recherche.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

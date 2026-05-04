@@ -1,0 +1,162 @@
+{# templates/admin/dashboard.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container-fluid fade-in">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Dashboard Administrateur</h1>
+            <div class="page-subtitle">Gérez les projets, les équipes et les tâches</div>
+        </div>
+    </div>
+
+    <!-- Global Stats Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stats-card stats-card-4">
+                <i class="bi bi-people stats-icon" style="color: var(--primary);"></i>
+                <h6>Total Utilisateurs</h6>
+                <h3>{{ stats.total_users }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-2">
+                <i class="bi bi-folder stats-icon" style="color: var(--color-success);"></i>
+                <h6>Total Projets</h6>
+                <h3>{{ stats.total_projets }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-1">
+                <i class="bi bi-exclamation-triangle stats-icon" style="color: var(--color-warning);"></i>
+                <h6>Réclamations (Attente)</h6>
+                <h3>{{ stats.total_reclam }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card stats-card-3">
+                <i class="bi bi-clock-history stats-icon" style="color: var(--color-info);"></i>
+                <h6>Projets en Attente</h6>
+                <h3>{{ stats.en_attente }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="search-filters">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher un projet..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les statuts</option>
+                    <option value="En attente" {{ status == 'En attente' ? 'selected' : '' }}>En attente</option>
+                    <option value="Accepté" {{ status == 'Accepté' ? 'selected' : '' }}>Acceptés</option>
+                    <option value="Refusé" {{ status == 'Refusé' ? 'selected' : '' }}>Refusés</option>
+                    <option value="En cours" {{ status == 'En cours' ? 'selected' : '' }}>En cours</option>
+                    <option value="Terminé" {{ status == 'Terminé' ? 'selected' : '' }}>Terminés</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="date_soumission" {{ sort == 'date_soumission' ? 'selected' : '' }}>Date de soumission</option>
+                    <option value="titre" {{ sort == 'titre' ? 'selected' : '' }}>Titre</option>
+                    <option value="etat" {{ sort == 'etat' ? 'selected' : '' }}>Statut</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="order" class="form-select" onchange="this.form.submit()">
+                    <option value="DESC" {{ order == 'DESC' ? 'selected' : '' }}>Plus récent d'abord</option>
+                    <option value="ASC" {{ order == 'ASC' ? 'selected' : '' }}>Plus ancien d'abord</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Liste des projets -->
+    <div class="card-modern">
+        <div class="card-header-modern">
+            <h3><i class="bi bi-folder2"></i> Tous les Projets</h3>
+            <span class="badge" style="background: rgba(255,255,255,0.2);">{{ projets|length }} projet(s)</span>
+        </div>
+        <div class="card-body-modern">
+            {% if projets|length > 0 %}
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Projet</th>
+                                <th>Entrepreneur</th>
+                                <th>Date de soumission</th>
+                                <th>Statut</th>
+                                <th>Progression</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for projet in projets %}
+                            <tr>
+                                <td data-label="Projet">
+                                    <div class="fw-bold">{{ projet.titre }}</div>
+                                    <div class="small text-muted">{{ projet.description|slice(0, 50) }}...</div>
+                                </td>
+                                <td data-label="Entrepreneur">{{ projet.entrepreneur.nom ?? 'N/A' }}</td>
+                                <td data-label="Date">{{ projet.dateSoumission|date('d/m/Y H:i') }}</td>
+                                <td data-label="Statut">
+                                    <span class="status-badge 
+                                        {% if projet.etat == 'En attente' %}status-pending
+                                        {% elseif projet.etat == 'Accepté' %}status-accepted
+                                        {% elseif projet.etat == 'Refusé' %}status-refused
+                                        {% elseif projet.etat == 'En cours' %}status-in-progress
+                                        {% else %}status-completed{% endif %}">
+                                        {{ projet.etat }}
+                                    </span>
+                                </td>
+                                <td data-label="Progression">
+                                    {% if projet.etat == 'Accepté' or projet.etat == 'En cours' %}
+                                        <div class="progress-container">
+                                            <div class="progress-bar-wrapper">
+                                                <div class="progress">
+                                                    <div class="progress-bar" style="width: {{ projet.progression }}%"></div>
+                                                </div>
+                                            </div>
+                                            <div class="progress-value">{{ projet.progression }}%</div>
+                                        </div>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td data-label="Actions">
+                                    <div class="btn-group" role="group">
+                                        {% if projet.etat == 'En attente' %}
+                                            <a href="{{ path('admin_valider_projet', {'id': projet.idProjet}) }}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="bi bi-check-circle"></i> Valider
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ path('entrepreneur_projet_detail', {'id': projet.idProjet}) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="text-muted mt-3">Aucun projet trouvé</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

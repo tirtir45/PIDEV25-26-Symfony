@@ -1,0 +1,359 @@
+{% extends 'base.html.twig' %}
+{% block title %}Gestion Utilisateurs — StartHub{% endblock %}
+
+{% block stylesheets %}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.gu-page { font-family: 'DM Sans', sans-serif; background: #F7F8FC; min-height: 100vh; padding: 28px 32px; }
+
+/* ── Topbar ── */
+.gu-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.gu-topbar h1 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #1A1233; margin: 0 0 2px; }
+.gu-topbar p  { font-size: 13px; color: #A09BBE; margin: 0; }
+
+/* ── KPI cards ── */
+.gu-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+.gu-kpi {
+    background: #fff; border: 1px solid #EAE7F5; border-radius: 12px;
+    padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+}
+.gu-kpi-icon {
+    width: 42px; height: 42px; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px;
+}
+.gu-kpi-val { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: #1A1233; line-height: 1; }
+.gu-kpi-lbl { font-size: 12px; color: #A09BBE; font-weight: 500; margin-top: 2px; }
+
+/* ── Main card ── */
+.gu-card { background: #fff; border: 1px solid #EAE7F5; border-radius: 12px; overflow: hidden; }
+
+/* ── Filter bar ── */
+.gu-filters {
+    padding: 16px 20px; border-bottom: 1px solid #EAE7F5;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    background: #F7F8FC;
+}
+.gu-search {
+    flex: 1; min-width: 200px; position: relative;
+}
+.gu-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #A09BBE; font-size: 14px; }
+.gu-search input {
+    width: 100%; border: 1px solid #EAE7F5; border-radius: 8px;
+    padding: 8px 12px 8px 34px; font-size: 13px; color: #1A1233;
+    background: #fff; outline: none; font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s;
+}
+.gu-search input:focus { border-color: #7C5CFC; }
+.gu-select {
+    border: 1px solid #EAE7F5; border-radius: 8px; padding: 8px 12px;
+    font-size: 13px; color: #1A1233; background: #fff; outline: none;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+}
+.gu-select:focus { border-color: #7C5CFC; }
+.gu-btn-filter {
+    background: #7C5CFC; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.gu-btn-filter:hover { background: #6a4de8; }
+
+/* ── Table ── */
+.gu-table { width: 100%; border-collapse: collapse; }
+.gu-table thead tr { background: #F3F0FF; }
+.gu-table thead th {
+    padding: 12px 16px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .7px; color: #7C5CFC;
+    border-bottom: 1px solid #EAE7F5; white-space: nowrap;
+}
+.gu-table tbody tr { border-bottom: 1px solid #F3F0FF; transition: background .1s; }
+.gu-table tbody tr:last-child { border-bottom: none; }
+.gu-table tbody tr:hover { background: #FAFAFE; }
+.gu-table td { padding: 13px 16px; font-size: 13px; color: #374151; vertical-align: middle; }
+
+/* Avatar */
+.gu-av {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
+}
+
+/* Role pills */
+.gu-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.pill-fournisseur  { background: #EFF6FF; color: #3B82F6; }
+.pill-entrepreneur { background: #F0FDF4; color: #16A34A; }
+.pill-membre       { background: #EDE8FF; color: #7C5CFC; }
+.pill-candidat     { background: #FFF7ED; color: #EA580C; }
+.pill-default      { background: #F3F4F6; color: #6B7280; }
+
+/* Status */
+.gu-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+.gu-status .dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot-active   { background: #22C55E; }
+.dot-inactive { background: #EF4444; }
+
+/* Actions */
+.gu-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.gu-btn {
+    border: 1px solid #EAE7F5; background: #fff; border-radius: 7px;
+    padding: 5px 10px; font-size: 12px; cursor: pointer; transition: .15s;
+    display: flex; align-items: center; gap: 4px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; color: #5a4f8a;
+}
+.gu-btn:hover { border-color: #7C5CFC; color: #7C5CFC; background: #F3F0FF; }
+.gu-btn.danger { border-color: #FECACA; color: #DC2626; }
+.gu-btn.danger:hover { background: #FEF2F2; }
+.gu-btn.warn { border-color: #FDE68A; color: #B45309; }
+.gu-btn.warn:hover { background: #FFFBEB; }
+.gu-btn.success { border-color: #BBF7D0; color: #15803D; }
+.gu-btn.success:hover { background: #F0FDF4; }
+
+/* Pagination */
+.gu-pagination { padding: 14px 20px; border-top: 1px solid #EAE7F5; display: flex; align-items: center; justify-content: space-between; }
+.gu-pagination .info { font-size: 12px; color: #A09BBE; }
+.gu-pages { display: flex; gap: 4px; }
+.gu-page-btn {
+    width: 30px; height: 30px; border-radius: 7px; border: 1px solid #EAE7F5;
+    background: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #5a4f8a;
+    transition: .15s;
+}
+.gu-page-btn.active { background: #7C5CFC; color: #fff; border-color: #7C5CFC; }
+.gu-page-btn:hover:not(.active) { border-color: #7C5CFC; color: #7C5CFC; }
+
+/* Empty */
+.gu-empty { padding: 60px 20px; text-align: center; color: #A09BBE; }
+.gu-empty i { font-size: 40px; display: block; margin-bottom: 12px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="gu-page">
+
+    {# Topbar #}
+    <div class="gu-topbar">
+        <div>
+            <h1>Gestion des Utilisateurs</h1>
+            <p>Visualisez, filtrez et gérez les comptes de la plateforme</p>
+        </div>
+        <span style="background:#EDE8FF;color:#5B35D5;border-radius:20px;padding:5px 16px;font-size:13px;font-weight:700;">
+            {{ users|length }} Utilisateur{{ users|length > 1 ? 's' : '' }}
+        </span>
+    </div>
+
+    {# KPIs #}
+    {% set total       = users|length %}
+    {% set actifs      = users|filter(u => u.actif)|length %}
+    {% set fournisseurs = users|filter(u => u.role and u.role.nomRole == 'Fournisseur')|length %}
+    {% set entrepreneurs = users|filter(u => u.role and u.role.nomRole == 'Entrepreneur')|length %}
+
+    <div class="gu-kpis">
+        <div class="gu-kpi">
+            <div class="gu-kpi-icon" style="background:#EDE8FF;"><i class="bi bi-people-fill" style="color:#7C5CFC;"></i></div>
+            <div><div class="gu-kpi-val">{{ total }}</div><div class="gu-kpi-lbl">Total</div></div>
+        </div>
+        <div class="gu-kpi">
+            <div class="gu-kpi-icon" style="background:#F0FDF4;"><i class="bi bi-person-check-fill" style="color:#22C55E;"></i></div>
+            <div><div class="gu-kpi-val" style="color:#16A34A;">{{ actifs }}</div><div class="gu-kpi-lbl">Actifs</div></div>
+        </div>
+        <div class="gu-kpi">
+            <div class="gu-kpi-icon" style="background:#EFF6FF;"><i class="bi bi-shop" style="color:#3B82F6;"></i></div>
+            <div><div class="gu-kpi-val" style="color:#3B82F6;">{{ fournisseurs }}</div><div class="gu-kpi-lbl">Fournisseurs</div></div>
+        </div>
+        <div class="gu-kpi">
+            <div class="gu-kpi-icon" style="background:#F0FDF4;"><i class="bi bi-rocket-takeoff" style="color:#16A34A;"></i></div>
+            <div><div class="gu-kpi-val" style="color:#16A34A;">{{ entrepreneurs }}</div><div class="gu-kpi-lbl">Entrepreneurs</div></div>
+        </div>
+    </div>
+
+    {# Main card #}
+    <div class="gu-card">
+
+        {# Filters #}
+        <form method="get" action="{{ path('admin_user_index') }}">
+            <div class="gu-filters">
+                <div class="gu-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="search" placeholder="Rechercher par nom, email ou téléphone..." value="{{ search }}">
+                </div>
+                <select name="role" class="gu-select" onchange="this.form.submit()">
+                    <option value="">Tous les rôles</option>
+                    {% for role in roles %}
+                        <option value="{{ role.id }}" {{ currentRole == role.id ? 'selected' : '' }}>{{ role.nomRole }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="gu-btn-filter"><i class="bi bi-funnel me-1"></i>Filtrer</button>
+            </div>
+        </form>
+
+        {# Table #}
+        {% if users is empty %}
+            <div class="gu-empty">
+                <i class="bi bi-people"></i>
+                <p style="font-size:14px;font-weight:600;color:#5a4f8a;">Aucun utilisateur trouvé</p>
+            </div>
+        {% else %}
+            <div style="overflow-x:auto;">
+                <table class="gu-table">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Contact</th>
+                            <th>Inscription</th>
+                            <th>Statut</th>
+                            <th>Comportement IA</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        {% set colors = ['#7C5CFC','#3B82F6','#16A34A','#EA580C','#0EA5E9','#8B5CF6'] %}
+                        {% set color = colors[loop.index0 % colors|length] %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div class="gu-av" style="background:{{ color }};">
+                                        {% if user.getPhoto() %}
+                                            <img src="{{ asset(user.getPhoto()) }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                        {% else %}
+                                            {{ user.nom|slice(0,1)|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:600;color:#1A1233;font-size:13px;">{{ user.nom }}</div>
+                                        <div style="font-size:11px;color:#A09BBE;">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% set role = user.role ? user.role.nomRole : 'Utilisateur' %}
+                                {% set pillClass = role == 'Fournisseur' ? 'pill-fournisseur' : (role == 'Entrepreneur' ? 'pill-entrepreneur' : (role starts with 'Membre' ? 'pill-membre' : (role == 'Candidat' ? 'pill-candidat' : 'pill-default'))) %}
+                                <span class="gu-pill {{ pillClass }}">{{ role }}</span>
+                            </td>
+                            <td style="color:#6B7280;">{{ user.telephone ?? '—' }}</td>
+                            <td style="color:#6B7280;">{{ user.dateInscription|date('d/m/Y') }}</td>
+                            <td>
+                                <span class="gu-status">
+                                    <span class="dot {{ user.actif ? 'dot-active' : 'dot-inactive' }}"></span>
+                                    <span style="color:{{ user.actif ? '#16A34A' : '#DC2626' }};">{{ user.actif ? 'Actif' : 'Désactivé' }}</span>
+                                </span>
+                            </td>
+                            {# ── Colonne Comportement IA ── #}
+                            <td style="vertical-align:top;min-width:220px;">
+                                <div id="behavior-{{ user.id }}">
+                                    <button onclick="analyzeBehavior({{ user.id }})"
+                                            id="btn-{{ user.id }}"
+                                            style="border:1px solid #EAE7F5;background:#fff;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;color:#7C5CFC;display:inline-flex;align-items:center;gap:4px;transition:.15s;"
+                                            onmouseover="this.style.background='#F3F0FF'" onmouseout="this.style.background='#fff'">
+                                        <i class="bi bi-cpu"></i> Analyser
+                                    </button>
+                                    <div id="result-{{ user.id }}" style="margin-top:6px;"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="gu-actions">
+                                    <form method="post" action="{{ path('admin_user_toggle_status', {'id': user.id}) }}" style="display:contents;">
+                                        <button type="submit" class="gu-btn {{ user.actif ? 'warn' : 'success' }}" title="{{ user.actif ? 'Désactiver' : 'Activer' }}">
+                                            <i class="bi {{ user.actif ? 'bi-person-x' : 'bi-person-check' }}"></i>
+                                            {{ user.actif ? 'Désactiver' : 'Activer' }}
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{{ path('admin_user_delete', {'id': user.id}) }}" style="display:contents;" onsubmit="return confirm('Supprimer {{ user.nom }} ?');">
+                                        <button type="submit" class="gu-btn danger" title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Pagination #}
+            <div class="gu-pagination">
+                <span class="info">{{ users|length }} résultat{{ users|length > 1 ? 's' : '' }}</span>
+                <div class="gu-pages">
+                    <button class="gu-page-btn active">1</button>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function analyzeBehavior(userId) {
+    const btn = document.getElementById('btn-' + userId);
+    const result = document.getElementById('result-' + userId);
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Analyse...';
+    result.innerHTML = '';
+
+    fetch('/admin/utilisateurs/' + userId + '/analyze-behavior')
+        .then(r => r.json())
+        .then(data => {
+            btn.style.display = 'none';
+
+            const colors = { low: '#16A34A', medium: '#B45309', high: '#DC2626' };
+            const bg     = { low: '#F0FDF4', medium: '#FFFBEB', high: '#FEF2F2' };
+            const icons  = { low: '🟢', medium: '🟡', high: '🔴' };
+            const labels = { low: 'Normal', medium: 'Suspect', high: 'Risque élevé' };
+
+            const risk  = data.risk_level || 'low';
+            const color = colors[risk];
+            const bgCol = bg[risk];
+            const score = Math.round((data.score || 0) * 100);
+
+            const details = data.details || {};
+            const checks = [
+                { key: 'unusual_login_time',         label: 'Heure de connexion',  icon: '⏰' },
+                { key: 'unusual_session_duration',   label: 'Durée de session',    icon: '⏱️' },
+                { key: 'unusual_activity_frequency', label: 'Fréquence activité',  icon: '📊' },
+            ];
+
+            let detailsHtml = checks.map(c => {
+                const val = details[c.key];
+                const statusColor = val ? '#DC2626' : '#16A34A';
+                const statusIcon  = val ? '⚠️' : '✅';
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:11px;color:#374151;">${c.icon} ${c.label}</span>
+                    <span style="font-size:10px;font-weight:700;color:${statusColor};">${statusIcon} ${val ? 'Anormal' : 'Normal'}</span>
+                </div>`;
+            }).join('');
+
+            const html = `
+            <div style="background:${bgCol};border:1.5px solid ${color}30;border-radius:10px;padding:10px 12px;min-width:200px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:12px;font-weight:700;color:${color};">${icons[risk]} ${labels[risk]}</span>
+                    <span style="font-size:11px;font-weight:700;background:${color}20;color:${color};padding:2px 8px;border-radius:20px;">
+                        Score : ${score}%
+                    </span>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <div style="height:6px;background:#e5e7eb;border-radius:10px;overflow:hidden;">
+                        <div style="height:100%;width:${score}%;background:${color};border-radius:10px;transition:width .5s;"></div>
+                    </div>
+                </div>
+                ${detailsHtml}
+                <div style="margin-top:6px;font-size:10px;color:#6B7280;font-style:italic;">${data.message || ''}</div>
+            </div>`;
+
+            result.innerHTML = html;
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cpu"></i> Analyser';
+            result.innerHTML = '<span style="font-size:11px;color:#DC2626;">⚠️ Service IA indisponible</span>';
+        });
+}
+</script>
+{% endblock %}

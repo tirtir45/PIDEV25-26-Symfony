@@ -1,0 +1,277 @@
+{# templates/entrepreneur/nouveau_projet.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="np-root">
+  <div class="np-card">
+
+    {# ── Header ── #}
+    <div class="np-header">
+      <div class="np-header-left">
+        <i class="bi bi-plus-circle-fill np-header-icon"></i>
+        <div>
+          <h1 class="np-title">Soumettre un Nouveau Projet</h1>
+          <span class="np-required-note">Tous les champs marqués d'un <span class="np-star">*</span> sont obligatoires</span>
+        </div>
+      </div>
+    </div>
+
+    {% for type, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="np-flash np-flash--{{ type }}">{{ message }}</div>
+      {% endfor %}
+    {% endfor %}
+
+    {{ form_start(form, {'attr': {'id': 'projectForm', 'novalidate': 'novalidate', 'data-turbo': 'false'}}) }}
+
+    {# ── Section 1 : Informations générales ── #}
+    <div class="np-section">
+      <div class="np-section-title">
+        <i class="bi bi-info-circle-fill"></i> Informations générales
+      </div>
+
+      <div class="np-field">
+        {{ form_label(form.titre) }}<span class="np-star"> *</span>
+        {{ form_widget(form.titre, {'attr': {'class': 'np-input', 'placeholder': 'Ex: Application mobile pour la santé', 'id': 'np_titre'}}) }}
+        <p class="np-hint">Minimum 3 caractères, maximum 150 caractères</p>
+        <p class="np-error" id="err_titre"></p>
+      </div>
+
+      <div class="np-field">
+        {{ form_label(form.description) }}<span class="np-star"> *</span>
+        {{ form_widget(form.description, {'attr': {'class': 'np-input', 'rows': 5, 'placeholder': 'Décrivez votre projet en détail...', 'id': 'np_description'}}) }}
+        <p class="np-hint">Minimum 20 caractères</p>
+        <p class="np-error" id="err_description"></p>
+      </div>
+
+      <div class="np-row">
+        <div class="np-field">
+          {{ form_label(form.secteur) }}<span class="np-star"> *</span>
+          {{ form_widget(form.secteur, {'attr': {'class': 'np-input', 'id': 'np_secteur'}}) }}
+          <p class="np-error" id="err_secteur"></p>
+        </div>
+        <div class="np-field">
+          {{ form_label(form.objectifs) }}<span class="np-star"> *</span>
+          {{ form_widget(form.objectifs, {'attr': {'class': 'np-input', 'rows': 4, 'placeholder': 'Quels sont vos objectifs ?', 'id': 'np_objectifs'}}) }}
+          <p class="np-hint">Minimum 10 caractères</p>
+          <p class="np-error" id="err_objectifs"></p>
+        </div>
+      </div>
+    </div>
+
+    {# ── Section 2 : Aspects financiers ── #}
+    <div class="np-section">
+      <div class="np-section-title">
+        <i class="bi bi-cash-stack"></i> Aspects financiers et ressources
+      </div>
+
+      <div class="np-row">
+        <div class="np-field">
+          {{ form_label(form.budget_estime) }}<span class="np-star"> *</span>
+          <div class="np-input-prefix">
+            <span class="np-prefix">€</span>
+            {{ form_widget(form.budget_estime, {'attr': {'class': 'np-input np-input--prefixed', 'placeholder': 'Ex: 50000', 'id': 'np_budget'}}) }}
+          </div>
+          <p class="np-hint">Entre 1 000 € et 10 000 000 €</p>
+          <p class="np-error" id="err_budget"></p>
+        </div>
+        <div class="np-field">
+          {{ form_label(form.duree_estimee) }}<span class="np-star"> *</span>
+          {{ form_widget(form.duree_estimee, {'attr': {'class': 'np-input', 'placeholder': 'Ex: 6', 'id': 'np_duree'}}) }}
+          <p class="np-hint">Entre 1 et 36 mois</p>
+          <p class="np-error" id="err_duree"></p>
+        </div>
+      </div>
+
+      <div class="np-row">
+        <div class="np-field">
+          {{ form_label(form.nb_membres_equipe) }}<span class="np-star"> *</span>
+          {{ form_widget(form.nb_membres_equipe, {'attr': {'class': 'np-input', 'placeholder': 'Ex: 3', 'id': 'np_membres', 'min': 1, 'max': 50}}) }}
+          <p class="np-hint">Entre 1 et 50 membres</p>
+          <p class="np-error" id="err_membres"></p>
+        </div>
+        <div class="np-field">
+          {{ form_label(form.statut_juridique) }}<span class="np-star"> *</span>
+          {{ form_widget(form.statut_juridique, {'attr': {'class': 'np-input', 'id': 'np_statut_juridique'}}) }}
+          <p class="np-error" id="err_statut_juridique"></p>
+        </div>
+      </div>
+
+      <div class="np-row">
+        <div class="np-field">
+          {{ form_label(form.financement_actuel) }}<span class="np-star"> *</span>
+          {{ form_widget(form.financement_actuel, {'attr': {'class': 'np-input', 'id': 'np_financement'}}) }}
+          <p class="np-error" id="err_financement"></p>
+        </div>
+      </div>
+
+      <div class="np-field">
+        {{ form_label(form.partenaires_potentiels) }}
+        {{ form_widget(form.partenaires_potentiels, {'attr': {'class': 'np-input', 'rows': 3, 'placeholder': 'Décrivez vos partenaires potentiels...'}}) }}
+        <p class="np-hint">Optionnel — Décrivez vos partenaires potentiels</p>
+      </div>
+    </div>
+
+    {# ── Section 3 : Coordonnées ── #}
+    <div class="np-section">
+      <div class="np-section-title">
+        <i class="bi bi-envelope-fill"></i> Coordonnées
+      </div>
+
+      <div class="np-row">
+        <div class="np-field">
+          {{ form_label(form.email_contact) }}<span class="np-star"> *</span>
+          {{ form_widget(form.email_contact, {'attr': {'class': 'np-input', 'placeholder': 'contact@entreprise.com', 'id': 'np_email'}}) }}
+          <p class="np-error" id="err_email"></p>
+        </div>
+        <div class="np-field">
+          {{ form_label(form.telephone_contact) }}<span class="np-star"> *</span>
+          {{ form_widget(form.telephone_contact, {'attr': {'class': 'np-input', 'placeholder': '06 12 34 56 78', 'id': 'np_telephone'}}) }}
+          <p class="np-hint">Format: 06 12 34 56 78 ou +336123456/8</p>
+          <p class="np-error" id="err_telephone"></p>
+        </div>
+      </div>
+
+      <div class="np-field">
+        {{ form_label(form.site_web) }}
+        {{ form_widget(form.site_web, {'attr': {'class': 'np-input', 'placeholder': 'https://www.monsite.com'}}) }}
+        <p class="np-hint">Optionnel — Ex: https://www.monsite.com</p>
+      </div>
+
+      <div class="np-field">
+        {{ form_label(form.experiences_anterieures) }}
+        {{ form_widget(form.experiences_anterieures, {'attr': {'class': 'np-input', 'rows': 3, 'placeholder': 'Décrivez vos expériences dans le domaine...'}}) }}
+        <p class="np-hint">Optionnel — Décrivez vos expériences dans le domaine</p>
+      </div>
+    </div>
+
+    {# ── Note obligatoire ── #}
+    <div class="np-required-banner">
+      <i class="bi bi-info-circle"></i> Tous les champs marqués d'un <span class="np-star">*</span> sont obligatoires.
+    </div>
+
+    {# ── Actions ── #}
+    <div class="np-actions">
+      <a href="{{ path('entrepreneur_dashboard') }}" class="np-btn-ghost">
+        <i class="bi bi-x-circle"></i> Annuler
+      </a>
+      <button type="submit" class="np-btn-primary">
+        <i class="bi bi-send-fill"></i> Soumettre le projet
+      </button>
+    </div>
+
+    {# Champs résiduels cachés (CSRF token + champs non rendus) #}
+    <div style="display:none">{{ form_rest(form) }}</div>
+
+    {{ form_end(form, {'render_rest': false}) }}
+  </div>
+</div>
+
+<style>
+:root {
+  --np-v600: #7c3aed; --np-v700: #6d28d9; --np-v100: #ede9fe; --np-v50: #f5f3ff;
+  --np-pink: #ec4899;
+  --np-ink: #1a1523; --np-ink2: #4c4566; --np-ink3: #8b7fa8;
+  --np-border: rgba(124,58,237,.18); --np-border2: rgba(124,58,237,.32);
+  --np-radius: 10px; --np-radius-lg: 18px;
+}
+.np-root { min-height: 100vh; padding: 2rem 1rem; background: #f8f7ff; }
+.np-card { max-width: 860px; margin: 0 auto; background: #fff; border-radius: var(--np-radius-lg); box-shadow: 0 4px 32px rgba(0,0,0,.08); border: 1px solid var(--np-border); overflow: hidden; }
+
+/* Header */
+.np-header { background: linear-gradient(135deg, var(--np-v600), var(--np-pink)); padding: 1.5rem 2rem; display: flex; align-items: center; }
+.np-header-left { display: flex; align-items: center; gap: 1rem; }
+.np-header-icon { font-size: 1.8rem; color: #fff; }
+.np-title { margin: 0; font-size: 1.3rem; font-weight: 800; color: #fff; }
+.np-required-note { font-size: .75rem; color: rgba(255,255,255,.8); }
+.np-star { color: #fbbf24; font-weight: 700; }
+
+/* Flash */
+.np-flash { padding: .75rem 2rem; font-size: .85rem; font-weight: 500; }
+.np-flash--success { background: #dcfce7; color: #166534; border-left: 4px solid #16a34a; }
+.np-flash--error   { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+
+/* Sections */
+.np-section { padding: 1.5rem 2rem; border-bottom: 1px solid var(--np-border); }
+.np-section-title { font-size: .95rem; font-weight: 700; color: var(--np-v600); margin-bottom: 1.25rem; display: flex; align-items: center; gap: .5rem; }
+
+/* Fields */
+.np-field { margin-bottom: 1.1rem; }
+.np-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.np-label, .np-field label { display: block; font-size: .8rem; font-weight: 600; color: var(--np-ink2); margin-bottom: .35rem; }
+.np-input {
+  width: 100%; box-sizing: border-box;
+  border: 1.5px solid var(--np-border2); border-radius: 8px;
+  padding: .6rem .85rem; font-size: .875rem; color: var(--np-ink);
+  background: #fff; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.np-input:focus { outline: none; border-color: var(--np-v600); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.np-input.is-invalid { border-color: #dc2626; }
+.np-input-prefix { position: relative; display: flex; align-items: center; }
+.np-prefix { position: absolute; left: .75rem; font-size: .875rem; color: var(--np-ink3); font-weight: 600; pointer-events: none; }
+.np-input--prefixed { padding-left: 2rem; }
+.np-hint  { font-size: .7rem; color: var(--np-ink3); margin: .25rem 0 0; }
+.np-error { font-size: .72rem; color: #dc2626; margin: .2rem 0 0; min-height: 1rem; }
+
+/* Required banner */
+.np-required-banner { margin: 0 2rem 1rem; padding: .65rem 1rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: .78rem; color: #1d4ed8; }
+
+/* Actions */
+.np-actions { display: flex; gap: .75rem; padding: 1.25rem 2rem 1.75rem; justify-content: flex-end; }
+.np-btn-primary { display: inline-flex; align-items: center; gap: .5rem; background: linear-gradient(135deg, var(--np-v600), var(--np-pink)); color: #fff; border: none; padding: .75rem 2rem; border-radius: 10px; font-size: .9rem; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .15s; }
+.np-btn-primary:hover { opacity: .92; transform: translateY(-1px); }
+.np-btn-ghost { display: inline-flex; align-items: center; gap: .5rem; background: transparent; color: var(--np-ink2); border: 1.5px solid var(--np-border2); padding: .75rem 1.5rem; border-radius: 10px; font-size: .9rem; font-weight: 500; text-decoration: none; transition: background .15s; }
+.np-btn-ghost:hover { background: var(--np-v50); }
+
+@media (max-width: 600px) {
+  .np-row { grid-template-columns: 1fr; }
+  .np-section { padding: 1.25rem 1rem; }
+  .np-actions { flex-direction: column-reverse; }
+  .np-btn-primary, .np-btn-ghost { justify-content: center; }
+}
+</style>
+
+<script>
+(function() {
+  const rules = [
+    { id: 'np_titre',           err: 'err_titre',           msg: 'Le titre est obligatoire (min 3 car.)',    test: v => v.trim().length >= 3 },
+    { id: 'np_description',     err: 'err_description',     msg: 'La description est obligatoire (min 20 car.)', test: v => v.trim().length >= 20 },
+    { id: 'np_secteur',         err: 'err_secteur',         msg: 'Veuillez sélectionner un secteur.',        test: v => v !== '' },
+    { id: 'np_objectifs',       err: 'err_objectifs',       msg: 'Les objectifs sont obligatoires (min 10 car.)', test: v => v.trim().length >= 10 },
+    { id: 'np_budget',          err: 'err_budget',          msg: 'Budget entre 1 000 et 10 000 000 €.',      test: v => { const n = parseFloat(v); return !isNaN(n) && n >= 1000 && n <= 10000000; } },
+    { id: 'np_duree',           err: 'err_duree',           msg: 'Durée entre 1 et 36 mois.',                test: v => { const n = parseInt(v); return !isNaN(n) && n >= 1 && n <= 36; } },
+    { id: 'np_membres',         err: 'err_membres',         msg: 'Nombre de membres entre 1 et 50.',         test: v => { const n = parseInt(v); return !isNaN(n) && n >= 1 && n <= 50; } },
+    { id: 'np_statut_juridique',err: 'err_statut_juridique',msg: 'Veuillez sélectionner un statut juridique.', test: v => v !== '' },
+    { id: 'np_financement',     err: 'err_financement',     msg: 'Veuillez sélectionner un financement.',    test: v => v !== '' },
+    { id: 'np_email',           err: 'err_email',           msg: 'Email de contact invalide.',               test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+    { id: 'np_telephone',       err: 'err_telephone',       msg: 'Téléphone invalide.',                      test: v => /^[\d\s\+\-\(\)]{8,20}$/.test(v.trim()) },
+  ];
+
+  function validate(rule) {
+    const el = document.getElementById(rule.id);
+    const errEl = document.getElementById(rule.err);
+    if (!el) return true;
+    const ok = rule.test(el.value);
+    el.classList.toggle('is-invalid', !ok);
+    if (errEl) errEl.textContent = ok ? '' : rule.msg;
+    return ok;
+  }
+
+  // Live validation
+  rules.forEach(rule => {
+    const el = document.getElementById(rule.id);
+    if (el) el.addEventListener('input', () => validate(rule));
+  });
+
+  document.getElementById('projectForm').addEventListener('submit', function(e) {
+    let valid = true;
+    rules.forEach(rule => { if (!validate(rule)) valid = false; });
+    if (!valid) {
+      e.preventDefault();
+      document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,1108 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container py-4 fade-in">
+
+    {# Flash messages #}
+    {% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>Succès !</strong> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Attention !</strong> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i>
+        <strong>Erreur !</strong> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+
+    {# ── HEADER ── #}
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-folder2-open me-2"></i>{{ projet.titre|escape }}</h2>
+            <span class="badge fs-6
+                {% if projet.etat == 'Accepté' %}bg-success
+                {% elseif projet.etat == 'Refusé' %}bg-danger
+                {% elseif projet.etat == 'En cours' %}bg-primary
+                {% elseif projet.etat == 'Terminé' %}bg-secondary
+                {% else %}bg-warning text-dark{% endif %}">
+                {{ projet.etat }}
+            </span>
+        </div>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        {# ══════════════════════════════════════════
+           COLONNE GAUCHE — Infos projet + Équipe
+           ══════════════════════════════════════════ #}
+        <div class="col-lg-7">
+
+            {# ── Informations générales ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-info-circle me-2"></i>Informations générales
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Entrepreneur</dt>
+                        <dd class="col-sm-8">{{ projet.id_entrepreneur.nom|escape }}
+                            <small class="text-muted">({{ projet.id_entrepreneur.email|escape }})</small></dd>
+
+                        <dt class="col-sm-4">Secteur</dt>
+                        <dd class="col-sm-8">{{ projet.secteur|escape }}</dd>
+
+                        <dt class="col-sm-4">Statut juridique</dt>
+                        <dd class="col-sm-8">{{ projet.statutJuridique|escape }}</dd>
+
+                        <dt class="col-sm-4">Budget estimé</dt>
+                        <dd class="col-sm-8"><strong>{{ projet.budgetEstime|number_format(0, ',', ' ') }} €</strong></dd>
+
+                        <dt class="col-sm-4">Durée estimée</dt>
+                        <dd class="col-sm-8">{{ projet.dureeEstimee }} mois</dd>
+
+                        <dt class="col-sm-4">Membres prévus</dt>
+                        <dd class="col-sm-8">{{ projet.nbMembresEquipe }}</dd>
+
+                        <dt class="col-sm-4">Financement</dt>
+                        <dd class="col-sm-8">{{ projet.financementActuel|escape }}</dd>
+
+                        <dt class="col-sm-4">Email contact</dt>
+                        <dd class="col-sm-8">{{ projet.emailContact|escape }}</dd>
+
+                        <dt class="col-sm-4">Téléphone</dt>
+                        <dd class="col-sm-8">{{ projet.telephoneContact|escape }}</dd>
+
+                        {% if projet.siteWeb %}
+                        <dt class="col-sm-4">Site web</dt>
+                        <dd class="col-sm-8"><a href="{{ projet.siteWeb|escape }}" target="_blank">{{ projet.siteWeb|escape }}</a></dd>
+                        {% endif %}
+
+                        <dt class="col-sm-4">Soumis le</dt>
+                        <dd class="col-sm-8">{{ projet.dateSoumission|date('d/m/Y H:i') }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {# ── Description & Objectifs ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-file-text me-2"></i>Description & Objectifs
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">Description</h6>
+                    <p class="text-muted">{{ projet.description|escape|nl2br }}</p>
+                    <hr>
+                    <h6 class="fw-bold">Objectifs</h6>
+                    <p class="text-muted">{{ projet.objectifs|escape|nl2br }}</p>
+                    {% if projet.partenairesPotentiels %}
+                    <hr>
+                    <h6 class="fw-bold">Partenaires potentiels</h6>
+                    <p class="text-muted">{{ projet.partenairesPotentiels|escape|nl2br }}</p>
+                    {% endif %}
+                    {% if projet.experiencesAnterieures %}
+                    <hr>
+                    <h6 class="fw-bold">Expériences antérieures</h6>
+                    <p class="text-muted">{{ projet.experiencesAnterieures|escape|nl2br }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── Équipe & Tâches ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-people me-2"></i>Équipe & Tâches assignées</span>
+                    <span class="badge bg-light text-dark">{{ membres|length }} membre(s)</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if membres is empty %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-person-x fs-3 d-block mb-2"></i>
+                            Aucun membre ajouté pour l'instant.
+                        </div>
+                    {% else %}
+                        <div class="accordion accordion-flush" id="accordionEquipe">
+                        {% for membre in membres %}
+                            {% set user = membre.idUtilisateur %}
+                            {% set userId = user ? user.id : 0 %}
+                            {% set tachesMembre = tachesParMembre[userId] is defined ? tachesParMembre[userId] : [] %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#membre{{ membre.idMembre }}">
+                                        <div class="d-flex align-items-center gap-3 w-100">
+                                            <div class="avatar-circle bg-primary text-white">
+                                                {{ user ? user.nom|slice(0,1)|upper : '?' }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ user ? user.nom|escape : 'Utilisateur supprimé' }}</strong>
+                                                {% if membre.roleEquipe %}
+                                                    <span class="badge bg-secondary ms-2">{{ membre.roleEquipe|escape }}</span>
+                                                {% endif %}
+                                                <br>
+                                                <small class="text-muted">{{ user ? user.email|escape : '' }}</small>
+                                            </div>
+                                            <span class="ms-auto badge bg-{{ tachesMembre|length > 0 ? 'primary' : 'light text-dark' }} me-3">
+                                                {{ tachesMembre|length }} tâche(s)
+                                            </span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="membre{{ membre.idMembre }}" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionEquipe">
+                                    <div class="accordion-body p-0">
+                                        {% if tachesMembre is empty %}
+                                            <p class="text-muted text-center py-3 mb-0">
+                                                <i class="bi bi-clipboard-x me-1"></i>Aucune tâche assignée.
+                                            </p>
+                                        {% else %}
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Tâche</th>
+                                                        <th>Priorité</th>
+                                                        <th>Statut</th>
+                                                        <th>Échéance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for tache in tachesMembre %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ tache.titre|escape }}</strong>
+                                                            {% if tache.description %}
+                                                                <br><small class="text-muted">{{ tache.description|escape|slice(0,80) }}{% if tache.description|length > 80 %}…{% endif %}</small>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if tache.priorite == 'haute' or tache.priorite == 'Haute' %}
+                                                                <span class="badge bg-danger">{{ tache.priorite }}</span>
+                                                            {% elseif tache.priorite == 'moyenne' or tache.priorite == 'Moyenne' %}
+                                                                <span class="badge bg-warning text-dark">{{ tache.priorite }}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">{{ tache.priorite ?? 'N/A' }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if tache.statut == 'Terminée' %}
+                                                                <span class="badge bg-success">{{ tache.statut }}</span>
+                                                            {% elseif tache.statut == 'En cours' %}
+                                                                <span class="badge bg-primary">{{ tache.statut }}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-light text-dark border">{{ tache.statut }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if tache.dateLimite %}
+                                                                {{ tache.dateLimite|date('d/m/Y') }}
+                                                            {% else %}
+                                                                <span class="text-muted">—</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+
+                        {# Tâches sans responsable #}
+                        {% if tachesParMembre[0] is defined %}
+                        <div class="p-3 border-top">
+                            <h6 class="text-muted"><i class="bi bi-person-dash me-1"></i>Tâches sans responsable assigné</h6>
+                            <ul class="list-group list-group-flush">
+                            {% for tache in tachesParMembre[0] %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ tache.titre|escape }}
+                                    <span class="badge bg-secondary">{{ tache.statut }}</span>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>{# /col-lg-7 #}
+
+        {# ══════════════════════════════════════════
+           COLONNE DROITE — Évaluation + Décision
+           ══════════════════════════════════════════ #}
+        <div class="col-lg-5">
+
+            {# ── Score & Évaluation ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-graph-up me-2"></i>Évaluation automatique
+                </div>
+                <div class="card-body text-center">
+                    {% if evaluation is null and evalData is null %}
+                        <a href="{{ path('admin_evaluer_projet', {'id': projet.idProjet}) }}"
+                           class="btn btn-primary mb-3">
+                            🤖 Lancer l'évaluation automatique
+                        </a>
+                    {% endif %}
+                    {% set pct = evaluation ? evaluation.pourcentage : (evalData ? evalData.pourcentage : null) %}
+                    {% if pct is not null %}
+                        <div class="score-donut mx-auto mb-3" style="--pct:{{ pct }}">
+                            <span>{{ pct }}%</span>
+                        </div>
+                        <p class="mb-1">
+                            {% if pct >= 70 %}
+                                <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>Éligible (≥ 70%)</span>
+                            {% else %}
+                                <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>Non éligible (< 70%)</span>
+                            {% endif %}
+                        </p>
+                        {% set details = evaluation ? evaluation.details : (evalData ? evalData.details : null) %}
+                        {% if details %}
+                        <div class="mt-3 text-start">
+                            {% for critere, detail in details %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small">
+                                    <span>{{ critere|replace({'_': ' '})|title }}</span>
+                                    <span>{{ detail.score }}/{{ detail.max_score }}</span>
+                                </div>
+                                <div class="progress" style="height:6px">
+                                    <div class="progress-bar
+                                        {% if detail.niveau == 'excellent' %}bg-success
+                                        {% elseif detail.niveau == 'bon' %}bg-info
+                                        {% elseif detail.niveau == 'correct' %}bg-warning
+                                        {% else %}bg-danger{% endif %}"
+                                        style="width:{{ (detail.score / detail.max_score * 100)|round }}%"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Aucune évaluation disponible.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── Analyse marché ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-bar-chart me-2"></i>Analyse marché</span>
+                    <a href="{{ path('admin_analyser_marche', {'id': projet.idProjet}) }}"
+                       class="btn btn-sm btn-light">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        {{ projet.marketScore is not null ? 'Relancer' : 'Lancer l\'analyse' }}
+                    </a>
+                </div>
+
+                {% if projet.marketScore is not null %}
+                {% set md = projet.marketData %}
+                <div class="card-body">
+
+                    {# ── Score composite ── #}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold">Score composite</span>
+                        <span class="fs-5 fw-bold
+                            {% if projet.marketScore >= 70 %}text-success
+                            {% elseif projet.marketScore >= 40 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ projet.marketScore }}/100
+                        </span>
+                    </div>
+                    <div class="progress mb-3" style="height:10px">
+                        <div class="progress-bar
+                            {% if projet.marketScore >= 70 %}bg-success
+                            {% elseif projet.marketScore >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width:{{ projet.marketScore }}%"></div>
+                    </div>
+
+                    {# ── Scores partiels ── #}
+                    {% if md %}
+                    <div class="row g-1 mb-3 text-center small">
+                        {% set scoreLabels = {'score_momentum': 'Dynamique', 'score_volatility': 'Stabilité', 'score_commodity': 'Matières 1ères', 'score_macro': 'Économie mondiale'} %}
+                        {% for key, label in scoreLabels %}
+                        {% set val = md[key] is defined ? md[key] : 50 %}
+                        <div class="col-3">
+                            <div class="border rounded p-1">
+                                <div class="text-muted" style="font-size:.68rem">{{ label }}</div>
+                                <strong class="{{ val >= 70 ? 'text-success' : (val >= 40 ? 'text-warning' : 'text-danger') }}">{{ val }}/100</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {# ── Tendance + indicateurs techniques ── #}
+                    <div class="row g-2 mb-3 small text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Tendance</div>
+                                {% if projet.marketTrend == 'bullish' %}
+                                    <span class="badge bg-success">📈 En hausse</span>
+                                {% elseif projet.marketTrend == 'bearish' %}
+                                    <span class="badge bg-danger">📉 En baisse</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">➡️ Stable</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Pression achat/vente</div>
+                                {% set rsi = md.rsi is defined ? md.rsi|round(0) : 50 %}
+                                <strong class="{{ rsi > 70 ? 'text-danger' : (rsi < 30 ? 'text-success' : 'text-secondary') }}">
+                                    {% if rsi > 70 %}Surachat{% elseif rsi < 30 %}Survente{% else %}Équilibré{% endif %}
+                                </strong>
+                                <div style="font-size:.65rem" class="text-muted">(indice {{ rsi }})</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Stabilité du marché</div>
+                                {% set vol = md.volatility is defined ? md.volatility|round(1) : 0 %}
+                                <strong class="{{ vol > 35 ? 'text-danger' : (vol < 15 ? 'text-success' : 'text-warning') }}">
+                                    {% if vol > 35 %}Instable{% elseif vol < 15 %}Très stable{% else %}Modérée{% endif %}
+                                </strong>
+                                <div style="font-size:.65rem" class="text-muted">({{ vol }}% annualisé)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── Performances ETF ── #}
+                    <div class="row g-2 mb-3 small text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Prix actuel ETF</div>
+                                <strong>{{ md.current_price is defined and md.current_price ? '$' ~ md.current_price : '—' }}</strong>
+                                {% if md.symbol is defined %}<div class="text-muted" style="font-size:.65rem">{{ md.symbol }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Cette semaine</div>
+                                {% set g1w = md.growth_1w is defined ? md.growth_1w : 0 %}
+                                <strong class="{{ g1w >= 0 ? 'text-success' : 'text-danger' }}">
+                                    {{ g1w >= 0 ? '+' : '' }}{{ g1w }}%
+                                </strong>
+                                <div style="font-size:.65rem" class="text-muted">{{ g1w > 2 ? 'Bonne semaine' : (g1w < -2 ? 'Semaine difficile' : 'Semaine stable') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Ce mois</div>
+                                {% set g1m = md.growth_1m is defined ? md.growth_1m : 0 %}
+                                <strong class="{{ g1m >= 0 ? 'text-success' : 'text-danger' }}">
+                                    {{ g1m >= 0 ? '+' : '' }}{{ g1m }}%
+                                </strong>
+                                <div style="font-size:.65rem" class="text-muted">{{ g1m > 3 ? 'Bon mois' : (g1m < -3 ? 'Mois difficile' : 'Mois stable') }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── Volume signal ── #}
+                    {% if md.volume_signal is defined %}
+                    <div class="small mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Intérêt des investisseurs</span>
+                            <strong class="{{ md.volume_signal > 120 ? 'text-success' : (md.volume_signal < 80 ? 'text-danger' : 'text-secondary') }}">
+                                {% if md.volume_signal > 120 %}Fort{% elseif md.volume_signal < 80 %}Faible{% else %}Normal{% endif %}
+                                <span class="text-muted fw-normal">({{ md.volume_signal }}% vs moyenne)</span>
+                            </strong>
+                        </div>
+                        <div class="progress" style="height:5px">
+                            <div class="progress-bar {{ md.volume_signal > 120 ? 'bg-success' : (md.volume_signal < 80 ? 'bg-danger' : 'bg-secondary') }}"
+                                 style="width:{{ md.volume_signal > 100 ? 100 : md.volume_signal }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Prix live ── #}
+                    {% if md.live_price is defined and md.live_price %}
+                    <div class="alert alert-info py-2 small mb-3">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>
+                        <strong>Prix live {{ md.symbol ?? '' }} :</strong> ${{ md.live_price.price }}
+                        {% if md.live_price.exchange %} — {{ md.live_price.exchange }}{% endif %}
+                        {% if md.live_price.updated %}
+                        <br><span class="text-muted">Dernière transaction : {{ md.live_price.updated }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Dernier EOD officiel ── #}
+                    {% if md.latest_eod is defined and md.latest_eod %}
+                    {% set eod = md.latest_eod %}
+                    <div class="border rounded p-2 small mb-3">
+                        <div class="fw-bold mb-1"><i class="bi bi-calendar-check me-1"></i>Dernier EOD officiel — {{ eod.date|slice(0,10) }}</div>
+                        <div class="row g-1 text-center">
+                            <div class="col-3"><div class="text-muted">Open</div><strong>${{ eod.open }}</strong></div>
+                            <div class="col-3"><div class="text-muted">High</div><strong class="text-success">${{ eod.high }}</strong></div>
+                            <div class="col-3"><div class="text-muted">Low</div><strong class="text-danger">${{ eod.low }}</strong></div>
+                            <div class="col-3"><div class="text-muted">Close</div><strong>${{ eod.close }}</strong></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Infos ETF ── #}
+                    {% if md.ticker_info is defined and md.ticker_info %}
+                    {% set ti = md.ticker_info %}
+                    <div class="border rounded p-2 small mb-3">
+                        <div class="fw-bold mb-1"><i class="bi bi-building me-1"></i>ETF : {{ ti.name ?? md.symbol }}</div>
+                        {% if ti.sector %}<div><span class="text-muted">Secteur :</span> {{ ti.sector }}</div>{% endif %}
+                        {% if ti.industry %}<div><span class="text-muted">Industrie :</span> {{ ti.industry }}</div>{% endif %}
+                        {% if ti.about %}<div class="text-muted mt-1" style="font-size:.75rem">{{ ti.about|slice(0,150) }}…</div>{% endif %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Splits récents ── #}
+                    {% if md.recent_splits is defined and md.recent_splits|length > 0 %}
+                    <div class="alert alert-warning py-2 small mb-3">
+                        <i class="bi bi-scissors me-1"></i>
+                        <strong>{{ md.recent_splits|length }} split(s) détecté(s) sur l'ETF (12 derniers mois) :</strong>
+                        {% for sp in md.recent_splits %}
+                            <span class="badge bg-warning text-dark ms-1">{{ sp.date|slice(0,10) }} × {{ sp.factor }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Commodité ── #}
+                    {% if md.commodity is defined and md.commodity %}
+                    {% set com = md.commodity %}
+                    <div class="border rounded p-2 small mb-3">
+                        <div class="fw-bold mb-1"><i class="bi bi-boxes me-1"></i>Commodité liée : {{ com.name }}</div>
+                        <div class="row g-1 text-center">
+                            <div class="col-3"><div class="text-muted">Prix</div><strong>{{ com.price ?? '—' }}</strong></div>
+                            <div class="col-3">
+                                <div class="text-muted">Jour</div>
+                                {% set pd = com.pct_day|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ pd > 0 ? 'text-success' : (pd < 0 ? 'text-danger' : '') }}">{{ com.pct_day ?? '—' }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted">Semaine</div>
+                                {% set pw = com.pct_week|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ pw > 0 ? 'text-success' : (pw < 0 ? 'text-danger' : '') }}">{{ com.pct_week ?? '—' }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted">Mois</div>
+                                {% set pm = com.pct_month|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ pm > 0 ? 'text-success' : (pm < 0 ? 'text-danger' : '') }}">{{ com.pct_month ?? '—' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Macro S&P500 ── #}
+                    {% if md.macro_index is defined and md.macro_index %}
+                    {% set mac = md.macro_index %}
+                    <div class="border rounded p-2 small mb-3">
+                        <div class="fw-bold mb-1"><i class="bi bi-globe me-1"></i>Macro : {{ mac.benchmark }}</div>
+                        <div class="row g-1 text-center">
+                            <div class="col-3"><div class="text-muted">Prix</div><strong>{{ mac.price ?? '—' }}</strong></div>
+                            <div class="col-3">
+                                <div class="text-muted">Jour</div>
+                                {% set mpd = mac.pct_day|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ mpd > 0 ? 'text-success' : (mpd < 0 ? 'text-danger' : '') }}">{{ mac.pct_day ?? '—' }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted">Mois</div>
+                                {% set mpm = mac.pct_month|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ mpm > 0 ? 'text-success' : (mpm < 0 ? 'text-danger' : '') }}">{{ mac.pct_month ?? '—' }}</strong>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-muted">Année</div>
+                                {% set mpy = mac.pct_year|default('0')|replace({'%':''})|trim %}
+                                <strong class="{{ mpy > 0 ? 'text-success' : (mpy < 0 ? 'text-danger' : '') }}">{{ mac.pct_year ?? '—' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Alertes ── #}
+                    {% if md.alerts is defined and md.alerts|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-1"><i class="bi bi-bell me-1"></i>Alertes automatiques</div>
+                        {% for alert in md.alerts %}
+                        <div class="alert alert-{{ alert.type }} py-1 px-2 small mb-1">{{ alert.msg }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Recommandation ── #}
+                    {% if md.recommendation is defined %}
+                    <div class="alert alert-light border small mb-0">
+                        <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+                        {{ md.recommendation }}
+                    </div>
+                    {% endif %}
+
+                    {% endif %}{# end md #}
+
+                    <div class="text-end mt-2">
+                        <small class="text-muted">
+                            {% if projet.marketAnalyzedAt %}Analysé le {{ projet.marketAnalyzedAt|date('d/m/Y H:i') }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-bar-chart-line fs-2 d-block mb-2"></i>
+                    Aucune analyse disponible.<br>
+                    <small>Cliquez sur "Lancer l'analyse" pour obtenir :<br>
+                    EOD historique · Prix live · RSI · Volatilité · Commodités · Macro S&P500</small>
+                </div>
+                {% endif %}
+            </div>
+
+            {# ── Analyse brevets (SerpAPI) ── #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-file-earmark-text me-2"></i>Analyse brevets <small class="opacity-75">via Google Patents</small></span>
+                    <div class="d-flex gap-2 align-items-center">
+                        {% if projet.patentData and projet.patentData.google_patents_url is defined and projet.patentData.google_patents_url %}
+                            <a href="{{ projet.patentData.google_patents_url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Google Patents
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('admin_analyser_patents', {'id': projet.idProjet}) }}"
+                           class="btn btn-sm btn-light">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            {{ projet.patentNoveltyScore is not null ? 'Relancer' : 'Lancer l\'analyse' }}
+                        </a>
+                    </div>
+                </div>
+
+                {% if projet.patentNoveltyScore is not null %}
+                {% set pd = projet.patentData %}
+                <div class="card-body">
+
+                    {# ── Score + métriques ── #}
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold">Score de nouveauté</span>
+                                <span class="fw-bold fs-5
+                                    {% if projet.patentNoveltyScore >= 70 %}text-success
+                                    {% elseif projet.patentNoveltyScore >= 40 %}text-warning
+                                    {% else %}text-danger{% endif %}">
+                                    {{ projet.patentNoveltyScore }}/100
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height:10px">
+                                <div class="progress-bar
+                                    {% if projet.patentNoveltyScore >= 70 %}bg-success
+                                    {% elseif projet.patentNoveltyScore >= 40 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width:{{ projet.patentNoveltyScore }}%"></div>
+                            </div>
+                        </div>
+                        {% if pd %}
+                        <div class="col-3 text-center">
+                            <div class="border rounded p-2 small">
+                                <div class="text-muted">Total brevets</div>
+                                <strong class="fs-6">{{ pd.total_results ?? 0 }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 text-center">
+                            <div class="border rounded p-2 small">
+                                <div class="text-muted">Récents (5 ans)</div>
+                                <strong class="{{ (pd.recent_5y ?? 0) > 30 ? 'text-danger' : 'text-success' }}">{{ pd.recent_5y ?? 0 }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 text-center">
+                            <div class="border rounded p-2 small">
+                                <div class="text-muted">Actifs</div>
+                                <strong class="text-warning">{{ pd.active_count ?? 0 }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 text-center">
+                            <div class="border rounded p-2 small">
+                                <div class="text-muted">Concurrents</div>
+                                <strong class="{{ (pd.competitors ?? [])|length > 0 ? 'text-danger' : 'text-success' }}">{{ (pd.competitors ?? [])|length }}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if pd %}
+
+                    {# ── Requête utilisée ── #}
+                    {% if pd.query is defined and pd.query %}
+                    <div class="small text-muted mb-3 p-2 bg-light rounded">
+                        <i class="bi bi-search me-1"></i><strong>Requête :</strong>
+                        <code class="text-dark">{{ pd.query }}</code>
+                    </div>
+                    {% endif %}
+
+                    {# ── Timeline d'activité ── #}
+                    {% if pd.timeline is defined and pd.timeline|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-graph-up me-1"></i>Activité de dépôt par période</div>
+                        <div class="d-flex gap-1 align-items-end" style="height:50px">
+                            {% for t in pd.timeline|reverse %}
+                                {% if t.pct > 0 %}
+                                <div title="{{ t.range }} : {{ t.pct }}%"
+                                     style="flex:1;background:linear-gradient(to top,#7c3aed,#a855f7);border-radius:3px 3px 0 0;height:{{ t.pct * 2 > 50 ? 50 : t.pct * 2 }}px;min-width:8px;opacity:.8;cursor:pointer"
+                                     data-bs-toggle="tooltip" data-bs-title="{{ t.range }} — {{ t.pct }}%"></div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:.65rem;color:#94a3b8;margin-top:2px">
+                            {% if pd.timeline|length > 0 %}
+                                <span>{{ pd.timeline|last.range }}</span>
+                                <span>{{ pd.timeline|first.range }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Top déposants ── #}
+                    {% if pd.top_assignees is defined and pd.top_assignees|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-building me-1"></i>Top déposants</div>
+                        {% for a in pd.top_assignees|slice(0,6) %}
+                        {% set val = a.percentage is defined ? a.percentage : a.count %}
+                        <div class="d-flex align-items-center gap-2 mb-1 small">
+                            <div class="text-truncate flex-grow-1" style="max-width:60%">{{ a.name }}</div>
+                            <div class="progress flex-grow-1" style="height:6px">
+                                <div class="progress-bar bg-primary" style="width:{{ val }}%"></div>
+                            </div>
+                            <span class="text-muted" style="min-width:35px;text-align:right">{{ val }}{% if a.percentage is defined %}%{% endif %}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Top codes CPC ── #}
+                    {% if pd.top_cpc is defined and pd.top_cpc|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-tags me-1"></i>Codes CPC dominants</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for c in pd.top_cpc|slice(0,8) %}
+                            {% set cLabel = c.name is defined ? c.name : (c.code is defined ? c.code : '?') %}
+                            {% set cVal = c.percentage is defined ? c.percentage : (c.count is defined ? c.count : '') %}
+                            <span class="badge bg-secondary" title="{{ cVal }}{% if c.percentage is defined %}%{% endif %} des brevets">{{ cLabel }} {% if cVal %}<small>{{ cVal }}{% if c.percentage is defined %}%{% endif %}</small>{% endif %}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Concurrents ── #}
+                    {% if pd.competitors is defined and pd.competitors|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Concurrents détectés</div>
+                        {% for c in pd.competitors %}
+                        <span class="badge bg-danger me-1 mb-1">{{ c.name }} ({{ c.count is defined ? c.count : (c.patents is defined ? c.patents : 0) }})</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Présence géographique ── #}
+                    {% if pd.countries is defined and pd.countries|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-globe me-1"></i>Présence géographique</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for code, stats in pd.countries %}
+                            <span class="badge {{ stats.active > 0 ? 'bg-success' : 'bg-light text-dark border' }}"
+                                  title="Actifs: {{ stats.active }} | Inactifs: {{ stats.inactive }}">
+                                {{ code }}
+                                {% if stats.active > 0 %}<small>✓{{ stats.active }}</small>{% endif %}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Brevets trouvés ── #}
+                    {% if pd.sample_patents is defined and pd.sample_patents|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-file-text me-1"></i>Brevets trouvés ({{ pd.sample_patents|length }} affichés / {{ pd.total_results ?? 0 }} total)</div>
+                        <div class="accordion accordion-flush" id="patentsAccordion">
+                        {% for p in pd.sample_patents %}
+                        <div class="accordion-item border rounded mb-1">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed py-2 small" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#patent{{ loop.index }}">
+                                    <div class="d-flex align-items-start gap-2 w-100 me-2">
+                                        {% if p.thumbnail %}
+                                        <img src="{{ p.thumbnail }}" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0">
+                                        {% endif %}
+                                        <div class="min-width-0">
+                                            <div class="fw-semibold text-truncate" style="max-width:280px">{{ p.title }}</div>
+                                            <div class="text-muted" style="font-size:.7rem">
+                                                {% if p.assignee %}{{ p.assignee }}{% endif %}
+                                                {% if p.filing_date %} · {{ p.filing_date|slice(0,4) }}{% endif %}
+                                                {% if p.publication_number %}
+                                                    · <span class="badge bg-light text-dark border">{{ p.publication_number }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="patent{{ loop.index }}" class="accordion-collapse collapse">
+                                <div class="accordion-body py-2 small">
+                                    {% if p.snippet %}
+                                    <p class="text-muted mb-2">{{ p.snippet }}</p>
+                                    {% endif %}
+
+                                    <div class="row g-2 mb-2">
+                                        {% if p.inventor %}
+                                        <div class="col-6"><span class="text-muted">Inventeur :</span> {{ p.inventor }}</div>
+                                        {% endif %}
+                                        {% if p.filing_date %}
+                                        <div class="col-6"><span class="text-muted">Dépôt :</span> {{ p.filing_date }}</div>
+                                        {% endif %}
+                                        {% if p.grant_date %}
+                                        <div class="col-6"><span class="text-muted">Accordé :</span> {{ p.grant_date }}</div>
+                                        {% endif %}
+                                        {% if p.language %}
+                                        <div class="col-6"><span class="text-muted">Langue :</span> {{ p.language|upper }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    {# Statut par pays #}
+                                    {% if p.country_status|length > 0 %}
+                                    <div class="mb-2">
+                                        {% for code, status in p.country_status %}
+                                        <span class="badge me-1
+                                            {% if status == 'ACTIVE' %}bg-success
+                                            {% elseif status == 'NOT_ACTIVE' %}bg-secondary
+                                            {% else %}bg-light text-dark border{% endif %}">
+                                            {{ code }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    {# Figures #}
+                                    {% if p.figures|length > 0 %}
+                                    <div class="d-flex gap-2 mb-2">
+                                        {% for fig in p.figures %}
+                                        <a href="{{ fig.full }}" target="_blank">
+                                            <img src="{{ fig.thumbnail }}" alt="Figure" style="height:60px;border-radius:4px;border:1px solid #e2e8f0">
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    {# Liens #}
+                                    <div class="d-flex gap-2">
+                                        {% if p.patent_link %}
+                                        <a href="{{ p.patent_link }}" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size:.75rem;padding:2px 8px">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Voir le brevet
+                                        </a>
+                                        {% endif %}
+                                        {% if p.pdf %}
+                                        <a href="{{ p.pdf }}" target="_blank" class="btn btn-xs btn-outline-danger" style="font-size:.75rem;padding:2px 8px">
+                                            <i class="bi bi-file-pdf me-1"></i>PDF
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {# ── Alertes ── #}
+                    {% if pd.alerts is defined and pd.alerts|length > 0 %}
+                    <div class="mb-3">
+                        {% for alert in pd.alerts %}
+                        <div class="alert alert-{{ alert.type }} py-1 px-2 small mb-1">{{ alert.msg }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# ── Recommandation ── #}
+                    {% if pd.recommendation is defined %}
+                    <div class="alert alert-light border small mb-0">
+                        <i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ pd.recommendation }}
+                    </div>
+                    {% endif %}
+
+                    {% endif %}{# end pd #}
+
+                    <div class="text-end mt-2">
+                        <small class="text-muted">
+                            {% if projet.patentAnalyzedAt %}Analysé le {{ projet.patentAnalyzedAt|date('d/m/Y H:i') }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i>
+                    Aucune analyse brevets disponible.<br>
+                    <small>Cliquez sur "Lancer l'analyse" pour rechercher via SerpAPI Google Patents :<br>
+                    brevets accordés · déposants · codes CPC · présence géographique · figures</small>
+                </div>
+                {% endif %}
+            </div>
+
+                {% if projet.patentNoveltyScore is not null %}
+                {% set pd = projet.patentData %}
+                <div class="card-body">
+
+                    {# Score nouveauté #}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold">Score de nouveauté</span>
+                        <span class="fs-5 fw-bold
+                            {% if projet.patentNoveltyScore >= 70 %}text-success
+                            {% elseif projet.patentNoveltyScore >= 40 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ projet.patentNoveltyScore }}/100
+                        </span>
+                    </div>
+                    <div class="progress mb-3" style="height:10px">
+                        <div class="progress-bar
+                            {% if projet.patentNoveltyScore >= 70 %}bg-success
+                            {% elseif projet.patentNoveltyScore >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width:{{ projet.patentNoveltyScore }}%"></div>
+                    </div>
+
+                    {% if pd %}
+                    {# Métriques clés #}
+                    <div class="row g-2 mb-3 text-center small">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Total brevets</div>
+                                <strong class="fs-6">{{ pd.total_patents ?? 0 }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Récents (5 ans)</div>
+                                <strong class="fs-6 {{ (pd.recent_patents_5y ?? 0) > 50 ? 'text-danger' : 'text-success' }}">
+                                    {{ pd.recent_patents_5y ?? 0 }}
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted">Concurrents</div>
+                                <strong class="fs-6 {{ (pd.competitors ?? [])|length > 0 ? 'text-warning' : 'text-success' }}">
+                                    {{ (pd.competitors ?? [])|length }}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Requête utilisée #}
+                    {% if pd.query is defined and pd.query %}
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-search me-1"></i>Requête : <code>{{ pd.query|slice(0,80) }}{% if pd.query|length > 80 %}…{% endif %}</code>
+                    </div>
+                    {% endif %}
+
+                    {# Principaux déposants #}
+                    {% if pd.top_assignees is defined and pd.top_assignees|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-building me-1"></i>Principaux déposants</div>
+                        {% for a in pd.top_assignees|slice(0,5) %}
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-truncate" style="max-width:70%">{{ a.name }}</span>
+                            {% if a.frequency is defined and a.frequency is not iterable %}
+                                <span class="badge bg-secondary">{{ a.frequency }}</span>
+                            {% elseif a.percentage is defined and a.percentage is not iterable %}
+                                <span class="badge bg-secondary">{{ a.percentage }}%</span>
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# Concurrents détectés #}
+                    {% if pd.competitors is defined and pd.competitors|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Concurrents détectés</div>
+                        {% for c in pd.competitors %}
+                        <span class="badge bg-warning text-dark me-1 mb-1">{{ c.name }} ({{ c.count ?? 0 }})</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# Exemples de brevets #}
+                    {% if pd.sample_patents is defined and pd.sample_patents|length > 0 %}
+                    <div class="mb-3">
+                        <div class="fw-bold small mb-2"><i class="bi bi-file-text me-1"></i>Exemples de brevets trouvés</div>
+                        {% for p in pd.sample_patents|slice(0,3) %}
+                        <div class="border rounded p-2 mb-1 small">
+                            <div class="fw-semibold text-truncate">{{ p.title ?? 'Sans titre' }}</div>
+                            <div class="text-muted">
+                                {% if p.assignee is defined %}{{ p.assignee }}{% endif %}
+                                {% if p.priority_date is defined %} · {{ p.priority_date|slice(0,4) }}{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# Alertes #}
+                    {% if pd.alerts is defined and pd.alerts|length > 0 %}
+                    <div class="mb-3">
+                        {% for alert in pd.alerts %}
+                        <div class="alert alert-{{ alert.type }} py-1 px-2 small mb-1">{{ alert.msg }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {# Recommandation #}
+                    {% if pd.recommendation is defined %}
+                    <div class="alert alert-light border small mb-0">
+                        <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+                        {{ pd.recommendation }}
+                    </div>
+                    {% endif %}
+
+                    {% endif %}{# end pd #}
+
+                    <div class="text-end mt-2">
+                        <small class="text-muted">
+                            {% if projet.patentAnalyzedAt %}Analysé le {{ projet.patentAnalyzedAt|date('d/m/Y H:i') }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i>
+                    Aucune analyse brevets disponible.<br>
+                    <small>Cliquez sur "Lancer l'analyse" pour rechercher les brevets existants via SerpAPI Google Patents.</small>
+                </div>
+                {% endif %}
+            </div>
+
+            {# ── Décision admin ── #}
+            <div class="card shadow-sm">
+                <div class="card-header
+                    {% if projet.etat == 'Accepté' %}bg-success text-white
+                    {% elseif projet.etat == 'Refusé' %}bg-danger text-white
+                    {% else %}bg-light{% endif %}">
+                    <i class="bi bi-check2-circle me-2"></i>Décision
+                </div>
+                <div class="card-body">
+                    {# DEBUG #}
+                    <div class="alert alert-info">
+                        <strong>DEBUG:</strong> État du projet = "{{ projet.etat }}"
+                    </div>
+                    
+                    {% if projet.etat == 'En attente' %}
+                        {# TEST SIMPLE #}
+                        <div class="alert alert-warning mb-3">
+                            <strong>Test formulaire simple :</strong>
+                            <form method="post" action="{{ path('admin_gestion_projet', {id: projet.idProjet}) }}" style="display:inline;">
+                                <input type="hidden" name="action" value="accepter">
+                                <button type="submit" class="btn btn-sm btn-success">TEST Accepter (simple)</button>
+                            </form>
+                        </div>
+                        
+                        <form method="post" id="validationForm" action="{{ path('admin_gestion_projet', {id: projet.idProjet}) }}">
+                            <div class="mb-3">
+                                <label for="commentaire_admin" class="form-label fw-bold">
+                                    <i class="bi bi-chat-text me-1"></i>Commentaire
+                                    <small class="text-muted fw-normal">(requis pour refus)</small>
+                                </label>
+                                <textarea name="commentaire_admin" id="commentaire_admin"
+                                          class="form-control" rows="4"
+                                          placeholder="Commentaire visible par l'entrepreneur...">{{ projet.commentaireAdmin|escape }}</textarea>
+                                <div class="invalid-feedback">Un commentaire est requis pour un refus.</div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" name="action" value="accepter" id="btnAccepter"
+                                        class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle-fill me-2"></i>Accepter le projet
+                                    {% set pct2 = evaluation ? evaluation.pourcentage : (evalData ? evalData.pourcentage : null) %}
+                                    {% if pct2 is not null and pct2 < 70 %}
+                                        <small>(Dérogation requise - score {{ pct2 }}%)</small>
+                                    {% endif %}
+                                </button>
+                                <button type="submit" name="action" value="refuser" id="btnRefuser"
+                                        class="btn btn-danger btn-lg">
+                                    <i class="bi bi-x-circle-fill me-2"></i>Refuser le projet
+                                </button>
+                            </div>
+                            
+                            <div class="mt-2 text-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Motif obligatoire pour le refus
+                                </small>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-2">
+                            {% if projet.etat == 'Accepté' %}
+                                <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem"></i>
+                                <h5 class="mt-2 text-success">Projet accepté</h5>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger" style="font-size:2.5rem"></i>
+                                <h5 class="mt-2 text-danger">Projet refusé</h5>
+                            {% endif %}
+                            {% if projet.commentaireAdmin %}
+                            <div class="alert alert-light text-start mt-3 mb-0">
+                                <strong><i class="bi bi-chat-quote me-1"></i>Commentaire :</strong>
+                                <p class="mb-0 mt-1 text-muted">{{ projet.commentaireAdmin|escape|nl2br }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>{# /col-lg-5 #}
+    </div>{# /row #}
+</div>
+
+<style>
+.fade-in { animation: fadeIn .4s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+.avatar-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; flex-shrink: 0;
+}
+
+/* Donut score */
+.score-donut {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: conic-gradient(#10b981 calc(var(--pct) * 1%), #e5e7eb 0);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+}
+.score-donut::before {
+    content: ''; position: absolute;
+    width: 78px; height: 78px; border-radius: 50%; background: white;
+}
+.score-donut span {
+    position: relative; font-weight: 700; font-size: 1.2rem; color: #1f2937;
+}
+</style>
+
+<script>
+// Désactivé temporairement pour test
+console.log('Script chargé - validation désactivée pour test');
+</script>
+{% endblock %}

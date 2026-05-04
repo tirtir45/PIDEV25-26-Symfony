@@ -1,0 +1,170 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Ventes{% endblock %}
+
+{% block body %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+    <section class="orders-hero">
+        <div>
+            <h1>Mes Ventes</h1>
+            <p>Consultez les commandes de vos ressources et confirmez la livraison.</p>
+        </div>
+        <div class="orders-hero-icon">💰</div>
+    </section>
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Total Ventes</p>
+                    <p class="stat-card-value">{{ stats.total_ventes|default(0) }}</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </article>
+
+        <article class="stat-card stat-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Revenu Total</p>
+                    <p class="stat-card-value">{{ stats.revenu_total|default(0)|number_format(2, '.', ' ') }} DT</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.93c-2.83.48-5.48-1.3-5.93-4.13-.45-2.83 1.3-5.48 4.13-5.93V6h2v1.94c1.73.36 3.09 1.72 3.45 3.45H15a2 2 0 00-2-2 2 2 0 000 4 2 2 0 010 4v.54z"></path>
+                    </svg>
+                </div>
+            </div>
+        </article>
+
+        <article class="stat-card stat-success">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">Produits Vendus</p>
+                    <p class="stat-card-value">{{ stats.produits_vendus|default(0) }}</p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 13h2v8H3zm4-8h2v16H7zm4-2h2v18h-2zm4 4h2v14h-2zm4-4h2v18h-2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </article>
+
+        <article class="stat-card stat-warning">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <p class="stat-card-label">A Livrer / Livrées / Annulées</p>
+                    <p class="stat-card-value">{{ stats.submitted|default(0) }} / {{ stats.completed|default(0) }} / <span style="color: #ef4444;">{{ stats.cancelled|default(0) }}</span></p>
+                </div>
+                <div class="stat-card-icon">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 8h-3V4H3v13h2a3 3 0 006 0h2a3 3 0 006 0h2v-5l-1-4zM8 18.5A1.5 1.5 0 116.5 17 1.5 1.5 0 018 18.5zm9 0a1.5 1.5 0 111.5-1.5A1.5 1.5 0 0117 18.5zM17 12V9.5h1.6L19.2 12z"></path>
+                    </svg>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <form class="filter-bar" method="get" action="{{ path('app_fournisseur_ventes') }}">
+        <input
+            class="search-input"
+            type="text"
+            name="q"
+            value="{{ filters.q|default('') }}"
+            placeholder="Rechercher par nom de produit...">
+        <select class="select-input" name="status">
+            <option value="all" {% if (filters.status|default('all')) == 'all' %}selected{% endif %}>Tous les statuts</option>
+            <option value="submitted" {% if (filters.status|default('all')) == 'submitted' %}selected{% endif %}>SUBMITTED</option>
+            <option value="completed" {% if (filters.status|default('all')) == 'completed' %}selected{% endif %}>COMPLETED</option>
+            <option value="cancelled" {% if (filters.status|default('all')) == 'cancelled' %}selected{% endif %}>CANCELLED</option>
+        </select>
+        <button class="btn btn-secondary" type="submit">Filtrer</button>
+        <span class="count-pill">{{ stats.total_ventes|default(0) }} vente(s)</span>
+    </form>
+
+    <div class="table-container">
+        {% if sales is not empty %}
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Commande</th>
+                            <th>Statut</th>
+                            <th>Produit</th>
+                            <th>Offre</th>
+                            <th>Qté</th>
+                            <th>Dates</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                            {% set commande = sale.commande %}
+                            {% set line = sale.line %}
+                            {% set ressource = sale.ressource %}
+                            {% set status = sale.status|upper %}
+                            {% set dateDeb = line.date_deb %}
+                            {% set dateFin = line.date_fin %}
+                            <tr>
+                                <td><strong>#{{ commande.idCommande }}</strong></td>
+                                <td>
+                                    {% if status == 'COMPLETED' %}
+                                        <span class="badge badge-green">COMPLETED</span>
+                                    {% elseif status == 'CANCELLED' %}
+                                        <span class="badge badge-red">CANCELLED</span>
+                                    {% else %}
+                                        <span class="badge badge-blue">SUBMITTED</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ sale.resource_name }}</td>
+                                <td><span class="badge badge-blue">{{ ressource.offre|default('N/A')|capitalize }}</span></td>
+                                <td>{{ sale.quantity }}</td>
+                                <td>
+                                    {{ dateDeb ? dateDeb|date('d/m/Y') : 'N/A' }}
+                                    {% if dateDeb and dateFin and dateFin|date('d/m/Y') != dateDeb|date('d/m/Y') %}
+                                        - {{ dateFin|date('d/m/Y') }}
+                                    {% endif %}
+                                </td>
+                                <td><strong style="color: #059669;">{{ sale.line_total|number_format(2, '.', ' ') }} DT</strong></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <a href="{{ path('app_commandes_show', {'idCommande': commande.idCommande}) }}" class="btn btn-secondary" style="padding: 8px 12px; text-decoration: none; font-size: 13px;">Voir Détails</a>
+                                        <a href="{{ path('app_fournisseur_borderaux', {'idCommande': commande.idCommande}) }}" class="btn btn-info" style="padding: 8px 12px; text-decoration: none; font-size: 13px; background-color: #6366f1; color: white;" target="_blank">Imprimer Bordereau</a>
+                                        
+                                        {% if status == 'SUBMITTED' %}
+                                            <form method="post" action="{{ path('app_fournisseur_ventes_complete', {'idCommande': commande.idCommande}) }}" onsubmit="return confirm('Marquer cette commande comme livrée ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('complete-vente-' ~ commande.idCommande) }}">
+                                                <button type="submit" class="btn btn-primary" style="padding: 8px 12px;">Confirmer livraison</button>
+                                            </form>
+                                        {% elseif status == 'CANCELLED' %}
+                                            <span class="badge badge-red" style="padding: 8px 12px; display: inline-block;">ANNULÉE</span>
+                                        {% else %}
+                                            <span class="badge badge-green">Déjà livrée</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3V3H9v2H6a2 2 0 00-2 2v6a2 2 0 001 1.73V19a2 2 0 002 2h10a2 2 0 002-2v-4.27A2 2 0 0020 13z"></path>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">Aucune vente trouvée</h3>
+                <p class="empty-state-text">Ajustez vos filtres ou attendez vos prochaines commandes.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

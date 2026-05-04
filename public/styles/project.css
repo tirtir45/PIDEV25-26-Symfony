@@ -1,0 +1,175 @@
+/* ============================================================
+   StartHub – Project Management Views
+   ============================================================ */
+
+/* ── Kanban ── */
+.kanban-board {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    min-height: 70vh;
+}
+
+.kanban-column {
+    min-width: 280px;
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.kanban-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.kanban-column-header .badge {
+    font-size: 0.75rem;
+}
+
+.kanban-cards {
+    min-height: 60px;
+}
+
+.kanban-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    cursor: grab;
+    border-left: 4px solid transparent;
+    transition: box-shadow .2s;
+}
+
+.kanban-card:active { cursor: grabbing; }
+.kanban-card:hover  { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+
+.kanban-card.priority-haute   { border-left-color: #dc3545; }
+.kanban-card.priority-moyenne { border-left-color: #fd7e14; }
+.kanban-card.priority-basse   { border-left-color: #28a745; }
+
+.kanban-card-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+.kanban-card-meta  { font-size: 0.75rem; color: #6c757d; }
+
+.kanban-card.dragging { opacity: 0.5; }
+.kanban-column.drag-over { background: #e8f4fd; border: 2px dashed #0d6efd; }
+
+/* ── Eisenhower Matrix ── */
+.matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1rem;
+    height: calc(100vh - 280px);
+    min-height: 500px;
+}
+
+.matrix-quadrant {
+    border-radius: 12px;
+    padding: 1.2rem;
+    overflow-y: auto;
+}
+
+.matrix-quadrant.q1 { background: #fff5f5; border: 2px solid #f28b82; }
+.matrix-quadrant.q2 { background: #f0fff4; border: 2px solid #81c995; }
+.matrix-quadrant.q3 { background: #fffde7; border: 2px solid #fdd663; }
+.matrix-quadrant.q4 { background: #f8f9fa; border: 2px solid #bdc1c6; }
+
+.matrix-quadrant-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.matrix-task {
+    background: #fff;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+}
+
+/* ── Sprint board ── */
+.sprint-card {
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    transition: box-shadow .2s;
+}
+
+.sprint-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+
+.sprint-card.actif    { border-left: 4px solid #0d6efd; }
+.sprint-card.planifie { border-left: 4px solid #6c757d; }
+.sprint-card.termine  { border-left: 4px solid #28a745; }
+
+.progress-sprint {
+    height: 8px;
+    border-radius: 4px;
+}
+
+/* ── Resources ── */
+.resource-card {
+    border-radius: 12px;
+    transition: box-shadow .2s, transform .15s;
+}
+
+.resource-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,.1);
+    transform: translateY(-2px);
+}
+
+.resource-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+/* ── Project nav tabs ── */
+.project-nav .nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.project-nav .nav-link.active, .project-nav .nav-link:hover {
+    background: #e8f0fe;
+    color: #0d6efd;
+}
+
+/* ── Calendar wrapper ── */
+.fc .fc-toolbar-title { font-size: 1.1rem; }
+.fc .fc-button { font-size: 0.82rem; }
+
+/* ── General ── */
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.badge-statut-a_faire   { background: #6c757d; color: #fff; }
+.badge-statut-en_cours  { background: #0d6efd; color: #fff; }
+.badge-statut-terminee  { background: #28a745; color: #fff; }

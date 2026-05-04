@@ -1,0 +1,112 @@
+{# templates/admin/analytics.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container">
+    <h1 class="mb-4"><i class="bi bi-bar-chart-stats"></i> Tableau de bord analytique</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Distribution des scores</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Taux d'acceptation par secteur</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="secteurChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Top projets par score</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Projet</th>
+                                <th>Secteur</th>
+                                <th>Score</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for projet in topProjets %}
+                            <tr>
+                                <td>{{ projet.titre }}</td>
+                                <td>{{ projet.secteur }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if projet.noteMoyenne >= 70 %}bg-success{% elseif projet.noteMoyenne >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ projet.noteMoyenne }}%">
+                                            {{ projet.noteMoyenne|round }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ projet.etat }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Graphique distribution des scores
+const ctx = document.getElementById('scoreChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+        datasets: [{
+            label: 'Nombre de projets',
+            data: {{ distributionScores|json_encode|raw }},
+            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+            borderColor: 'rgb(16, 185, 129)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+// Graphique par secteur
+const ctx2 = document.getElementById('secteurChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'pie',
+    data: {
+        labels: {{ secteurs|keys|json_encode|raw }},
+        datasets: [{
+            data: {{ secteurs|values|json_encode|raw }},
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+        }]
+    }
+});
+</script>
+{% endblock %}

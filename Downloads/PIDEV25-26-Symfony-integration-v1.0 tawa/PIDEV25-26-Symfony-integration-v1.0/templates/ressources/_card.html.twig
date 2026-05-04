@@ -1,0 +1,79 @@
+{% set imageSrc = ressource.image_r and (ressource.image_r starts with 'http://' or ressource.image_r starts with 'https://')
+    ? ressource.image_r
+    : (ressource.image_r ? asset('uploads/ressources/' ~ ressource.image_r) : '') %}
+
+{% set offreNormalized = ressource.offre ? ressource.offre|lower : '' %}
+{% set qty = ressource.quantite|default(0) %}
+{% set canAdd = (ressource.disponibilite and qty > 0) %}
+{% set displayUnit = (offreNormalized == 'louer' and ressource.unite_louer) ? ressource.unite_louer : '-' %}
+
+<article class="resource-card {{ is_recommended|default(false) ? 'recommended-card' : '' }} {{ ressource.isBanned ? 'banned-opacity' : '' }}">
+    <div class="resource-badge">
+        {% if is_recommended|default(false) %}
+            <i class="bi bi-star-fill me-1"></i> 
+            {% if recommended_for is defined and recommended_for %}
+                Pour : {{ recommended_for.titre }}
+            {% else %}
+                Recommandé
+            {% endif %}
+            — {{ ressource.type_r ?: 'Ressource' }}
+        {% elseif ressource.isBanned %}
+            <span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Sous Modération</span>
+        {% else %}
+            {{ ressource.type_r ?: 'Ressource' }}
+        {% endif %}
+    </div>
+
+    <div class="report-trigger" title="Signaler cet article">
+        <a href="{{ path('app_resource_report', {id: ressource.id_ressource}) }}" class="text-muted"><i class="bi bi-flag"></i></a>
+    </div>
+
+    <div class="resource-image-wrap">
+        {% if imageSrc %}
+            <img src="{{ imageSrc }}" alt="{{ ressource.nom ?: 'Ressource' }}"
+                 onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+            <div class="image-fallback" hidden>Image indisponible</div>
+        {% else %}
+            <div class="image-fallback">Aucune image</div>
+        {% endif %}
+    </div>
+
+    <h3>{{ ressource.nom ?: 'Sans nom' }}</h3>
+    <p>{{ ressource.description ? ressource.description|slice(0, 75) ~ (ressource.description|length > 75 ? '...' : '') : 'Aucune description' }}</p>
+
+    <div class="resource-meta">
+        <span>Quantite: {{ ressource.quantite ?? '-' }}</span>
+        <span>Unite: {{ displayUnit }}</span>
+    </div>
+
+    <div class="resource-footer">
+        <div class="price">
+            {% if offreNormalized == 'achat' and ressource.prix_achat is not null %}
+                {{ ressource.prix_achat }} DT
+            {% elseif offreNormalized == 'louer' and ressource.prix_louer is not null %}
+                {{ ressource.prix_louer }} DT{{ displayUnit != '-' ? ' / ' ~ displayUnit : '' }}
+            {% elseif ressource.prix_achat is not null %}
+                {{ ressource.prix_achat }} DT
+            {% elseif ressource.prix_louer is not null %}
+                {{ ressource.prix_louer }} DT{{ ressource.unite_louer ? ' / ' ~ ressource.unite_louer : '' }}
+            {% else %}
+                Prix indisponible
+            {% endif %}
+        </div>
+        {% set isAvailable = (ressource.disponibilite and qty > 0) %}
+        <span class="status {{ isAvailable ? 'ok' : 'ko' }}">
+            {% if qty <= 0 %}
+                Rupture de stock
+            {% elseif ressource.disponibilite %}
+                Disponible
+            {% else %}
+                Indisponible
+            {% endif %}
+        </span>
+    </div>
+
+    <form class="card-links card-links-form" method="post" action="{{ path('app_panier_add', {'idRessource': ressource.id_ressource}) }}">
+        <input type="hidden" name="quantite" value="1">
+        <button type="submit" {% if not canAdd %}disabled{% endif %}>Ajouter au panier</button>
+    </form>
+</article>

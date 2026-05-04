@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Réservation{% endblock %}
+
+{% set active = 'admin_res' %}
+
+{% block body %}
+<div class="page-header" style="gap:14px;">
+    <div style="flex:1">
+        <p class="page-header-title">🎫 Nouvelle Réservation</p>
+        <p class="page-header-sub">Créer une réservation pour un événement</p>
+    </div>
+    <a href="{{ path('admin_evenement_index') }}"
+       style="background:rgba(255,255,255,.18); color:white; border:1.5px solid rgba(255,255,255,.4);
+              border-radius:10px; padding:10px 16px; font-size:13px; font-weight:700; text-decoration:none;">
+        Gérer Événements
+    </a>
+    <a href="{{ path('admin_reservation_index') }}" class="btn-pink"
+       style="text-decoration:none; font-size:13px; padding:10px 16px;">
+        Voir les Réservations
+    </a>
+</div>
+
+<div style="background:white; border-radius:16px; padding:30px;
+            border:1px solid #ead5f0; box-shadow:0 6px 14px rgba(161,85,185,.08);
+            max-width:560px; margin:0 auto;">
+
+    <!-- Section title -->
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:22px; color:#A155B9; font-weight:800;">|</span>
+        <span style="font-size:17px; font-weight:800; color:#2d0a3e;">Nouvelle Réservation</span>
+    </div>
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+    <!-- Date réservation (read-only label, like Java) -->
+    <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;">
+            Date de réservation
+        </label>
+        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:9px;
+                    padding:11px 14px; font-size:13px; color:#475569;">
+            📅 {{ 'now'|date('d/m/Y à H:i:s') }}
+            <span style="font-size:11px; color:#94a3b8; margin-left:8px;">(automatique)</span>
+        </div>
+    </div>
+
+    <!-- Événement -->
+    <div style="margin-bottom:16px;">
+        {{ form_label(form.evenement, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.evenement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.evenement) }}
+    </div>
+
+    <!-- Utilisateur -->
+    <div style="margin-bottom:16px;">
+        {{ form_label(form.utilisateur, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.utilisateur, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.utilisateur) }}
+    </div>
+
+    <!-- Statut paiement -->
+    <div style="margin-bottom:20px;">
+        {{ form_label(form.statutPaiement, null, {'label_attr': {'style': 'font-size:12px; font-weight:700; color:#A155B9; display:block; margin-bottom:6px;'}}) }}
+        {{ form_widget(form.statutPaiement, {'attr': {'style': 'border-radius:9px; padding:11px 14px; font-size:13px; background:#f8fafc; border:1.5px solid #e2e8f0; width:100%;'}}) }}
+        {{ form_errors(form.statutPaiement) }}
+    </div>
+
+    <div style="height:1px; background:linear-gradient(to right,#D08EC1,#f5c6e0,transparent); margin-bottom:18px;"></div>
+
+    <div style="display:flex; gap:14px; align-items:center;">
+        <a href="{{ path('admin_reservation_index') }}"
+           style="background:white; color:#A155B9; border:2px solid #A155B9; border-radius:10px;
+                  padding:10px 24px; font-size:13px; font-weight:700; text-decoration:none; text-align:center;">
+            Annuler
+        </a>
+        <button type="submit"
+                style="background:#A155B9; color:white; border:none; border-radius:10px;
+                       padding:10px 26px; font-size:13px; font-weight:800; cursor:pointer;
+                       box-shadow:0 4px 12px rgba(161,85,185,.35);">
+            Ajouter la réservation
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}
