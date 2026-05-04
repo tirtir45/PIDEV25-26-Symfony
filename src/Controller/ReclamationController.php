@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Reclamations;
 use App\Entity\Reclamation_commentaires;
+use App\Event\ReclamationEvent;
 use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
 use App\Service\ReclamationAnalyzerService;
@@ -15,6 +16,7 @@ use App\Service\SpamDetectionService;
 use App\Service\ProfanityFilterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -33,7 +35,8 @@ class ReclamationController extends AbstractController
         NotificationService $notifier,
         CaptchaService $captcha,
         SpamDetectionService $spamDetector,
-        ProfanityFilterService $profanityFilter
+        ProfanityFilterService $profanityFilter,
+        EventDispatcherInterface $dispatcher
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
@@ -92,6 +95,7 @@ class ReclamationController extends AbstractController
                     $em->persist($r);
                     $em->flush();
 
+                    $dispatcher->dispatch(new ReclamationEvent($r), ReclamationEvent::CREATED);
                     $notifier->onNewReclamation($r);
                     $this->addFlash('success', 'Votre réclamation a été envoyée avec succès.');
                     return $this->redirectToRoute('reclamation_index');
@@ -118,7 +122,8 @@ class ReclamationController extends AbstractController
         Request $request,
         ReclamationsRepository $repo,
         UtilisateursRepository $userRepo,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        EventDispatcherInterface $dispatcher
     ): Response {
         $userId = $request->getSession()->get('user_id');
         if (!$userId) {
@@ -147,6 +152,12 @@ class ReclamationController extends AbstractController
                 $msg->setDate_commentaire(new \DateTime());
                 $em->persist($msg);
                 $em->flush();
+
+                // SMS si c'est un admin qui répond (pas l'utilisateur lui-même)
+                $isAdmin = $request->getSession()->get('user_role') === 'Administrateur';
+                if ($isAdmin) {
+                    $dispatcher->dispatch(new ReclamationEvent($reclamation, null, $contenu), ReclamationEvent::ADMIN_REPLIED);
+                }
             }
 
             return $this->redirectToRoute('reclamation_show', ['id' => $id]);

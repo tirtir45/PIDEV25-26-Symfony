@@ -4,12 +4,14 @@ namespace App\Controller;
 
 use App\Entity\Reclamations;
 use App\Entity\Reclamation_commentaires;
+use App\Event\ReclamationEvent;
 use App\Repository\ReclamationsRepository;
 use App\Repository\UtilisateursRepository;
 use App\Service\NotificationService;
 use App\Service\UserVerificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -94,7 +96,8 @@ class AdminReclamationController extends AbstractController
         UtilisateursRepository $userRepo,
         EntityManagerInterface $em,
         NotificationService $notifier,
-        UserVerificationService $verifier
+        UserVerificationService $verifier,
+        EventDispatcherInterface $dispatcher
     ): Response {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -116,6 +119,7 @@ class AdminReclamationController extends AbstractController
                 $em->flush();
                 if ($oldStatut !== $statut) {
                     $notifier->onStatusChange($reclamation, $oldStatut);
+                    $dispatcher->dispatch(new ReclamationEvent($reclamation, $oldStatut), ReclamationEvent::STATUS_CHANGED);
                     // Vérifier badge si réclamation résolue
                     if ($statut === 'RESOLU' && $reclamation->getUtilisateur()) {
                         $verifier->checkAndUpdate($reclamation->getUtilisateur());
@@ -142,6 +146,7 @@ class AdminReclamationController extends AbstractController
                 $em->flush();
 
                 $notifier->onAdminReply($reclamation, $contenu);
+                $dispatcher->dispatch(new ReclamationEvent($reclamation, null, $contenu), ReclamationEvent::ADMIN_REPLIED);
             }
 
             return $this->redirectToRoute('admin_reclamation_show', ['id' => $id]);
@@ -155,7 +160,7 @@ class AdminReclamationController extends AbstractController
     }
 
     #[Route('/admin/reclamations/{id}/statut', name: 'admin_reclamation_statut', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em, NotificationService $notifier): Response
+    public function updateStatut(int $id, Request $request, ReclamationsRepository $repo, EntityManagerInterface $em, NotificationService $notifier, EventDispatcherInterface $dispatcher): Response
     {
         if (!$this->checkAdmin($request)) {
             return $this->redirectToRoute('app_dashboard');
@@ -168,6 +173,7 @@ class AdminReclamationController extends AbstractController
             $em->flush();
             if ($oldStatut !== $r->getStatut()) {
                 $notifier->onStatusChange($r, $oldStatut);
+                $dispatcher->dispatch(new ReclamationEvent($r, $oldStatut), ReclamationEvent::STATUS_CHANGED);
             }
             $this->addFlash('success', 'Statut mis à jour.');
         }
